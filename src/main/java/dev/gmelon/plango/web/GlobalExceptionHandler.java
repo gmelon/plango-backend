@@ -1,6 +1,7 @@
 package dev.gmelon.plango.web;
 
 import dev.gmelon.plango.exception.UnauthenticatedException;
+import dev.gmelon.plango.exception.UnauthorizedException;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -22,7 +23,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UnauthenticatedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ErrorResponseDto unauthorizedExceptionHandler(UnauthenticatedException exception) {
+    public ErrorResponseDto unauthenticatedExceptionHandler(UnauthenticatedException exception) {
+        return new ErrorResponseDto(exception.getMessage());
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponseDto unauthorizedExceptionHandler(UnauthorizedException exception) {
         return new ErrorResponseDto(exception.getMessage());
     }
 

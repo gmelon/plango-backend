@@ -8,6 +8,7 @@ import dev.gmelon.plango.service.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.web.TestAuthUtil;
 import io.restassured.RestAssured;
+import io.restassured.http.Cookie;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,8 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-
-import javax.servlet.http.Cookie;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,7 +48,8 @@ class AuthControllerTest {
                 .build();
 
         // when
-        ExtractableResponse<Response> response = RestAssured.given()
+        ExtractableResponse<Response> response = RestAssured
+                .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .when().post("/api/v1/auth/signup")
@@ -72,14 +72,16 @@ class AuthControllerTest {
                 .password("passwordA")
                 .name("nameA")
                 .build();
-        RestAssured.given()
+        RestAssured
+                .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .when().post("/api/v1/auth/signup")
                 .then().log().all();
 
         // when
-        ExtractableResponse<Response> response = RestAssured.given()
+        ExtractableResponse<Response> response = RestAssured
+                .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .when().post("/api/v1/auth/signup")
@@ -98,7 +100,7 @@ class AuthControllerTest {
                 .password("passwordA")
                 .name("nameA")
                 .build();
-        TestAuthUtil.signup(signupRequest);
+        Cookie loginCookie = TestAuthUtil.signupAndGetCookie(signupRequest);
 
         LoginRequestDto loginRequest = LoginRequestDto.builder()
                 .email("a@a.com")
@@ -106,7 +108,8 @@ class AuthControllerTest {
                 .build();
 
         // when
-        ExtractableResponse<Response> response = RestAssured.given()
+        ExtractableResponse<Response> response = RestAssured
+                .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(loginRequest).log().all()
                 .when().post("/api/v1/auth/login")
@@ -126,7 +129,8 @@ class AuthControllerTest {
                 .build();
 
         // when
-        ExtractableResponse<Response> response = RestAssured.given()
+        ExtractableResponse<Response> response = RestAssured
+                .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(loginRequest).log().all()
                 .when().post("/api/v1/auth/login")
@@ -145,19 +149,13 @@ class AuthControllerTest {
                 .password("passwordA")
                 .name("nameA")
                 .build();
-        TestAuthUtil.signup(signupRequest);
-
-        LoginRequestDto loginRequest = LoginRequestDto.builder()
-                .email("a@a.com")
-                .password("passwordA")
-                .build();
-        Cookie cookie = TestAuthUtil.loginAndGetCookie(loginRequest);
+        Cookie loginCookie = TestAuthUtil.signupAndGetCookie(signupRequest);
 
         // when
-        ExtractableResponse<Response> response = RestAssured.given()
+        ExtractableResponse<Response> response = RestAssured
+                .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .cookie(cookie.getName(), cookie.getValue())
-                .body(loginRequest).log().all()
+                .cookie(loginCookie).log().all()
                 .when().post("/api/v1/auth/logout")
                 .then().log().all().extract();
 

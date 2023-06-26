@@ -15,6 +15,9 @@ spring:
         show_sql: true
         format_sql: true
     database: h2
+  jackson:
+    deserialization:
+      adjust-dates-to-context-time-zone: false
 server:
   servlet:
     session:
