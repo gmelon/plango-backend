@@ -1,3 +1,5 @@
+import java.time.LocalDateTime
+
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '2.7.12'
@@ -5,7 +7,7 @@ plugins {
 }
 
 group = 'dev.gmelon'
-version = '0.0.1-SNAPSHOT'
+version = '0.1-' + LocalDateTime.now().format("yyyyMMddHHmmss")
 
 java {
 	sourceCompatibility = '11'
@@ -24,12 +26,15 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.security:spring-security-crypto'
 
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.h2database:h2'
 	annotationProcessor 'org.projectlombok:lombok'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'io.rest-assured:rest-assured:4.5.1'
 }
 
 tasks.named('test') {

@@ -15,3 +15,7 @@ spring:
         show_sql: true
         format_sql: true
     database: h2
+server:
+  servlet:
+    session:
+      tracking-modes: cookie
