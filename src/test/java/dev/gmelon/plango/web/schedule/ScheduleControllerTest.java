@@ -1,5 +1,8 @@
 package dev.gmelon.plango.web.schedule;
 
+import dev.gmelon.plango.domain.diary.Diary;
+import dev.gmelon.plango.domain.member.Member;
+import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
@@ -38,8 +41,13 @@ class ScheduleControllerTest {
     private Cookie loginCookieOfMemberA;
     private Cookie loginCookieOfMemberB;
 
+    private Member memberA;
+    private Member memberB;
+
     @Autowired
     private ScheduleRepository scheduleRepository;
+    @Autowired
+    private MemberRepository memberRepository;
 
     @LocalServerPort
     private int port;
@@ -61,6 +69,9 @@ class ScheduleControllerTest {
                 .name("nameB")
                 .build();
         loginCookieOfMemberB = TestAuthUtil.signupAndGetCookie(memberBSignupRequest);
+
+        memberA = memberRepository.findByEmail(memberASignupRequest.getEmail()).get();
+        memberB = memberRepository.findByEmail(memberBSignupRequest.getEmail()).get();
     }
 
     @Test
@@ -314,81 +325,161 @@ class ScheduleControllerTest {
     }
 
     @Test
-    void 날짜별_계획_목록_조회() {
+    void 날짜별_기록을_가진_계획_목록_조회() {
         // given
         // memberA 계획 추가
-        List<ScheduleCreateRequestDto> memberARequests = List.of(
-                ScheduleCreateRequestDto.builder()
-                        .title("A의 계획")
+        List<Schedule> memberARequests = List.of(
+                Schedule.builder()
+                        .title("계획 1")
                         .startTime(LocalDateTime.of(2023, 6, 25, 23, 59, 59))
                         .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .member(memberA)
                         .build(),
-                ScheduleCreateRequestDto.builder()
-                        .title("A의 계획")
+                Schedule.builder()
+                        .title("계획 2")
                         .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
                         .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .member(memberA)
                         .build(),
-                ScheduleCreateRequestDto.builder()
-                        .title("A의 계획")
+                Schedule.builder()
+                        .title("계획 3")
                         .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
                         .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 1))
+                        .member(memberA)
+                        .diary(Diary.builder().title("").build())
                         .build(),
-                ScheduleCreateRequestDto.builder()
-                        .title("A의 계획")
+                Schedule.builder()
+                        .title("계획 4")
                         .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                         .endTime(LocalDateTime.of(2023, 6, 26, 12, 0, 0))
+                        .member(memberA)
+                        .diary(Diary.builder().title("").build())
                         .build(),
-                ScheduleCreateRequestDto.builder()
-                        .title("A의 계획")
+                Schedule.builder()
+                        .title("계획 5")
                         .startTime(LocalDateTime.of(2023, 6, 26, 23, 59, 59))
                         .endTime(LocalDateTime.of(2023, 6, 27, 0, 0, 0))
+                        .member(memberA)
                         .build()
         );
-        for (ScheduleCreateRequestDto memberARequest : memberARequests) {
-            RestAssured
-                    .given()
-                    .contentType(MediaType.APPLICATION_JSON_VALUE)
-                    .body(memberARequest).log().all()
-                    .cookie(loginCookieOfMemberA)
-                    .when().post("/api/v1/schedules")
-                    .then().log().all();
-        }
+        scheduleRepository.saveAll(memberARequests);
 
         // memberB 계획 추가
-        List<ScheduleCreateRequestDto> memberBRequests = List.of(
-                ScheduleCreateRequestDto.builder()
-                        .title("B의 계획")
+        List<Schedule> memberBRequests = List.of(
+                Schedule.builder()
+                        .title("계획 6")
                         .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                         .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                        .member(memberB)
+                        .diary(Diary.builder().title("").build())
                         .build(),
-                ScheduleCreateRequestDto.builder()
-                        .title("B의 계획")
+                Schedule.builder()
+                        .title("계획 7")
                         .startTime(LocalDateTime.of(2023, 6, 26, 15, 0, 0))
                         .endTime(LocalDateTime.of(2023, 6, 26, 22, 0, 1))
+                        .member(memberB)
                         .build()
         );
-        for (ScheduleCreateRequestDto memberARequest : memberARequests) {
-            RestAssured
-                    .given()
-                    .contentType(MediaType.APPLICATION_JSON_VALUE)
-                    .body(memberARequest).log().all()
-                    .cookie(loginCookieOfMemberB)
-                    .when().post("/api/v1/schedules")
-                    .then().log().all();
-        }
+        scheduleRepository.saveAll(memberBRequests);
 
         // when
         ExtractableResponse<Response> response = RestAssured
                 .given()
-                .param("date", "2023-06-26").log().all()
+                .param("date", "2023-06-26")
+                .param("hasDiary", true)
+                .log().all()
                 .cookie(loginCookieOfMemberA)
                 .when().get("/api/v1/schedules")
                 .then().log().all().extract();
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        List<String> expectedScheduleTitles = List.of("계획 3", "계획 4");
+
+        assertThat(response.jsonPath().getInt("$.size()")).isEqualTo(expectedScheduleTitles.size());
         for (int i = 0; i < response.jsonPath().getInt("$.size()"); i++) {
-            assertThat(response.jsonPath().getString("[" + i + "].title")).isNotEqualTo("B의 계획");
+            assertThat(response.jsonPath().getString("[" + i + "].title"))
+                    .isEqualTo(expectedScheduleTitles.get(i));
+            assertThat(response.jsonPath().getString("[" + i + "].startTime")).contains("2023-06-26");
+        }
+    }
+
+    @Test
+    void 날짜별_전체_계획_목록_조회() {
+        // given
+        // memberA 계획 추가
+        List<Schedule> memberARequests = List.of(
+                Schedule.builder()
+                        .title("계획 1")
+                        .startTime(LocalDateTime.of(2023, 6, 25, 23, 59, 59))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .member(memberA)
+                        .diary(Diary.builder().title("").build())
+                        .build(),
+                Schedule.builder()
+                        .title("계획 2")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .member(memberA)
+                        .build(),
+                Schedule.builder()
+                        .title("계획 3")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 1))
+                        .member(memberA)
+                        .diary(Diary.builder().title("").build())
+                        .build(),
+                Schedule.builder()
+                        .title("계획 4")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 12, 0, 0))
+                        .member(memberA)
+                        .build(),
+                Schedule.builder()
+                        .title("계획 5")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 23, 59, 59))
+                        .endTime(LocalDateTime.of(2023, 6, 27, 0, 0, 0))
+                        .member(memberA)
+                        .build()
+        );
+        scheduleRepository.saveAll(memberARequests);
+        scheduleRepository.saveAll(memberARequests);
+
+        // memberB 계획 추가
+        List<Schedule> memberBRequests = List.of(
+                Schedule.builder()
+                        .title("계획 6")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                        .member(memberB)
+                        .diary(Diary.builder().title("").build())
+                        .build(),
+                Schedule.builder()
+                        .title("계획 7")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 15, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 22, 0, 1))
+                        .member(memberB)
+                        .build()
+        );
+        scheduleRepository.saveAll(memberBRequests);
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .param("date", "2023-06-26")
+                .log().all()
+                .cookie(loginCookieOfMemberA)
+                .when().get("/api/v1/schedules")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        List<String> expectedScheduleTitles = List.of("계획 2", "계획 3", "계획 4", "계획 5");
+
+        assertThat(response.jsonPath().getInt("$.size()")).isEqualTo(expectedScheduleTitles.size());
+        for (int i = 0; i < response.jsonPath().getInt("$.size()"); i++) {
+            assertThat(response.jsonPath().getString("[" + i + "].title"))
+                    .isEqualTo(expectedScheduleTitles.get(i));
             assertThat(response.jsonPath().getString("[" + i + "].startTime")).contains("2023-06-26");
         }
     }

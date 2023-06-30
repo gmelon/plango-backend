@@ -19,7 +19,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -59,12 +58,11 @@ public class DiaryService {
         LocalDateTime startDateTime = LocalDateTime.of(requestDate, LocalTime.of(0, 0, 0));
         LocalDateTime endDateTime = LocalDateTime.of(requestDate, LocalTime.of(23, 59, 59));
 
-        List<Schedule> schedules = scheduleRepository.findByMemberIdAndStartTimeBetweenOrderByStartTimeAsc(memberId, startDateTime, endDateTime);
+        List<Schedule> schedules = scheduleRepository.findByMemberIdAndStartTimeBetweenAndDiaryNotNullOrderByStartTimeAscEndTimeAsc(memberId, startDateTime, endDateTime);
 
         // TODO fetch join?
         return schedules.stream()
                 .map(Schedule::getDiary)
-                .filter(Objects::nonNull)
                 .map(DiaryListResponseDto::of)
                 .collect(Collectors.toList());
     }

@@ -45,15 +45,22 @@ public class ScheduleService {
         return ScheduleResponseDto.of(schedule);
     }
 
-    public List<ScheduleListResponseDto> findAllByDate(Long memberId, LocalDate requestDate) {
-        LocalDateTime startDateTime = LocalDateTime.of(requestDate, LocalTime.of(0, 0, 0));
-        LocalDateTime endDateTime = LocalDateTime.of(requestDate, LocalTime.of(23, 59, 59));
-
-        List<Schedule> schedules = scheduleRepository.findByMemberIdAndStartTimeBetweenOrderByStartTimeAsc(memberId, startDateTime, endDateTime);
+    public List<ScheduleListResponseDto> findAllByDate(Long memberId, LocalDate requestDate, boolean hasDiary) {
+        List<Schedule> schedules = findSchedulesByMemberAndDate(memberId, requestDate, hasDiary);
 
         return schedules.stream()
                 .map(ScheduleListResponseDto::of)
                 .collect(Collectors.toList());
+    }
+
+    private List<Schedule> findSchedulesByMemberAndDate(Long memberId, LocalDate requestDate, boolean hasDiary) {
+        LocalDateTime startDateTime = LocalDateTime.of(requestDate, LocalTime.of(0, 0, 0));
+        LocalDateTime endDateTime = LocalDateTime.of(requestDate, LocalTime.of(23, 59, 59));
+
+        if (hasDiary) {
+            return scheduleRepository.findByMemberIdAndStartTimeBetweenAndDiaryNotNullOrderByStartTimeAscEndTimeAsc(memberId, startDateTime, endDateTime);
+        }
+        return scheduleRepository.findByMemberIdAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(memberId, startDateTime, endDateTime);
     }
 
     @Transactional
@@ -84,7 +91,7 @@ public class ScheduleService {
         LocalDateTime startDateTime = LocalDateTime.of(startDate, LocalTime.of(0, 0, 0));
         LocalDateTime endDateTime = LocalDateTime.of(endDate, LocalTime.of(23, 59, 59));
 
-        List<Schedule> schedules = scheduleRepository.findByMemberIdAndStartTimeBetweenOrderByStartTimeAsc(memberId, startDateTime, endDateTime);
+        List<Schedule> schedules = scheduleRepository.findByMemberIdAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(memberId, startDateTime, endDateTime);
 
         // TODO DB단에서 처리할 수 있도록 리팩토링 하기
         return schedules.stream()

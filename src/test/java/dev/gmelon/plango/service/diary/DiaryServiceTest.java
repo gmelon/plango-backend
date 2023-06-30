@@ -298,17 +298,23 @@ class DiaryServiceTest {
                         .build(),
                 Schedule.builder()
                         .title("계획 6")
-                        .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
-                        .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
-                        .member(memberB)
-                        .diary(Diary.builder().title("기록 6").build())
+                        .startTime(LocalDateTime.of(2023, 6, 26, 23, 59, 59))
+                        .endTime(LocalDateTime.of(2023, 6, 27, 0, 0, 0))
+                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("계획 7")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                        .member(memberB)
+                        .diary(Diary.builder().title("기록 7").build())
+                        .build(),
+                Schedule.builder()
+                        .title("계획 8")
                         .startTime(LocalDateTime.of(2023, 6, 26, 15, 0, 0))
                         .endTime(LocalDateTime.of(2023, 6, 26, 22, 0, 1))
                         .member(memberB)
-                        .diary(Diary.builder().title("기록 7").build())
+                        .diary(Diary.builder().title("기록 8").build())
                         .build()
         );
         scheduleRepository.saveAll(schedules);

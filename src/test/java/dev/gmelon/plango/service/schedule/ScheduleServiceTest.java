@@ -1,5 +1,6 @@
 package dev.gmelon.plango.service.schedule;
 
+import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
@@ -219,38 +220,40 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 날짜별_계획_목록_조회() {
+    void 날짜별_기록을_가진_계획_목록_조회() {
         // given
         // memberA 계획 추가
         List<Schedule> memberARequests = List.of(
                 Schedule.builder()
-                        .title("A의 계획")
-                        .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
-                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
-                        .member(memberA)
-                        .build(),
-                Schedule.builder()
-                        .title("A의 계획")
-                        .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
-                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 1))
-                        .member(memberA)
-                        .build(),
-                Schedule.builder()
-                        .title("A의 계획")
+                        .title("계획 1")
                         .startTime(LocalDateTime.of(2023, 6, 25, 23, 59, 59))
                         .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("A의 계획")
-                        .startTime(LocalDateTime.of(2023, 6, 26, 23, 59, 59))
-                        .endTime(LocalDateTime.of(2023, 6, 27, 0, 0, 0))
+                        .title("계획 2")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("A의 계획")
+                        .title("계획 3")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 1))
+                        .member(memberA)
+                        .diary(Diary.builder().title("").build())
+                        .build(),
+                Schedule.builder()
+                        .title("계획 4")
                         .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                         .endTime(LocalDateTime.of(2023, 6, 26, 12, 0, 0))
+                        .member(memberA)
+                        .diary(Diary.builder().title("").build())
+                        .build(),
+                Schedule.builder()
+                        .title("계획 5")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 23, 59, 59))
+                        .endTime(LocalDateTime.of(2023, 6, 27, 0, 0, 0))
                         .member(memberA)
                         .build()
         );
@@ -259,13 +262,14 @@ class ScheduleServiceTest {
         // memberB 계획 추가
         List<Schedule> memberBRequests = List.of(
                 Schedule.builder()
-                        .title("B의 계획")
+                        .title("계획 6")
                         .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                         .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
                         .member(memberB)
+                        .diary(Diary.builder().title("").build())
                         .build(),
                 Schedule.builder()
-                        .title("B의 계획")
+                        .title("계획 7")
                         .startTime(LocalDateTime.of(2023, 6, 26, 15, 0, 0))
                         .endTime(LocalDateTime.of(2023, 6, 26, 22, 0, 1))
                         .member(memberB)
@@ -276,13 +280,89 @@ class ScheduleServiceTest {
         LocalDate targetDate = LocalDate.of(2023, 6, 26);
 
         // when
-        List<ScheduleListResponseDto> scheduleListResponseDtos = scheduleService.findAllByDate(memberA.getId(), targetDate);
+        List<ScheduleListResponseDto> responseDtos = scheduleService.findAllByDate(memberA.getId(), targetDate, true);
 
         // then
-        assertThat(scheduleListResponseDtos)
-                .flatExtracting(ScheduleListResponseDto::getTitle).doesNotContain("B의 계획");
-        assertThat(scheduleListResponseDtos)
-                .flatExtracting((ScheduleListResponseDto dto) -> dto.getStartTime().toLocalDate())
+        List<String> expectedScheduleTitles = List.of("계획 3", "계획 4");
+
+        assertThat(responseDtos)
+                .extracting(ScheduleListResponseDto::getTitle).isEqualTo(expectedScheduleTitles);
+        assertThat(responseDtos)
+                .extracting((ScheduleListResponseDto dto) -> dto.getStartTime().toLocalDate())
+                .containsOnly(targetDate);
+    }
+
+    @Test
+    void 날짜별_전체_계획_목록_조회() {
+        // given
+        // memberA 계획 추가
+        List<Schedule> memberARequests = List.of(
+                Schedule.builder()
+                        .title("계획 1")
+                        .startTime(LocalDateTime.of(2023, 6, 25, 23, 59, 59))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .member(memberA)
+                        .diary(Diary.builder().title("").build())
+                        .build(),
+                Schedule.builder()
+                        .title("계획 2")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .member(memberA)
+                        .build(),
+                Schedule.builder()
+                        .title("계획 3")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 1))
+                        .member(memberA)
+                        .diary(Diary.builder().title("").build())
+                        .build(),
+                Schedule.builder()
+                        .title("계획 4")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 12, 0, 0))
+                        .member(memberA)
+                        .build(),
+                Schedule.builder()
+                        .title("계획 5")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 23, 59, 59))
+                        .endTime(LocalDateTime.of(2023, 6, 27, 0, 0, 0))
+                        .member(memberA)
+                        .diary(Diary.builder().title("").build())
+                        .build()
+        );
+        scheduleRepository.saveAll(memberARequests);
+
+        // memberB 계획 추가
+        List<Schedule> memberBRequests = List.of(
+                Schedule.builder()
+                        .title("계획 6")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                        .member(memberB)
+                        .diary(Diary.builder().title("").build())
+                        .build(),
+                Schedule.builder()
+                        .title("계획 7")
+                        .startTime(LocalDateTime.of(2023, 6, 26, 15, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 22, 0, 1))
+                        .member(memberB)
+                        .build()
+        );
+        scheduleRepository.saveAll(memberBRequests);
+
+        LocalDate targetDate = LocalDate.of(2023, 6, 26);
+
+        // when
+        List<ScheduleListResponseDto> responseDtos = scheduleService.findAllByDate(memberA.getId(), targetDate, false);
+
+        // then
+        List<String> expectedScheduleTitles = List.of("계획 2", "계획 3", "계획 4", "계획 5");
+
+        assertThat(responseDtos)
+                .extracting(ScheduleListResponseDto::getTitle).isEqualTo(expectedScheduleTitles);
+        assertThat(responseDtos)
+                .extracting((ScheduleListResponseDto dto) -> dto.getStartTime().toLocalDate())
                 .containsOnly(targetDate);
     }
 

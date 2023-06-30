@@ -39,12 +39,12 @@ public class ScheduleController {
         return scheduleService.findById(sessionMember.getId(), scheduleId);
     }
 
-    // TODO 기록 유무에 따라 다르게 반환하는 옵션 추가하기
     @GetMapping(params = "date")
     public List<ScheduleListResponseDto> findAllByDate(
             @LoginMember SessionMember sessionMember,
-            @DateTimeFormat(pattern = "yyyy-MM-dd") @RequestParam("date") LocalDate requestDate) {
-        return scheduleService.findAllByDate(sessionMember.getId(), requestDate);
+            @DateTimeFormat(pattern = "yyyy-MM-dd") @RequestParam("date") LocalDate requestDate,
+            @RequestParam(defaultValue = "false") boolean hasDiary) {
+        return scheduleService.findAllByDate(sessionMember.getId(), requestDate, hasDiary);
     }
 
     @GetMapping(params = "yearMonth")
