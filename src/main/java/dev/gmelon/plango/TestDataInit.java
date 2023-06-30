@@ -3,10 +3,12 @@ package dev.gmelon.plango;
 import dev.gmelon.plango.service.auth.AuthService;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
+@Profile("local")
 @RequiredArgsConstructor
 @Component
 public class TestDataInit {

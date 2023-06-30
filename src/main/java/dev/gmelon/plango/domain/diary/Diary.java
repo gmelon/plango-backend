@@ -37,6 +37,12 @@ public class Diary extends BaseTimeEntity {
         this.imageUrl = imageUrl;
     }
 
+    public void edit(DiaryEditor editor) {
+        this.title = editor.getTitle();
+        this.content = editor.getContent();
+        this.imageUrl = editor.getImageUrl();
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;

@@ -6,12 +6,11 @@ import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.UnauthorizedException;
 import dev.gmelon.plango.service.schedule.dto.*;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Sql(value = "classpath:/reset.sql")
 @SpringBootTest
 class ScheduleServiceTest {
 
@@ -36,8 +35,8 @@ class ScheduleServiceTest {
     @Autowired
     private MemberRepository memberRepository;
 
-    @BeforeAll
-    void beforeAll() {
+    @BeforeEach
+    void setUp() {
         memberA = Member.builder()
                 .email("a@a.com")
                 .password("passwordA")
@@ -51,11 +50,6 @@ class ScheduleServiceTest {
                 .name("nameB")
                 .build();
         memberRepository.save(memberB);
-    }
-
-    @BeforeEach
-    void setUp() {
-        scheduleRepository.deleteAll();
     }
 
     @Test
@@ -93,13 +87,14 @@ class ScheduleServiceTest {
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
 
         // when
-        ScheduleResponseDto foundScheduleDto = scheduleService.findById(memberA.getId(), createdScheduleId);
+        ScheduleResponseDto responseDto = scheduleService.findById(memberA.getId(), createdScheduleId);
 
         // then
-        assertThat(foundScheduleDto.getTitle()).isEqualTo(schedule.getTitle());
-        assertThat(foundScheduleDto.getContent()).isEqualTo(schedule.getContent());
-        assertThat(foundScheduleDto.getStartTime()).isEqualTo(schedule.getStartTime());
-        assertThat(foundScheduleDto.getEndTime()).isEqualTo(schedule.getEndTime());
+        assertThat(responseDto.getId()).isEqualTo(createdScheduleId);
+        assertThat(responseDto.getTitle()).isEqualTo(schedule.getTitle());
+        assertThat(responseDto.getContent()).isEqualTo(schedule.getContent());
+        assertThat(responseDto.getStartTime()).isEqualTo(schedule.getStartTime());
+        assertThat(responseDto.getEndTime()).isEqualTo(schedule.getEndTime());
     }
 
     @Test
@@ -179,6 +174,12 @@ class ScheduleServiceTest {
         // when, then
         assertThatThrownBy(() -> scheduleService.edit(memberB.getId(), createdScheduleId, editRequet))
                 .isInstanceOf(UnauthorizedException.class);
+
+        Schedule foundSchedule = assertDoesNotThrow(() -> scheduleRepository.findById(createdScheduleId).get());
+        assertThat(foundSchedule)
+                .usingRecursiveComparison()
+                .ignoringFields("member")
+                .isEqualTo(schedule);
     }
 
     @Test

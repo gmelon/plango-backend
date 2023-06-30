@@ -33,7 +33,8 @@ public class GlobalExceptionHandler {
         return new ErrorResponseDto(exception.getMessage());
     }
 
-    // TODO 사용자 예외로 분리?
+    // TODO 사용자 예외로 분리하기
+    // TODO 추상 예외 만들고, 우선 NotFoundException 추가하기
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponseDto runtimeExceptionHandler(RuntimeException exception) {

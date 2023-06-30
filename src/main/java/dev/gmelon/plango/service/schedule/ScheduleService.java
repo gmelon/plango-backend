@@ -45,6 +45,17 @@ public class ScheduleService {
         return ScheduleResponseDto.of(schedule);
     }
 
+    public List<ScheduleListResponseDto> findAllByDate(Long memberId, LocalDate requestDate) {
+        LocalDateTime startDateTime = LocalDateTime.of(requestDate, LocalTime.of(0, 0, 0));
+        LocalDateTime endDateTime = LocalDateTime.of(requestDate, LocalTime.of(23, 59, 59));
+
+        List<Schedule> schedules = scheduleRepository.findByMemberIdAndStartTimeBetweenOrderByStartTimeAsc(memberId, startDateTime, endDateTime);
+
+        return schedules.stream()
+                .map(ScheduleListResponseDto::of)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public void edit(Long memberId, Long scheduleId, ScheduleEditRequestDto requestDto) {
         Member member = findMemberById(memberId);
@@ -64,17 +75,6 @@ public class ScheduleService {
         validateMember(schedule, member);
 
         scheduleRepository.delete(schedule);
-    }
-
-    public List<ScheduleListResponseDto> findAllByDate(Long memberId, LocalDate requestDate) {
-        LocalDateTime startDateTime = LocalDateTime.of(requestDate, LocalTime.of(0, 0, 0));
-        LocalDateTime endDateTime = LocalDateTime.of(requestDate, LocalTime.of(23, 59, 59));
-
-        List<Schedule> schedules = scheduleRepository.findByMemberIdAndStartTimeBetweenOrderByStartTimeAsc(memberId, startDateTime, endDateTime);
-
-        return schedules.stream()
-                .map(ScheduleListResponseDto::of)
-                .collect(Collectors.toList());
     }
 
     public List<ScheduleCountResponseDto> getCountOfDaysInMonth(Long memberId, YearMonth requestMonth) {

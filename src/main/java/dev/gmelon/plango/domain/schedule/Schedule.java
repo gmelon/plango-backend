@@ -42,16 +42,9 @@ public class Schedule extends BaseTimeEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @OneToOne(fetch = LAZY, cascade = ALL)
+    @OneToOne(fetch = LAZY, cascade = ALL, orphanRemoval = true)
     @JoinColumn(name = "diary_id")
     private Diary diary;
-
-    public void edit(ScheduleEditor editor) {
-        this.title = editor.getTitle();
-        this.content = editor.getContent();
-        this.startTime = editor.getStartTime();
-        this.endTime = editor.getEndTime();
-    }
 
     @Builder
     public Schedule(String title, String content, LocalDateTime startTime, LocalDateTime endTime, Member member, Diary diary) {
@@ -61,6 +54,21 @@ public class Schedule extends BaseTimeEntity {
         this.endTime = endTime;
         this.member = member;
         this.diary = diary;
+    }
+
+    public void edit(ScheduleEditor editor) {
+        this.title = editor.getTitle();
+        this.content = editor.getContent();
+        this.startTime = editor.getStartTime();
+        this.endTime = editor.getEndTime();
+    }
+
+    public void addDiary(Diary diary) {
+        this.diary = diary;
+    }
+
+    public void deleteDiary() {
+        this.diary = null;
     }
 
     @Override

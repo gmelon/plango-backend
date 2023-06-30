@@ -18,9 +18,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Sql(value = "classpath:/reset.sql")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AuthControllerTest {
 
@@ -100,7 +102,7 @@ class AuthControllerTest {
                 .password("passwordA")
                 .name("nameA")
                 .build();
-        Cookie loginCookie = TestAuthUtil.signupAndGetCookie(signupRequest);
+        TestAuthUtil.signupAndGetCookie(signupRequest);
 
         LoginRequestDto loginRequest = LoginRequestDto.builder()
                 .email("a@a.com")

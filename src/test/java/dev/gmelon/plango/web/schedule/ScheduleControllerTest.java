@@ -13,16 +13,15 @@ import io.restassured.RestAssured;
 import io.restassured.http.Cookie;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -32,12 +31,12 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Sql(value = "classpath:/reset.sql")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ScheduleControllerTest {
 
-    private Cookie memberALoginCookie;
-    private Cookie memberBLoginCookie;
+    private Cookie loginCookieOfMemberA;
+    private Cookie loginCookieOfMemberB;
 
     @Autowired
     private ScheduleRepository scheduleRepository;
@@ -45,8 +44,8 @@ class ScheduleControllerTest {
     @LocalServerPort
     private int port;
 
-    @BeforeAll
-    void beforeAll() {
+    @BeforeEach
+    void setUp() {
         RestAssured.port = port;
 
         SignupRequestDto memberASignupRequest = SignupRequestDto.builder()
@@ -54,19 +53,14 @@ class ScheduleControllerTest {
                 .password("passwordA")
                 .name("nameA")
                 .build();
-        memberALoginCookie = TestAuthUtil.signupAndGetCookie(memberASignupRequest);
+        loginCookieOfMemberA = TestAuthUtil.signupAndGetCookie(memberASignupRequest);
 
         SignupRequestDto memberBSignupRequest = SignupRequestDto.builder()
                 .email("b@b.com")
                 .password("passwordB")
                 .name("nameB")
                 .build();
-        memberBLoginCookie = TestAuthUtil.signupAndGetCookie(memberBSignupRequest);
-    }
-
-    @BeforeEach
-    void setUp() {
-        scheduleRepository.deleteAll();
+        loginCookieOfMemberB = TestAuthUtil.signupAndGetCookie(memberBSignupRequest);
     }
 
     @Test
@@ -84,7 +78,7 @@ class ScheduleControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
-                .cookie(memberALoginCookie)
+                .cookie(loginCookieOfMemberA)
                 .when().post("/api/v1/schedules")
                 .then().log().all().extract();
 
@@ -113,19 +107,20 @@ class ScheduleControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
-                .cookie(memberALoginCookie)
+                .cookie(loginCookieOfMemberA)
                 .when().post("/api/v1/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         // when
         ExtractableResponse<Response> response = RestAssured
                 .given()
-                .cookie(memberALoginCookie)
+                .cookie(loginCookieOfMemberA)
                 .when().get(createdScheduleLocation)
                 .then().log().all().extract();
 
         // then
         ScheduleResponseDto responseDto = response.as(ScheduleResponseDto.class);
+        assertThat(responseDto.getId()).isEqualTo(parseScheduleIdFrom(createdScheduleLocation));
         assertThat(responseDto.getTitle()).isEqualTo(request.getTitle());
         assertThat(responseDto.getContent()).isEqualTo(request.getContent());
         assertThat(responseDto.getStartTime()).isEqualTo(request.getStartTime());
@@ -137,7 +132,7 @@ class ScheduleControllerTest {
         // when
         ExtractableResponse<Response> response = RestAssured
                 .given()
-                .cookie(memberALoginCookie)
+                .cookie(loginCookieOfMemberA)
                 .when().get("/api/v1/schedules/1")
                 .then().log().all().extract();
 
@@ -159,14 +154,14 @@ class ScheduleControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
-                .cookie(memberALoginCookie)
+                .cookie(loginCookieOfMemberA)
                 .when().post("/api/v1/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         // when
         ExtractableResponse<Response> response = RestAssured
                 .given()
-                .cookie(memberBLoginCookie)
+                .cookie(loginCookieOfMemberB)
                 .when().get(createdScheduleLocation)
                 .then().log().all().extract();
 
@@ -188,7 +183,7 @@ class ScheduleControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(createRequest).log().all()
-                .cookie(memberALoginCookie)
+                .cookie(loginCookieOfMemberA)
                 .when().post("/api/v1/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdScheduleId = parseScheduleIdFrom(createdScheduleLocation);
@@ -205,7 +200,7 @@ class ScheduleControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(editRequet).log().all()
-                .cookie(memberALoginCookie)
+                .cookie(loginCookieOfMemberA)
                 .when().put(createdScheduleLocation)
                 .then().log().all().extract();
 
@@ -232,7 +227,7 @@ class ScheduleControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
-                .cookie(memberALoginCookie)
+                .cookie(loginCookieOfMemberA)
                 .when().post("/api/v1/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
@@ -248,7 +243,7 @@ class ScheduleControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(editRequet).log().all()
-                .cookie(memberBLoginCookie)
+                .cookie(loginCookieOfMemberB)
                 .when().put(createdScheduleLocation)
                 .then().log().all().extract();
 
@@ -270,7 +265,7 @@ class ScheduleControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(createRequest).log().all()
-                .cookie(memberALoginCookie)
+                .cookie(loginCookieOfMemberA)
                 .when().post("/api/v1/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdScheduleId = parseScheduleIdFrom(createdScheduleLocation);
@@ -278,7 +273,7 @@ class ScheduleControllerTest {
         // when
         ExtractableResponse<Response> response = RestAssured
                 .given().log().all()
-                .cookie(memberALoginCookie)
+                .cookie(loginCookieOfMemberA)
                 .when().delete(createdScheduleLocation)
                 .then().log().all().extract();
 
@@ -300,7 +295,7 @@ class ScheduleControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
-                .cookie(memberALoginCookie)
+                .cookie(loginCookieOfMemberA)
                 .when().post("/api/v1/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdScheduleId = parseScheduleIdFrom(createdScheduleLocation);
@@ -308,7 +303,7 @@ class ScheduleControllerTest {
         // when
         ExtractableResponse<Response> response = RestAssured
                 .given().log().all()
-                .cookie(memberBLoginCookie)
+                .cookie(loginCookieOfMemberB)
                 .when().delete(createdScheduleLocation)
                 .then().log().all().extract();
 
@@ -325,6 +320,11 @@ class ScheduleControllerTest {
         List<ScheduleCreateRequestDto> memberARequests = List.of(
                 ScheduleCreateRequestDto.builder()
                         .title("A의 계획")
+                        .startTime(LocalDateTime.of(2023, 6, 25, 23, 59, 59))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .build(),
+                ScheduleCreateRequestDto.builder()
+                        .title("A의 계획")
                         .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
                         .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
                         .build(),
@@ -335,18 +335,13 @@ class ScheduleControllerTest {
                         .build(),
                 ScheduleCreateRequestDto.builder()
                         .title("A의 계획")
-                        .startTime(LocalDateTime.of(2023, 6, 25, 23, 59, 59))
-                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
+                        .endTime(LocalDateTime.of(2023, 6, 26, 12, 0, 0))
                         .build(),
                 ScheduleCreateRequestDto.builder()
                         .title("A의 계획")
                         .startTime(LocalDateTime.of(2023, 6, 26, 23, 59, 59))
                         .endTime(LocalDateTime.of(2023, 6, 27, 0, 0, 0))
-                        .build(),
-                ScheduleCreateRequestDto.builder()
-                        .title("A의 계획")
-                        .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
-                        .endTime(LocalDateTime.of(2023, 6, 26, 12, 0, 0))
                         .build()
         );
         for (ScheduleCreateRequestDto memberARequest : memberARequests) {
@@ -354,7 +349,7 @@ class ScheduleControllerTest {
                     .given()
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
                     .body(memberARequest).log().all()
-                    .cookie(memberALoginCookie)
+                    .cookie(loginCookieOfMemberA)
                     .when().post("/api/v1/schedules")
                     .then().log().all();
         }
@@ -377,7 +372,7 @@ class ScheduleControllerTest {
                     .given()
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
                     .body(memberARequest).log().all()
-                    .cookie(memberBLoginCookie)
+                    .cookie(loginCookieOfMemberB)
                     .when().post("/api/v1/schedules")
                     .then().log().all();
         }
@@ -385,9 +380,9 @@ class ScheduleControllerTest {
         // when
         ExtractableResponse<Response> response = RestAssured
                 .given()
-                .param("requestDate", "2023-06-26").log().all()
-                .cookie(memberALoginCookie)
-                .when().get("/api/v1/schedules/day")
+                .param("date", "2023-06-26").log().all()
+                .cookie(loginCookieOfMemberA)
+                .when().get("/api/v1/schedules")
                 .then().log().all().extract();
 
         // then
@@ -438,7 +433,7 @@ class ScheduleControllerTest {
                     .given()
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
                     .body(request).log().all()
-                    .cookie(memberALoginCookie)
+                    .cookie(loginCookieOfMemberA)
                     .when().post("/api/v1/schedules")
                     .then().log().all();
         }
@@ -446,9 +441,9 @@ class ScheduleControllerTest {
         // when
         ExtractableResponse<Response> response = RestAssured
                 .given()
-                .param("requestMonth", "2023-06").log().all()
-                .cookie(memberALoginCookie)
-                .when().get("/api/v1/schedules/month")
+                .param("yearMonth", "2023-06").log().all()
+                .cookie(loginCookieOfMemberA)
+                .when().get("/api/v1/schedules")
                 .then().log().all().extract();
 
         // then
