@@ -51,7 +51,7 @@ public class DiaryService {
 
         validateMember(schedule, member);
 
-        return DiaryResponseDto.of(schedule.getDiary());
+        return DiaryResponseDto.from(schedule);
     }
 
     public List<DiaryListResponseDto> findAllByDate(Long memberId, LocalDate requestDate) {
@@ -60,10 +60,9 @@ public class DiaryService {
 
         List<Schedule> schedules = scheduleRepository.findByMemberIdAndStartTimeBetweenAndDiaryNotNullOrderByStartTimeAscEndTimeAsc(memberId, startDateTime, endDateTime);
 
-        // TODO fetch join?
+        // TODO fetch join
         return schedules.stream()
-                .map(Schedule::getDiary)
-                .map(DiaryListResponseDto::of)
+                .map(DiaryListResponseDto::from)
                 .collect(Collectors.toList());
     }
 

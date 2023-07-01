@@ -10,7 +10,6 @@ import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryResponseDto;
-import dev.gmelon.plango.service.schedule.dto.ScheduleCreateRequestDto;
 import dev.gmelon.plango.web.TestAuthUtil;
 import io.restassured.RestAssured;
 import io.restassured.http.Cookie;
@@ -42,7 +41,7 @@ class DiaryControllerTest {
     private Member memberA;
     private Member memberB;
 
-    private Long scheduleIdOfMemberA;
+    private Schedule scheduleOfMemberA;
 
     @Autowired
     private DiaryRepository diaryRepository;
@@ -64,31 +63,23 @@ class DiaryControllerTest {
                 .name("nameA")
                 .build();
         loginCookieOfMemberA = TestAuthUtil.signupAndGetCookie(memberASignupRequest);
-
         SignupRequestDto memberBSignupRequest = SignupRequestDto.builder()
                 .email("b@b.com")
                 .password("passwordB")
                 .name("nameB")
                 .build();
         loginCookieOfMemberB = TestAuthUtil.signupAndGetCookie(memberBSignupRequest);
-
         memberA = memberRepository.findByEmail(memberASignupRequest.getEmail()).get();
         memberB = memberRepository.findByEmail(memberBSignupRequest.getEmail()).get();
 
-        ScheduleCreateRequestDto scheduleCreateRequestDto = ScheduleCreateRequestDto.builder()
+        scheduleOfMemberA = Schedule.builder()
                 .title("계획 제목")
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 25, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 25, 11, 0, 0))
+                .member(memberA)
                 .build();
-        String locationHeader = RestAssured
-                .given()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(scheduleCreateRequestDto).log().all()
-                .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules")
-                .thenReturn().header(HttpHeaders.LOCATION);
-        scheduleIdOfMemberA = parseIdFrom(locationHeader);
+        scheduleRepository.save(scheduleOfMemberA);
     }
 
     @Test
@@ -106,7 +97,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleIdOfMemberA + "/diary")
+                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .then().log().all().extract();
 
         // then
@@ -134,7 +125,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberB)
-                .when().post("/api/v1/schedules/" + scheduleIdOfMemberA + "/diary")
+                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .then().log().all().extract();
 
         // then
@@ -154,7 +145,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleIdOfMemberA + "/diary")
+                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         // when
@@ -169,9 +160,14 @@ class DiaryControllerTest {
 
         DiaryResponseDto responseDto = response.as(DiaryResponseDto.class);
         assertThat(responseDto.getId()).isEqualTo(parseIdFrom(createdDiaryLocation));
-        assertThat(responseDto.getTitle()).isEqualTo(request.getTitle());
-        assertThat(responseDto.getContent()).isEqualTo(request.getContent());
-        assertThat(responseDto.getImageUrl()).isEqualTo(request.getImageUrl());
+        assertThat(responseDto)
+                .usingRecursiveComparison()
+                .ignoringFields("id", "schedule")
+                .isEqualTo(request);
+
+        assertThat(responseDto.getSchedule().getTitle()).isEqualTo(scheduleOfMemberA.getTitle());
+        assertThat(responseDto.getSchedule().getStartTime()).isEqualTo(scheduleOfMemberA.getStartTime());
+        assertThat(responseDto.getSchedule().getEndTime()).isEqualTo(scheduleOfMemberA.getEndTime());
     }
 
     @Test
@@ -187,7 +183,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleIdOfMemberA + "/diary")
+                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         // when
@@ -230,7 +226,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(createRequest).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleIdOfMemberA + "/diary")
+                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdDiaryId = parseIdFrom(createdDiaryLocation);
 
@@ -271,7 +267,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(createRequest).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleIdOfMemberA + "/diary")
+                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         DiaryEditRequestDto editRequest = DiaryEditRequestDto.builder()
@@ -306,7 +302,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(createRequest).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleIdOfMemberA + "/diary")
+                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdDiaryId = parseIdFrom(createdDiaryLocation);
 
@@ -335,7 +331,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(createRequest).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleIdOfMemberA + "/diary")
+                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdDiaryId = parseIdFrom(createdDiaryLocation);
 
@@ -417,10 +413,12 @@ class DiaryControllerTest {
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-        List<Integer> expectedDiaryId = List.of(2, 3, 4, 5);
+        List<Integer> expectedTitleIndex = List.of(2, 3, 4, 5);
         for (int i = 0; i < response.jsonPath().getInt("$.size()"); i++) {
             assertThat(response.jsonPath().getString("[" + i + "].title"))
-                    .isEqualTo("기록 " + expectedDiaryId.get(i));
+                    .isEqualTo("기록 " + expectedTitleIndex.get(i));
+            assertThat(response.jsonPath().getString("[" + i + "].schedule.title"))
+                    .isEqualTo("계획 " + expectedTitleIndex.get(i));
         }
     }
 

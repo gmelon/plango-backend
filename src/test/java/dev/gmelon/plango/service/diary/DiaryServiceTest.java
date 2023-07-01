@@ -20,6 +20,7 @@ import org.springframework.test.context.jdbc.Sql;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,7 +33,7 @@ class DiaryServiceTest {
     private Member memberA;
     private Member memberB;
 
-    private Long scheduleIdOfMemberA;
+    private Schedule scheduleOfMemberA;
 
     @Autowired
     private DiaryService diaryService;
@@ -59,14 +60,14 @@ class DiaryServiceTest {
                 .build();
         memberRepository.save(memberB);
 
-        Schedule schedule = Schedule.builder()
+        scheduleOfMemberA = Schedule.builder()
                 .title("계획 제목")
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 25, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 25, 11, 0, 0))
                 .member(memberA)
                 .build();
-        scheduleIdOfMemberA = scheduleRepository.save(schedule).getId();
+        scheduleRepository.save(scheduleOfMemberA);
     }
 
     @Test
@@ -79,7 +80,7 @@ class DiaryServiceTest {
                 .build();
 
         // when
-        Long createdDiaryId = diaryService.create(memberA.getId(), scheduleIdOfMemberA, request);
+        Long createdDiaryId = diaryService.create(memberA.getId(), scheduleOfMemberA.getId(), request);
 
         // then
         assertThat(createdDiaryId).isNotNull();
@@ -100,7 +101,7 @@ class DiaryServiceTest {
                 .build();
 
         // when
-        assertThatThrownBy(() -> diaryService.create(memberB.getId(), scheduleIdOfMemberA, request))
+        assertThatThrownBy(() -> diaryService.create(memberB.getId(), scheduleOfMemberA.getId(), request))
                 .isInstanceOf(UnauthorizedException.class);
     }
 
@@ -114,7 +115,7 @@ class DiaryServiceTest {
                 .build();
         diaryRepository.save(diary);
 
-        Schedule schedule = scheduleRepository.findById(scheduleIdOfMemberA).get();
+        Schedule schedule = scheduleRepository.findById(scheduleOfMemberA.getId()).get();
         schedule.addDiary(diary);
         scheduleRepository.save(schedule);
 
@@ -126,6 +127,10 @@ class DiaryServiceTest {
         assertThat(responseDto.getTitle()).isEqualTo(diary.getTitle());
         assertThat(responseDto.getContent()).isEqualTo(diary.getContent());
         assertThat(responseDto.getImageUrl()).isEqualTo(diary.getImageUrl());
+
+        assertThat(responseDto.getSchedule().getTitle()).isEqualTo(scheduleOfMemberA.getTitle());
+        assertThat(responseDto.getSchedule().getStartTime()).isEqualTo(scheduleOfMemberA.getStartTime());
+        assertThat(responseDto.getSchedule().getEndTime()).isEqualTo(scheduleOfMemberA.getEndTime());
     }
 
     @Test
@@ -138,7 +143,7 @@ class DiaryServiceTest {
                 .build();
         diaryRepository.save(diary);
 
-        Schedule schedule = scheduleRepository.findById(scheduleIdOfMemberA).get();
+        Schedule schedule = scheduleRepository.findById(scheduleOfMemberA.getId()).get();
         schedule.addDiary(diary);
         scheduleRepository.save(schedule);
 
@@ -165,7 +170,7 @@ class DiaryServiceTest {
                 .build();
         diaryRepository.save(diary);
 
-        Schedule schedule = scheduleRepository.findById(scheduleIdOfMemberA).get();
+        Schedule schedule = scheduleRepository.findById(scheduleOfMemberA.getId()).get();
         schedule.addDiary(diary);
         scheduleRepository.save(schedule);
 
@@ -196,7 +201,7 @@ class DiaryServiceTest {
                 .build();
         diaryRepository.save(diary);
 
-        Schedule schedule = scheduleRepository.findById(scheduleIdOfMemberA).get();
+        Schedule schedule = scheduleRepository.findById(scheduleOfMemberA.getId()).get();
         schedule.addDiary(diary);
         scheduleRepository.save(schedule);
 
@@ -226,7 +231,7 @@ class DiaryServiceTest {
                 .build();
         diaryRepository.save(diary);
 
-        Schedule schedule = scheduleRepository.findById(scheduleIdOfMemberA).get();
+        Schedule schedule = scheduleRepository.findById(scheduleOfMemberA.getId()).get();
         schedule.addDiary(diary);
         scheduleRepository.save(schedule);
 
@@ -247,7 +252,7 @@ class DiaryServiceTest {
                 .build();
         diaryRepository.save(diary);
 
-        Schedule schedule = scheduleRepository.findById(scheduleIdOfMemberA).get();
+        Schedule schedule = scheduleRepository.findById(scheduleOfMemberA.getId()).get();
         schedule.addDiary(diary);
         scheduleRepository.save(schedule);
 
@@ -323,8 +328,10 @@ class DiaryServiceTest {
         List<DiaryListResponseDto> responseDtos = diaryService.findAllByDate(memberA.getId(), LocalDate.of(2023, 6, 26));
 
         // then
-        List<String> expectedDiaryTitle = List.of("기록 2", "기록 3", "기록 4", "기록 5");
+        List<Integer> expectedTitleIndex = List.of(2, 3, 4, 5);
         assertThat(responseDtos).extracting(DiaryListResponseDto::getTitle)
-                .isEqualTo(expectedDiaryTitle);
+                .isEqualTo(expectedTitleIndex.stream().map(index -> "기록 " + index).collect(Collectors.toList()));
+        assertThat(responseDtos).extracting(responseDto -> responseDto.getSchedule().getTitle())
+                .isEqualTo(expectedTitleIndex.stream().map(index -> "계획 " + index).collect(Collectors.toList()));
     }
 }
