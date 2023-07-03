@@ -27,12 +27,15 @@ public class ScheduleEditRequestDto {
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime endTime;
 
+    private String location;
+
     @Builder
-    public ScheduleEditRequestDto(String title, String content, LocalDateTime startTime, LocalDateTime endTime) {
+    public ScheduleEditRequestDto(String title, String content, LocalDateTime startTime, LocalDateTime endTime, String location) {
         this.title = title;
         this.content = content;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.location = location;
     }
 
     public ScheduleEditor toScheduleEditor() {
@@ -41,6 +44,7 @@ public class ScheduleEditRequestDto {
                 .content(content)
                 .startTime(startTime)
                 .endTime(endTime)
+                .location(location)
                 .build();
     }
 }

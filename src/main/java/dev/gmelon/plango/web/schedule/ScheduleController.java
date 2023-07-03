@@ -54,11 +54,18 @@ public class ScheduleController {
         return scheduleService.getCountOfDaysInMonth(sessionMember.getId(), requestYearMonth);
     }
 
-    @PutMapping("/{scheduleId}")
+    @PatchMapping("/{scheduleId}")
     public void edit(@LoginMember SessionMember sessionMember,
                      @PathVariable Long scheduleId,
                      @RequestBody @Valid ScheduleEditRequestDto requestDto) {
         scheduleService.edit(sessionMember.getId(), scheduleId, requestDto);
+    }
+
+    @PatchMapping("/{scheduleId}/done")
+    public void editDone(@LoginMember SessionMember sessionMember,
+                         @PathVariable Long scheduleId,
+                         @RequestBody @Valid ScheduleEditDoneRequestDto requestDto) {
+        scheduleService.editDone(sessionMember.getId(), scheduleId, requestDto);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

@@ -38,6 +38,11 @@ public class Schedule extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDateTime endTime;
 
+    private String location;
+
+    @Column(columnDefinition = "BOOLEAN DEFAULT 'false'", nullable = false)
+    private boolean done;
+
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
@@ -47,11 +52,13 @@ public class Schedule extends BaseTimeEntity {
     private Diary diary;
 
     @Builder
-    public Schedule(String title, String content, LocalDateTime startTime, LocalDateTime endTime, Member member, Diary diary) {
+    public Schedule(String title, String content, LocalDateTime startTime, LocalDateTime endTime, String location, boolean done, Member member, Diary diary) {
         this.title = title;
         this.content = content;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.location = location;
+        this.done = done;
         this.member = member;
         this.diary = diary;
     }
@@ -61,6 +68,7 @@ public class Schedule extends BaseTimeEntity {
         this.content = editor.getContent();
         this.startTime = editor.getStartTime();
         this.endTime = editor.getEndTime();
+        this.location = editor.getLocation();
     }
 
     public void addDiary(Diary diary) {
@@ -69,6 +77,10 @@ public class Schedule extends BaseTimeEntity {
 
     public void deleteDiary() {
         this.diary = null;
+    }
+
+    public void changeDone(boolean done) {
+        this.done = done;
     }
 
     @Override

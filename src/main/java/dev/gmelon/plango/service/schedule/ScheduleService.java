@@ -30,6 +30,8 @@ public class ScheduleService {
     public Long create(Long memberId, ScheduleCreateRequestDto requestDto) {
         Member member = findMemberById(memberId);
 
+        // TODO request에서 startTime < endTime 인지 검증!!
+
         Schedule requestSchedule = requestDto.toEntity(member);
 
         Schedule savedSchedule = scheduleRepository.save(requestSchedule);
@@ -72,6 +74,16 @@ public class ScheduleService {
 
         ScheduleEditor scheduleEditor = requestDto.toScheduleEditor();
         schedule.edit(scheduleEditor);
+    }
+
+    @Transactional
+    public void editDone(Long memberId, Long scheduleId, ScheduleEditDoneRequestDto requestDto) {
+        Member member = findMemberById(memberId);
+        Schedule schedule = findScheduleById(scheduleId);
+
+        validateMember(schedule, member);
+
+        schedule.changeDone(requestDto.getIsDone());
     }
 
     @Transactional

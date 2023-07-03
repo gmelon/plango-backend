@@ -7,10 +7,7 @@ import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
-import dev.gmelon.plango.service.schedule.dto.ScheduleCountResponseDto;
-import dev.gmelon.plango.service.schedule.dto.ScheduleCreateRequestDto;
-import dev.gmelon.plango.service.schedule.dto.ScheduleEditRequestDto;
-import dev.gmelon.plango.service.schedule.dto.ScheduleResponseDto;
+import dev.gmelon.plango.service.schedule.dto.*;
 import dev.gmelon.plango.web.TestAuthUtil;
 import io.restassured.RestAssured;
 import io.restassured.http.Cookie;
@@ -18,6 +15,8 @@ import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -82,6 +81,7 @@ class ScheduleControllerTest {
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                .location("계획 장소")
                 .build();
 
         // when
@@ -103,6 +103,8 @@ class ScheduleControllerTest {
         assertThat(createdSchedule.getContent()).isEqualTo(request.getContent());
         assertThat(createdSchedule.getStartTime()).isEqualTo(request.getStartTime());
         assertThat(createdSchedule.getEndTime()).isEqualTo(request.getEndTime());
+        assertThat(createdSchedule.getLocation()).isEqualTo(request.getLocation());
+        assertThat(createdSchedule.isDone()).isFalse();
     }
 
     @Test
@@ -113,6 +115,7 @@ class ScheduleControllerTest {
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                .location("계획 장소")
                 .build();
         String createdScheduleLocation = RestAssured
                 .given()
@@ -136,6 +139,8 @@ class ScheduleControllerTest {
         assertThat(responseDto.getContent()).isEqualTo(request.getContent());
         assertThat(responseDto.getStartTime()).isEqualTo(request.getStartTime());
         assertThat(responseDto.getEndTime()).isEqualTo(request.getEndTime());
+        assertThat(responseDto.getLocation()).isEqualTo(request.getLocation());
+        assertThat(responseDto.getIsDone()).isFalse();
     }
 
     @Test
@@ -189,6 +194,7 @@ class ScheduleControllerTest {
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                .location("계획 장소")
                 .build();
         String createdScheduleLocation = RestAssured
                 .given()
@@ -204,6 +210,7 @@ class ScheduleControllerTest {
                 .content("수정된 본문")
                 .startTime(LocalDateTime.of(2024, 7, 27, 11, 0, 0))
                 .endTime(LocalDateTime.of(2024, 7, 27, 12, 0, 0))
+                .location("수정된 장소")
                 .build();
 
         // when
@@ -212,7 +219,7 @@ class ScheduleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(editRequet).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().put(createdScheduleLocation)
+                .when().patch(createdScheduleLocation)
                 .then().log().all().extract();
 
         // then
@@ -223,6 +230,7 @@ class ScheduleControllerTest {
         assertThat(foundSchedule.getContent()).isEqualTo(editRequet.getContent());
         assertThat(foundSchedule.getStartTime()).isEqualTo(editRequet.getStartTime());
         assertThat(foundSchedule.getEndTime()).isEqualTo(editRequet.getEndTime());
+        assertThat(foundSchedule.getLocation()).isEqualTo(editRequet.getLocation());
     }
 
     @Test
@@ -255,12 +263,70 @@ class ScheduleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(editRequet).log().all()
                 .cookie(loginCookieOfMemberB)
-                .when().put(createdScheduleLocation)
+                .when().patch(createdScheduleLocation)
                 .then().log().all().extract();
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
         assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("권한이 없는 자원입니다.");
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {"false:true", "true:false", "false:false", "true:true"}, delimiter = ':')
+    void 계획_완료_여부_변경(boolean given, boolean expected) {
+        // given
+        Schedule schedule = Schedule.builder()
+                .title("계획 제목")
+                .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
+                .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                .done(given)
+                .member(memberA)
+                .build();
+        scheduleRepository.save(schedule);
+
+        ScheduleEditDoneRequestDto request = new ScheduleEditDoneRequestDto(expected);
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request).log().all()
+                .cookie(loginCookieOfMemberA)
+                .when().patch("/api/v1/schedules/" + schedule.getId() + "/done")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+
+        Schedule foundSchedule = assertDoesNotThrow(() -> scheduleRepository.findById(schedule.getId()).get());
+        assertThat(foundSchedule.isDone()).isEqualTo(expected);
+    }
+
+    @Test
+    void 타인의_계획_완료_여부_변경() {
+        // given
+        Schedule schedule = Schedule.builder()
+                .title("계획 제목")
+                .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
+                .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                .done(false)
+                .member(memberA)
+                .build();
+        scheduleRepository.save(schedule);
+
+        ScheduleEditDoneRequestDto request = new ScheduleEditDoneRequestDto(true);
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request).log().all()
+                .cookie(loginCookieOfMemberB)
+                .when().patch("/api/v1/schedules/" + schedule.getId() + "/done")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
     }
 
     @Test

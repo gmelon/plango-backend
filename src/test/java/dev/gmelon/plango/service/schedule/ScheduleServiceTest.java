@@ -9,6 +9,8 @@ import dev.gmelon.plango.exception.UnauthorizedException;
 import dev.gmelon.plango.service.schedule.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
@@ -61,6 +63,7 @@ class ScheduleServiceTest {
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                .location("계획 장소")
                 .build();
 
         // when
@@ -73,6 +76,8 @@ class ScheduleServiceTest {
         assertThat(createdSchedule.getContent()).isEqualTo(request.getContent());
         assertThat(createdSchedule.getStartTime()).isEqualTo(request.getStartTime());
         assertThat(createdSchedule.getEndTime()).isEqualTo(request.getEndTime());
+        assertThat(createdSchedule.getLocation()).isEqualTo(request.getLocation());
+        assertThat(createdSchedule.isDone()).isFalse();
     }
 
     @Test
@@ -83,6 +88,7 @@ class ScheduleServiceTest {
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                .location("계획 장소")
                 .member(memberA)
                 .build();
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
@@ -96,6 +102,8 @@ class ScheduleServiceTest {
         assertThat(responseDto.getContent()).isEqualTo(schedule.getContent());
         assertThat(responseDto.getStartTime()).isEqualTo(schedule.getStartTime());
         assertThat(responseDto.getEndTime()).isEqualTo(schedule.getEndTime());
+        assertThat(responseDto.getLocation()).isEqualTo(schedule.getLocation());
+        assertThat(responseDto.getIsDone()).isFalse();
     }
 
     @Test
@@ -131,6 +139,7 @@ class ScheduleServiceTest {
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                .location("계획 장소")
                 .member(memberA)
                 .build();
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
@@ -140,6 +149,7 @@ class ScheduleServiceTest {
                 .content("수정된 본문")
                 .startTime(LocalDateTime.of(2024, 7, 27, 11, 0, 0))
                 .endTime(LocalDateTime.of(2024, 7, 27, 12, 0, 0))
+                .location("수정된 장소")
                 .build();
 
         // when
@@ -151,6 +161,7 @@ class ScheduleServiceTest {
         assertThat(foundSchedule.getContent()).isEqualTo(editRequet.getContent());
         assertThat(foundSchedule.getStartTime()).isEqualTo(editRequet.getStartTime());
         assertThat(foundSchedule.getEndTime()).isEqualTo(editRequet.getEndTime());
+        assertThat(foundSchedule.getLocation()).isEqualTo(editRequet.getLocation());
     }
 
     @Test
@@ -181,6 +192,50 @@ class ScheduleServiceTest {
                 .usingRecursiveComparison()
                 .ignoringFields("member")
                 .isEqualTo(schedule);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {"false:true", "true:false", "false:false", "true:true"}, delimiter = ':')
+    void 계획_완료_여부_변경(boolean given, boolean expected) {
+        // given
+        Schedule schedule = Schedule.builder()
+                .title("계획 제목")
+                .content("계획 본문")
+                .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
+                .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                .done(given)
+                .member(memberA)
+                .build();
+        Long createdScheduleId = scheduleRepository.save(schedule).getId();
+
+        ScheduleEditDoneRequestDto request = new ScheduleEditDoneRequestDto(expected);
+
+        // when
+        scheduleService.editDone(memberA.getId(), createdScheduleId, request);
+
+        // then
+        Schedule foundSchedule = assertDoesNotThrow(() -> scheduleRepository.findById(createdScheduleId).get());
+        assertThat(foundSchedule.isDone()).isEqualTo(expected);
+    }
+
+    @Test
+    void 타인의_계획_완료_여부_변경() {
+        // given
+        Schedule schedule = Schedule.builder()
+                .title("계획 제목")
+                .content("계획 본문")
+                .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
+                .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                .done(false)
+                .member(memberA)
+                .build();
+        Long createdScheduleId = scheduleRepository.save(schedule).getId();
+
+        ScheduleEditDoneRequestDto request = new ScheduleEditDoneRequestDto(true);
+
+        // when, then
+        assertThatThrownBy(() -> scheduleService.editDone(memberB.getId(), createdScheduleId, request))
+                .isInstanceOf(UnauthorizedException.class);
     }
 
     @Test

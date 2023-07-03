@@ -77,6 +77,7 @@ class DiaryControllerTest {
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 25, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 25, 11, 0, 0))
+                .location("계획 장소")
                 .member(memberA)
                 .build();
         scheduleRepository.save(scheduleOfMemberA);
