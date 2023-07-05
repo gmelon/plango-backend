@@ -129,6 +129,7 @@ class DiaryServiceTest {
         assertThat(responseDto.getContent()).isEqualTo(diary.getContent());
         assertThat(responseDto.getImageUrl()).isEqualTo(diary.getImageUrl());
 
+        assertThat(responseDto.getSchedule().getId()).isEqualTo(scheduleOfMemberA.getId());
         assertThat(responseDto.getSchedule().getTitle()).isEqualTo(scheduleOfMemberA.getTitle());
         assertThat(responseDto.getSchedule().getStartTime()).isEqualTo(scheduleOfMemberA.getStartTime());
         assertThat(responseDto.getSchedule().getEndTime()).isEqualTo(scheduleOfMemberA.getEndTime());
@@ -159,6 +160,62 @@ class DiaryServiceTest {
         assertThatThrownBy(() -> diaryService.findById(memberB.getId(), 1L))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("존재하지 않는 기록입니다.");
+    }
+
+    @Test
+    void 계획_id로_기록_단건_조회() {
+        // given
+        Diary diary = Diary.builder()
+                .title("기록 제목")
+                .content("기록 본문")
+                .imageUrl("https://image.com/imageA")
+                .build();
+        diaryRepository.save(diary);
+
+        Schedule schedule = scheduleRepository.findById(scheduleOfMemberA.getId()).get();
+        schedule.addDiary(diary);
+        scheduleRepository.save(schedule);
+
+        // when
+        DiaryResponseDto responseDto = diaryService.findByScheduleId(memberA.getId(), schedule.getId());
+
+        // then
+        assertThat(responseDto.getId()).isEqualTo(diary.getId());
+        assertThat(responseDto.getTitle()).isEqualTo(diary.getTitle());
+        assertThat(responseDto.getContent()).isEqualTo(diary.getContent());
+        assertThat(responseDto.getImageUrl()).isEqualTo(diary.getImageUrl());
+
+        assertThat(responseDto.getSchedule().getId()).isEqualTo(scheduleOfMemberA.getId());
+        assertThat(responseDto.getSchedule().getTitle()).isEqualTo(scheduleOfMemberA.getTitle());
+        assertThat(responseDto.getSchedule().getStartTime()).isEqualTo(scheduleOfMemberA.getStartTime());
+        assertThat(responseDto.getSchedule().getEndTime()).isEqualTo(scheduleOfMemberA.getEndTime());
+    }
+
+    @Test
+    void 타인의_계획_id로_기록_단건_조회() {
+        // given
+        Diary diary = Diary.builder()
+                .title("기록 제목")
+                .content("기록 본문")
+                .imageUrl("https://image.com/imageA")
+                .build();
+        diaryRepository.save(diary);
+
+        Schedule schedule = scheduleRepository.findById(scheduleOfMemberA.getId()).get();
+        schedule.addDiary(diary);
+        scheduleRepository.save(schedule);
+
+        // when, then
+        assertThatThrownBy(() -> diaryService.findByScheduleId(memberB.getId(), schedule.getId()))
+                .isInstanceOf(UnauthorizedException.class);
+    }
+
+    @Test
+    void 존재하지_않는_계획_id로_기록_단건_조회() {
+        // when, then
+        assertThatThrownBy(() -> diaryService.findByScheduleId(memberB.getId(), scheduleOfMemberA.getId() + 1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("존재하지 않는 계획입니다.");
     }
 
     @Test

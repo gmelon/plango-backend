@@ -166,6 +166,7 @@ class DiaryControllerTest {
                 .ignoringFields("id", "schedule")
                 .isEqualTo(request);
 
+        assertThat(responseDto.getSchedule().getId()).isEqualTo(scheduleOfMemberA.getId());
         assertThat(responseDto.getSchedule().getTitle()).isEqualTo(scheduleOfMemberA.getTitle());
         assertThat(responseDto.getSchedule().getStartTime()).isEqualTo(scheduleOfMemberA.getStartTime());
         assertThat(responseDto.getSchedule().getEndTime()).isEqualTo(scheduleOfMemberA.getEndTime());
@@ -202,6 +203,89 @@ class DiaryControllerTest {
     void 존재하지_않는_기록_단건_조회() {
         // given
         String requestUrl = "/api/v1/diaries/1";
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given().log().all()
+                .cookie(loginCookieOfMemberA)
+                .when().get(requestUrl)
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @Test
+    void 계획_id로_기록_단건_조회() {
+        // given
+        DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
+                .title("기록 제목")
+                .content("기록 본문")
+                .imageUrl("https://image.com/imageA")
+                .build();
+        String createdDiaryLocation = RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request).log().all()
+                .cookie(loginCookieOfMemberA)
+                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .thenReturn().header(HttpHeaders.LOCATION);
+        Long createdDiaryId = parseIdFrom(createdDiaryLocation);
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given().log().all()
+                .cookie(loginCookieOfMemberA)
+                .when().get("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+
+        DiaryResponseDto responseDto = response.as(DiaryResponseDto.class);
+        assertThat(responseDto.getId()).isEqualTo(createdDiaryId);
+        assertThat(responseDto)
+                .usingRecursiveComparison()
+                .ignoringFields("id", "schedule")
+                .isEqualTo(request);
+
+        assertThat(responseDto.getSchedule().getId()).isEqualTo(scheduleOfMemberA.getId());
+        assertThat(responseDto.getSchedule().getTitle()).isEqualTo(scheduleOfMemberA.getTitle());
+        assertThat(responseDto.getSchedule().getStartTime()).isEqualTo(scheduleOfMemberA.getStartTime());
+        assertThat(responseDto.getSchedule().getEndTime()).isEqualTo(scheduleOfMemberA.getEndTime());
+    }
+
+    @Test
+    void 타인의_계획_id로_기록_단건_조회() {
+        // given
+        DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
+                .title("기록 제목")
+                .content("기록 본문")
+                .imageUrl("https://image.com/imageA")
+                .build();
+        RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request).log().all()
+                .cookie(loginCookieOfMemberA)
+                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .thenReturn().header(HttpHeaders.LOCATION);
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given().log().all()
+                .cookie(loginCookieOfMemberB)
+                .when().get("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    void 존재하지_않는_계획_id로_기록_단건_조회() {
+        // given
+        String requestUrl = "/api/v1/schedules/" + (scheduleOfMemberA.getId() + 1) + "/diary";
 
         // when
         ExtractableResponse<Response> response = RestAssured

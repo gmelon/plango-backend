@@ -45,6 +45,8 @@ public class DiaryResponseDto {
     @Getter
     public static class ScheduleOfDiaryResponseDto {
 
+        private Long id;
+
         private String title;
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
@@ -55,6 +57,7 @@ public class DiaryResponseDto {
 
         public static ScheduleOfDiaryResponseDto from(Schedule schedule) {
             return ScheduleOfDiaryResponseDto.builder()
+                    .id(schedule.getId())
                     .title(schedule.getTitle())
                     .startTime(schedule.getStartTime())
                     .endTime(schedule.getEndTime())
@@ -62,7 +65,8 @@ public class DiaryResponseDto {
         }
 
         @Builder
-        public ScheduleOfDiaryResponseDto(String title, LocalDateTime startTime, LocalDateTime endTime) {
+        public ScheduleOfDiaryResponseDto(Long id, String title, LocalDateTime startTime, LocalDateTime endTime) {
+            this.id = id;
             this.title = title;
             this.startTime = startTime;
             this.endTime = endTime;

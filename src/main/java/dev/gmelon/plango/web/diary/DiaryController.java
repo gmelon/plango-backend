@@ -41,6 +41,12 @@ public class DiaryController {
         return diaryService.findById(sessionMember.getId(), diaryId);
     }
 
+    @GetMapping("/schedules/{scheduleId}/diary")
+    public DiaryResponseDto findByScheduleId(@LoginMember SessionMember sessionMember,
+                                             @PathVariable Long scheduleId) {
+        return diaryService.findByScheduleId(sessionMember.getId(), scheduleId);
+    }
+
     @GetMapping(path = "/diaries", params = "date")
     public List<DiaryListResponseDto> findAllByDate(
             @LoginMember SessionMember sessionMember,
