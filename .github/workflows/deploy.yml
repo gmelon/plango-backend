@@ -1,4 +1,4 @@
-name: plango
+name: plango-deploy
 
 on:
   workflow_dispatch:
