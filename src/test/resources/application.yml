@@ -1,4 +1,6 @@
 spring:
+  session:
+    store-type: none
   jackson:
     deserialization:
       adjust-dates-to-context-time-zone: false
