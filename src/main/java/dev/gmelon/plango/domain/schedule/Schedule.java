@@ -29,7 +29,7 @@ public class Schedule extends BaseTimeEntity {
     @Column(nullable = false)
     private String title;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     @Column(nullable = false)
@@ -40,7 +40,7 @@ public class Schedule extends BaseTimeEntity {
 
     private String location;
 
-    @Column(columnDefinition = "BOOLEAN DEFAULT 'false'", nullable = false)
+    @Column(columnDefinition = "BOOLEAN DEFAULT 0", nullable = false)
     private boolean done;
 
     @ManyToOne(fetch = LAZY)

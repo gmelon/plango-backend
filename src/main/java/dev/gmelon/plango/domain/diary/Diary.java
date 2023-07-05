@@ -25,7 +25,7 @@ public class Diary extends BaseTimeEntity {
     @Column(nullable = false)
     private String title;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     private String imageUrl;

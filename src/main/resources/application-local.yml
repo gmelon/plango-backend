@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:plango;MODE=MariaDB
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: create
+    database: h2
