@@ -23,8 +23,8 @@ if [ -n "${TARGET_PID}" ]; then
   sudo kill "${TARGET_PID}"
 fi
 
-nohup java -jar -Dspring.config.location=classpath:/application.yml,classpath:/application-real.yml,/home/ec2-user/app/application-real-db.yml,\
-                /home/ec2-user/app/application-real-s3.yml -Dspring.profiles.active=real \
+nohup java -jar -Dspring.config.location=classpath:/application.yml,classpath:/application-real.yml,/home/ec2-user/app/application-real-db.yml,/home/ec2-user/app/application-real-s3.yml \
+                -Dspring.profiles.active=real \
                 -Dserver.port=${TARGET_PORT} /home/ec2-user/app/plango-backend/build/libs/* > /home/ec2-user/app/nohup.out 2>&1 &
 echo "> 이제 새로운 WAS가 ${TARGET_PORT} 에서 실행됩니다."
 exit 0
