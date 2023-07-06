@@ -89,7 +89,7 @@ class DiaryControllerTest {
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
 
         // when
@@ -117,7 +117,7 @@ class DiaryControllerTest {
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
 
         // when
@@ -139,7 +139,7 @@ class DiaryControllerTest {
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         String createdDiaryLocation = RestAssured
                 .given()
@@ -178,7 +178,7 @@ class DiaryControllerTest {
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         String createdDiaryLocation = RestAssured
                 .given()
@@ -221,7 +221,7 @@ class DiaryControllerTest {
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         String createdDiaryLocation = RestAssured
                 .given()
@@ -261,7 +261,7 @@ class DiaryControllerTest {
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         RestAssured
                 .given()
@@ -304,7 +304,7 @@ class DiaryControllerTest {
         DiaryCreateRequestDto createRequest = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         String createdDiaryLocation = RestAssured
                 .given()
@@ -318,7 +318,7 @@ class DiaryControllerTest {
         DiaryEditRequestDto editRequest = DiaryEditRequestDto.builder()
                 .title("기록 제목 2")
                 .content("기록 본문 2")
-                .imageUrl("https://image.com/imageB")
+                .imageUrl("https://plango-backend/imageB.jpg")
                 .build();
 
         // when
@@ -345,7 +345,7 @@ class DiaryControllerTest {
         DiaryCreateRequestDto createRequest = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         String createdDiaryLocation = RestAssured
                 .given()
@@ -358,7 +358,7 @@ class DiaryControllerTest {
         DiaryEditRequestDto editRequest = DiaryEditRequestDto.builder()
                 .title("기록 제목 2")
                 .content("기록 본문 2")
-                .imageUrl("https://image.com/imageB")
+                .imageUrl("https://plango-backend/imageB.jpg")
                 .build();
 
         // when
@@ -380,7 +380,7 @@ class DiaryControllerTest {
         DiaryCreateRequestDto createRequest = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         String createdDiaryLocation = RestAssured
                 .given()
@@ -409,7 +409,7 @@ class DiaryControllerTest {
         DiaryCreateRequestDto createRequest = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         String createdDiaryLocation = RestAssured
                 .given()

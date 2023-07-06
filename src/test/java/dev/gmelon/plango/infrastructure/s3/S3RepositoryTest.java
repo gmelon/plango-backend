@@ -32,10 +32,10 @@ class S3RepositoryTest {
     @Test
     void 파일_삭제_요청() {
         // given
-        String savedFileName = s3Repository.upload("image.jpg", InputStream.nullInputStream(), ContentType.IMAGE_JPEG.toString(), 0L);
+        String savedFilePath = s3Repository.upload("image.jpg", InputStream.nullInputStream(), ContentType.IMAGE_JPEG.toString(), 0L);
 
         // when
-        s3Repository.delete(savedFileName);
+        s3Repository.delete(savedFilePath);
 
         // then
         assertThat(amazonS3.isFileSaved()).isFalse();

@@ -27,6 +27,7 @@ import java.util.List;
 @Component
 public class AmazonS3TestImpl implements AmazonS3 {
 
+    private String savedFileName;
     private boolean fileSaved = false;
 
     public boolean isFileSaved() {
@@ -320,24 +321,28 @@ public class AmazonS3TestImpl implements AmazonS3 {
     @Override
     public PutObjectResult putObject(PutObjectRequest putObjectRequest) throws SdkClientException, AmazonServiceException {
         fileSaved = true;
+        savedFileName = putObjectRequest.getKey();
         return null;
     }
 
     @Override
     public PutObjectResult putObject(String bucketName, String key, File file) throws SdkClientException, AmazonServiceException {
         fileSaved = true;
+        savedFileName = key;
         return null;
     }
 
     @Override
     public PutObjectResult putObject(String bucketName, String key, InputStream input, ObjectMetadata metadata) throws SdkClientException, AmazonServiceException {
         fileSaved = true;
+        savedFileName = key;
         return null;
     }
 
     @Override
     public PutObjectResult putObject(String bucketName, String key, String content) throws AmazonServiceException, SdkClientException {
         fileSaved = true;
+        savedFileName = key;
         return null;
     }
 
@@ -358,12 +363,18 @@ public class AmazonS3TestImpl implements AmazonS3 {
 
     @Override
     public void deleteObject(String bucketName, String key) throws SdkClientException, AmazonServiceException {
-        fileSaved = false;
+        if (key.equals(savedFileName)) {
+            savedFileName = null;
+            fileSaved = false;
+        }
     }
 
     @Override
     public void deleteObject(DeleteObjectRequest deleteObjectRequest) throws SdkClientException, AmazonServiceException {
-        fileSaved = false;
+        if (deleteObjectRequest.getKey().equals(savedFileName)) {
+            savedFileName = null;
+            fileSaved = false;
+        }
     }
 
     @Override

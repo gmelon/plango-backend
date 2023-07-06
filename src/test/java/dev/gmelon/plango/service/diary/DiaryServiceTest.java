@@ -77,7 +77,7 @@ class DiaryServiceTest {
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
 
         // when
@@ -98,7 +98,7 @@ class DiaryServiceTest {
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
 
         // when
@@ -112,7 +112,7 @@ class DiaryServiceTest {
         Diary diary = Diary.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         diaryRepository.save(diary);
 
@@ -141,7 +141,7 @@ class DiaryServiceTest {
         Diary diary = Diary.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         diaryRepository.save(diary);
 
@@ -168,7 +168,7 @@ class DiaryServiceTest {
         Diary diary = Diary.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         diaryRepository.save(diary);
 
@@ -197,7 +197,7 @@ class DiaryServiceTest {
         Diary diary = Diary.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         diaryRepository.save(diary);
 
@@ -224,7 +224,7 @@ class DiaryServiceTest {
         Diary diary = Diary.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         diaryRepository.save(diary);
 
@@ -235,7 +235,7 @@ class DiaryServiceTest {
         DiaryEditRequestDto requestDto = DiaryEditRequestDto.builder()
                 .title("기록 제목 B")
                 .content("기록 본문 B")
-                .imageUrl("https://image.com/imageB")
+                .imageUrl("https://plango-backend/imageB.jpg")
                 .build();
 
         // when
@@ -255,7 +255,7 @@ class DiaryServiceTest {
         Diary diary = Diary.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         diaryRepository.save(diary);
 
@@ -266,7 +266,7 @@ class DiaryServiceTest {
         DiaryEditRequestDto requestDto = DiaryEditRequestDto.builder()
                 .title("기록 제목 B")
                 .content("기록 본문 B")
-                .imageUrl("https://image.com/imageB")
+                .imageUrl("https://plango-backend/imageB.jpg")
                 .build();
 
         // when, then
@@ -281,11 +281,12 @@ class DiaryServiceTest {
 
     @Test
     void 기록_삭제() {
+        // TODO s3 삭제 여부 어떻게 검증하면 좋을지 고민
         // given
         Diary diary = Diary.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         diaryRepository.save(diary);
 
@@ -306,7 +307,7 @@ class DiaryServiceTest {
         Diary diary = Diary.builder()
                 .title("기록 제목")
                 .content("기록 본문")
-                .imageUrl("https://image.com/imageA")
+                .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
         diaryRepository.save(diary);
 

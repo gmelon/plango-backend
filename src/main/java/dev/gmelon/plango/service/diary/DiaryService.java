@@ -7,6 +7,7 @@ import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.UnauthorizedException;
+import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryListResponseDto;
@@ -29,6 +30,7 @@ public class DiaryService {
     private final DiaryRepository diaryRepository;
     private final ScheduleRepository scheduleRepository;
     private final MemberRepository memberRepository;
+    private final S3Repository s3Repository;
 
     @Transactional
     public Long create(Long memberId, Long scheduleId, DiaryCreateRequestDto requestDto) {
@@ -82,7 +84,16 @@ public class DiaryService {
         validateMember(schedule, member);
 
         Diary diary = schedule.getDiary();
+        String prevDiaryImageUrl = diary.getImageUrl();
+
         diary.edit(requestDto.toDiaryEditor());
+        deleteImageIfChanged(prevDiaryImageUrl, requestDto);
+    }
+
+    private void deleteImageIfChanged(String prevDiaryImageUrl, DiaryEditRequestDto requestDto) {
+        if (!prevDiaryImageUrl.equals(requestDto.getImageUrl())) {
+            s3Repository.delete(prevDiaryImageUrl);
+        }
     }
 
     @Transactional
@@ -92,7 +103,10 @@ public class DiaryService {
 
         validateMember(schedule, member);
 
+        String diaryImageUrl = schedule.getDiary().getImageUrl();
         schedule.deleteDiary();
+
+        s3Repository.delete(diaryImageUrl);
     }
 
     private void validateMember(Schedule schedule, Member member) {
