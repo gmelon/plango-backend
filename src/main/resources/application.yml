@@ -1,4 +1,13 @@
 spring:
+  profiles:
+    group:
+      local:
+        - local
+        - local-s3
+      real:
+        - real
+        - real-db
+        - real-s3
   session:
     store-type: jdbc
   jackson:

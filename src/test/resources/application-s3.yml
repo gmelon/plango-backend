@@ -1,0 +1,4 @@
+cloud:
+  aws:
+    s3:
+      bucket: plango-backend

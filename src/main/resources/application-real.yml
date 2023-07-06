@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    include: real-db
   jpa:
     hibernate:
       ddl-auto: none

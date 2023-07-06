@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: s3
   session:
     store-type: none
   jackson:
