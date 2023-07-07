@@ -17,6 +17,8 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     List<Schedule> findByMemberIdAndStartTimeBetweenAndDiaryNotNullOrderByStartTimeAscEndTimeAsc(Long memberId, LocalDateTime start, LocalDateTime end);
 
+    List<Schedule> findByMemberIdAndStartTimeBetweenAndDiaryNullOrderByStartTimeAscEndTimeAsc(Long memberId, LocalDateTime start, LocalDateTime end);
+
     Optional<Schedule> findByDiaryId(Long diaryId);
 
 }

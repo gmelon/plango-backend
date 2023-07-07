@@ -55,21 +55,25 @@ public class DiaryResponseDto {
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
         private LocalDateTime endTime;
 
+        private String location;
+
         public static ScheduleOfDiaryResponseDto from(Schedule schedule) {
             return ScheduleOfDiaryResponseDto.builder()
                     .id(schedule.getId())
                     .title(schedule.getTitle())
                     .startTime(schedule.getStartTime())
                     .endTime(schedule.getEndTime())
+                    .location(schedule.getLocation())
                     .build();
         }
 
         @Builder
-        public ScheduleOfDiaryResponseDto(Long id, String title, LocalDateTime startTime, LocalDateTime endTime) {
+        public ScheduleOfDiaryResponseDto(Long id, String title, LocalDateTime startTime, LocalDateTime endTime, String location) {
             this.id = id;
             this.title = title;
             this.startTime = startTime;
             this.endTime = endTime;
+            this.location = location;
         }
     }
 

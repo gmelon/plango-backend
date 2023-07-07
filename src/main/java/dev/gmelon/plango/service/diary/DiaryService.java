@@ -104,8 +104,8 @@ public class DiaryService {
         validateMember(schedule, member);
 
         String diaryImageUrl = schedule.getDiary().getImageUrl();
-        schedule.deleteDiary();
 
+        schedule.deleteDiary();
         s3Repository.delete(diaryImageUrl);
     }
 

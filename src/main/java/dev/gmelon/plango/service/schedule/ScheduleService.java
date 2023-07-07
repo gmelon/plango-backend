@@ -47,20 +47,20 @@ public class ScheduleService {
         return ScheduleResponseDto.of(schedule);
     }
 
-    public List<ScheduleListResponseDto> findAllByDate(Long memberId, LocalDate requestDate, boolean hasDiary) {
-        List<Schedule> schedules = findSchedulesByMemberAndDate(memberId, requestDate, hasDiary);
+    public List<ScheduleListResponseDto> findAllByDate(Long memberId, LocalDate requestDate, boolean noDiaryOnly) {
+        List<Schedule> schedules = findSchedulesByMemberAndDate(memberId, requestDate, noDiaryOnly);
 
         return schedules.stream()
                 .map(ScheduleListResponseDto::of)
                 .collect(Collectors.toList());
     }
 
-    private List<Schedule> findSchedulesByMemberAndDate(Long memberId, LocalDate requestDate, boolean hasDiary) {
+    private List<Schedule> findSchedulesByMemberAndDate(Long memberId, LocalDate requestDate, boolean noDiaryOnly) {
         LocalDateTime startDateTime = LocalDateTime.of(requestDate, LocalTime.of(0, 0, 0));
         LocalDateTime endDateTime = LocalDateTime.of(requestDate, LocalTime.of(23, 59, 59));
 
-        if (hasDiary) {
-            return scheduleRepository.findByMemberIdAndStartTimeBetweenAndDiaryNotNullOrderByStartTimeAscEndTimeAsc(memberId, startDateTime, endDateTime);
+        if (noDiaryOnly) {
+            return scheduleRepository.findByMemberIdAndStartTimeBetweenAndDiaryNullOrderByStartTimeAscEndTimeAsc(memberId, startDateTime, endDateTime);
         }
         return scheduleRepository.findByMemberIdAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(memberId, startDateTime, endDateTime);
     }

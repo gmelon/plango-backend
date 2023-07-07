@@ -391,7 +391,7 @@ class ScheduleControllerTest {
     }
 
     @Test
-    void 날짜별_기록을_가진_계획_목록_조회() {
+    void 날짜별_기록이_없는_계획_목록_조회() {
         // given
         // memberA 계획 추가
         List<Schedule> memberARequests = List.of(
@@ -452,7 +452,7 @@ class ScheduleControllerTest {
         ExtractableResponse<Response> response = RestAssured
                 .given()
                 .param("date", "2023-06-26")
-                .param("hasDiary", true)
+                .param("noDiaryOnly", true)
                 .log().all()
                 .cookie(loginCookieOfMemberA)
                 .when().get("/api/v1/schedules")
@@ -460,7 +460,7 @@ class ScheduleControllerTest {
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-        List<String> expectedScheduleTitles = List.of("계획 3", "계획 4");
+        List<String> expectedScheduleTitles = List.of("계획 2", "계획 5");
 
         assertThat(response.jsonPath().getInt("$.size()")).isEqualTo(expectedScheduleTitles.size());
         for (int i = 0; i < response.jsonPath().getInt("$.size()"); i++) {

@@ -133,6 +133,7 @@ class DiaryServiceTest {
         assertThat(responseDto.getSchedule().getTitle()).isEqualTo(scheduleOfMemberA.getTitle());
         assertThat(responseDto.getSchedule().getStartTime()).isEqualTo(scheduleOfMemberA.getStartTime());
         assertThat(responseDto.getSchedule().getEndTime()).isEqualTo(scheduleOfMemberA.getEndTime());
+        assertThat(responseDto.getSchedule().getLocation()).isEqualTo(scheduleOfMemberA.getLocation());
     }
 
     @Test

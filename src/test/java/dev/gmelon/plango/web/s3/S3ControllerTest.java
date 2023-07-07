@@ -1,5 +1,7 @@
 package dev.gmelon.plango.web.s3;
 
+import dev.gmelon.plango.config.s3.AmazonS3TestImpl;
+import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.web.TestAuthUtil;
 import io.restassured.RestAssured;
@@ -9,12 +11,11 @@ import io.restassured.response.Response;
 import org.apache.http.entity.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -27,6 +28,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 class S3ControllerTest {
 
     private Cookie loginCookieOfMemberA;
+
+    @Autowired
+    private S3Repository s3Repository;
+    @Autowired
+    private AmazonS3TestImpl amazonS3;
 
     @LocalServerPort
     private int port;
@@ -45,13 +51,7 @@ class S3ControllerTest {
 
     @Test
     void 파일_저장_요청() throws IOException {
-        MultipartFile file = new MockMultipartFile(
-                "file",
-                "image.jpg",
-                ContentType.IMAGE_JPEG.toString(),
-                InputStream.nullInputStream()
-        );
-
+        // given, when
         ExtractableResponse<Response> response = RestAssured
                 .given()
                 .cookie(loginCookieOfMemberA)
@@ -61,6 +61,7 @@ class S3ControllerTest {
                 .when().post("/api/v1/s3")
                 .then().log().all().extract();
 
+        // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
     }
 
@@ -77,5 +78,53 @@ class S3ControllerTest {
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @Test
+    void 파일_삭제_요청() {
+        // given
+        String savedFileUrl = s3Repository.upload(
+                "image.jpg",
+                InputStream.nullInputStream(),
+                ContentType.IMAGE_JPEG.toString(),
+                0L
+        );
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .param("savedFileUrl", savedFileUrl)
+                .cookie(loginCookieOfMemberA)
+                .log().all()
+                .when().delete("/api/v1/s3")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        assertThat(amazonS3.isFileSaved()).isFalse();
+    }
+
+    @Test
+    void 잘못된_url로_파일_삭제_요청() {
+        // given
+        s3Repository.upload(
+                "image.jpg",
+                InputStream.nullInputStream(),
+                ContentType.IMAGE_JPEG.toString(),
+                0L
+        );
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .param("savedFileUrl", "invalid url")
+                .cookie(loginCookieOfMemberA)
+                .log().all()
+                .when().delete("/api/v1/s3")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(amazonS3.isFileSaved()).isTrue();
     }
 }

@@ -53,19 +53,23 @@ public class DiaryListResponseDto {
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
         private LocalDateTime endTime;
 
+        private String location;
+
         public static ScheduleOfDiaryListResponseDto from(Schedule schedule) {
             return ScheduleOfDiaryListResponseDto.builder()
                     .title(schedule.getTitle())
                     .startTime(schedule.getStartTime())
                     .endTime(schedule.getEndTime())
+                    .location(schedule.getLocation())
                     .build();
         }
 
         @Builder
-        public ScheduleOfDiaryListResponseDto(String title, LocalDateTime startTime, LocalDateTime endTime) {
+        public ScheduleOfDiaryListResponseDto(String title, LocalDateTime startTime, LocalDateTime endTime, String location) {
             this.title = title;
             this.startTime = startTime;
             this.endTime = endTime;
+            this.location = location;
         }
     }
 

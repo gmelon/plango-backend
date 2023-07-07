@@ -46,13 +46,13 @@ public class S3Repository {
         return metadata;
     }
 
-    public void delete(String savedFileFullPath) {
-        String savedFileName = extractSavedFileName(savedFileFullPath);
+    public void delete(String savedFileUrl) {
+        String savedFileName = extractSavedFileName(savedFileUrl);
         amazonS3.deleteObject(new DeleteObjectRequest(bucket, savedFileName));
     }
 
-    private String extractSavedFileName(String savedFileFullPath) {
-        return savedFileFullPath.substring(savedFileFullPath.lastIndexOf('/') + 1);
+    private String extractSavedFileName(String savedFileUrl) {
+        return savedFileUrl.substring(savedFileUrl.lastIndexOf('/') + 1);
     }
 
 }

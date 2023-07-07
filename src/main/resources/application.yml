@@ -13,6 +13,9 @@ spring:
   jackson:
     deserialization:
       adjust-dates-to-context-time-zone: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
 server:
   servlet:
     session:

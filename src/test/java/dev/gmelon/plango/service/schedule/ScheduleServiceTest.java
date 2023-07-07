@@ -275,7 +275,7 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 날짜별_기록을_가진_계획_목록_조회() {
+    void 날짜별_기록이_없는_계획_목록_조회() {
         // given
         // memberA 계획 추가
         List<Schedule> memberARequests = List.of(
@@ -338,7 +338,7 @@ class ScheduleServiceTest {
         List<ScheduleListResponseDto> responseDtos = scheduleService.findAllByDate(memberA.getId(), targetDate, true);
 
         // then
-        List<String> expectedScheduleTitles = List.of("계획 3", "계획 4");
+        List<String> expectedScheduleTitles = List.of("계획 2", "계획 5");
 
         assertThat(responseDtos)
                 .extracting(ScheduleListResponseDto::getTitle).isEqualTo(expectedScheduleTitles);

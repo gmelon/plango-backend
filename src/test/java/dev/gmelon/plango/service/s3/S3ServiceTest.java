@@ -1,6 +1,6 @@
 package dev.gmelon.plango.service.s3;
 
-import dev.gmelon.plango.domain.member.MemberRepository;
+import dev.gmelon.plango.config.s3.AmazonS3TestImpl;
 import org.apache.http.entity.ContentType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ class S3ServiceTest {
     @Autowired
     private S3Service s3Service;
     @Autowired
-    private MemberRepository memberRepository;
+    private AmazonS3TestImpl amazonS3;
 
     @Test
     void 파일_저장_요청() throws IOException {
@@ -34,10 +34,29 @@ class S3ServiceTest {
         );
 
         // when
-        String savedFilePath = s3Service.upload(file);
+        String savedFileUrl = s3Service.upload(file);
 
         // then
-        assertThat(savedFilePath).startsWith("https://plango-backend");
-        assertThat(savedFilePath).endsWith(".jpg");
+        assertThat(savedFileUrl).startsWith("https://plango-backend");
+        assertThat(savedFileUrl).endsWith(".jpg");
+        assertThat(amazonS3.isFileSaved()).isTrue();
+    }
+
+    @Test
+    void 파일_삭제_요청() throws IOException {
+        // given
+        MultipartFile file = new MockMultipartFile(
+                "file",
+                "image.jpg",
+                ContentType.IMAGE_JPEG.toString(),
+                InputStream.nullInputStream()
+        );
+        String savedFilePath = s3Service.upload(file);
+
+        // when
+        s3Service.delete(savedFilePath);
+
+        // then
+        assertThat(amazonS3.isFileSaved()).isFalse();
     }
 }

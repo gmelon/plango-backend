@@ -24,4 +24,7 @@ public class S3Service {
         }
     }
 
+    public void delete(String savedFileUrl) {
+        s3Repository.delete(savedFileUrl);
+    }
 }

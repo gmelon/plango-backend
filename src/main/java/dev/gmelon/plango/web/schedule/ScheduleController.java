@@ -43,8 +43,8 @@ public class ScheduleController {
     public List<ScheduleListResponseDto> findAllByDate(
             @LoginMember SessionMember sessionMember,
             @DateTimeFormat(pattern = "yyyy-MM-dd") @RequestParam("date") LocalDate requestDate,
-            @RequestParam(defaultValue = "false") boolean hasDiary) {
-        return scheduleService.findAllByDate(sessionMember.getId(), requestDate, hasDiary);
+            @RequestParam(defaultValue = "false") boolean noDiaryOnly) {
+        return scheduleService.findAllByDate(sessionMember.getId(), requestDate, noDiaryOnly);
     }
 
     @GetMapping(params = "yearMonth")
