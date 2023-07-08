@@ -160,7 +160,7 @@ class DiaryServiceTest {
         // when, then
         assertThatThrownBy(() -> diaryService.findById(memberB.getId(), 1L))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("존재하지 않는 기록입니다.");
+                .hasMessage("존재하지 않는 계획입니다.");
     }
 
     @Test

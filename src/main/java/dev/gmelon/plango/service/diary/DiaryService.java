@@ -87,13 +87,20 @@ public class DiaryService {
         String prevDiaryImageUrl = diary.getImageUrl();
 
         diary.edit(requestDto.toDiaryEditor());
-        deleteImageIfChanged(prevDiaryImageUrl, requestDto);
+        deletePrevImageIfChanged(prevDiaryImageUrl, requestDto);
     }
 
-    private void deleteImageIfChanged(String prevDiaryImageUrl, DiaryEditRequestDto requestDto) {
-        if (!prevDiaryImageUrl.equals(requestDto.getImageUrl())) {
+    private void deletePrevImageIfChanged(String prevDiaryImageUrl, DiaryEditRequestDto requestDto) {
+        if (prevDiaryImageUrl == null) {
+            return;
+        }
+        if (isImageChangedOrDeleted(prevDiaryImageUrl, requestDto)) {
             s3Repository.delete(prevDiaryImageUrl);
         }
+    }
+
+    private boolean isImageChangedOrDeleted(String prevDiaryImageUrl, DiaryEditRequestDto requestDto) {
+        return requestDto.getImageUrl() == null || !prevDiaryImageUrl.equals(requestDto.getImageUrl());
     }
 
     @Transactional
@@ -106,7 +113,13 @@ public class DiaryService {
         String diaryImageUrl = schedule.getDiary().getImageUrl();
 
         schedule.deleteDiary();
-        s3Repository.delete(diaryImageUrl);
+        deleteImageIfExists(diaryImageUrl);
+    }
+
+    private void deleteImageIfExists(String diaryImageUrl) {
+        if (diaryImageUrl != null) {
+            s3Repository.delete(diaryImageUrl);
+        }
     }
 
     private void validateMember(Schedule schedule, Member member) {
@@ -122,7 +135,7 @@ public class DiaryService {
 
     private Schedule findScheduleByDiaryId(Long diaryId) {
         return scheduleRepository.findByDiaryId(diaryId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 기록입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계획입니다."));
     }
 
     private Member findMemberById(Long memberId) {

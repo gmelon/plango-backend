@@ -7,6 +7,7 @@ import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
+import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import dev.gmelon.plango.service.schedule.dto.*;
 import dev.gmelon.plango.web.TestAuthUtil;
 import io.restassured.RestAssured;
@@ -108,7 +109,7 @@ class ScheduleControllerTest {
     }
 
     @Test
-    void 계획_단건_조회() {
+    void 기록이_없는_계획_단건_조회() {
         // given
         ScheduleCreateRequestDto request = ScheduleCreateRequestDto.builder()
                 .title("계획 제목")
@@ -141,6 +142,57 @@ class ScheduleControllerTest {
         assertThat(responseDto.getEndTime()).isEqualTo(request.getEndTime());
         assertThat(responseDto.getLocation()).isEqualTo(request.getLocation());
         assertThat(responseDto.getIsDone()).isFalse();
+        assertThat(responseDto.getHasDiary()).isFalse();
+        assertThat(responseDto.getDiary()).isNull();
+    }
+
+    @Test
+    void 기록이_있는_계획_단건_조회() {
+        // given
+        ScheduleCreateRequestDto scheduleRequest = ScheduleCreateRequestDto.builder()
+                .title("계획 제목")
+                .content("계획 본문")
+                .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
+                .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                .location("계획 장소")
+                .build();
+        String createdScheduleLocation = RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(scheduleRequest).log().all()
+                .cookie(loginCookieOfMemberA)
+                .when().post("/api/v1/schedules")
+                .thenReturn().header(HttpHeaders.LOCATION);
+
+        DiaryCreateRequestDto diaryRequest = DiaryCreateRequestDto.builder()
+                .title("기록 제목")
+                .build();
+        RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(diaryRequest).log().all()
+                .cookie(loginCookieOfMemberA)
+                .when().post(createdScheduleLocation + "/diary")
+                .then().log().all();
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .cookie(loginCookieOfMemberA)
+                .when().get(createdScheduleLocation)
+                .then().log().all().extract();
+
+        // then
+        ScheduleResponseDto responseDto = response.as(ScheduleResponseDto.class);
+        assertThat(responseDto.getId()).isEqualTo(parseScheduleIdFrom(createdScheduleLocation));
+        assertThat(responseDto.getTitle()).isEqualTo(scheduleRequest.getTitle());
+        assertThat(responseDto.getContent()).isEqualTo(scheduleRequest.getContent());
+        assertThat(responseDto.getStartTime()).isEqualTo(scheduleRequest.getStartTime());
+        assertThat(responseDto.getEndTime()).isEqualTo(scheduleRequest.getEndTime());
+        assertThat(responseDto.getLocation()).isEqualTo(scheduleRequest.getLocation());
+        assertThat(responseDto.getIsDone()).isFalse();
+        assertThat(responseDto.getHasDiary()).isTrue();
+        assertThat(responseDto.getDiary().getId()).isNotNull();
     }
 
     @Test

@@ -17,6 +17,8 @@ spring:
     multipart:
       max-file-size: 5MB
 server:
+  tomcat:
+    max-http-form-post-size: 5MB
   servlet:
     session:
       tracking-modes: cookie

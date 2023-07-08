@@ -1,6 +1,7 @@
 package dev.gmelon.plango.service.schedule;
 
 import dev.gmelon.plango.domain.diary.Diary;
+import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
@@ -35,6 +36,8 @@ class ScheduleServiceTest {
     private ScheduleService scheduleService;
     @Autowired
     private ScheduleRepository scheduleRepository;
+    @Autowired
+    private DiaryRepository diaryRepository;
     @Autowired
     private MemberRepository memberRepository;
 
@@ -81,7 +84,7 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 계획_단건_조회() {
+    void 기록이_없는_계획_단건_조회() {
         // given
         Schedule schedule = Schedule.builder()
                 .title("계획 제목")
@@ -104,6 +107,37 @@ class ScheduleServiceTest {
         assertThat(responseDto.getEndTime()).isEqualTo(schedule.getEndTime());
         assertThat(responseDto.getLocation()).isEqualTo(schedule.getLocation());
         assertThat(responseDto.getIsDone()).isFalse();
+        assertThat(responseDto.getHasDiary()).isFalse();
+        assertThat(responseDto.getDiary()).isNull();
+    }
+
+    @Test
+    void 기록이_있는_계획_단건_조회() {
+        // given
+        Schedule schedule = Schedule.builder()
+                .title("계획 제목")
+                .content("계획 본문")
+                .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
+                .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                .location("계획 장소")
+                .diary(Diary.builder().title("기록 제목").build())
+                .member(memberA)
+                .build();
+        Long createdScheduleId = scheduleRepository.save(schedule).getId();
+
+        // when
+        ScheduleResponseDto responseDto = scheduleService.findById(memberA.getId(), createdScheduleId);
+
+        // then
+        assertThat(responseDto.getId()).isEqualTo(createdScheduleId);
+        assertThat(responseDto.getTitle()).isEqualTo(schedule.getTitle());
+        assertThat(responseDto.getContent()).isEqualTo(schedule.getContent());
+        assertThat(responseDto.getStartTime()).isEqualTo(schedule.getStartTime());
+        assertThat(responseDto.getEndTime()).isEqualTo(schedule.getEndTime());
+        assertThat(responseDto.getLocation()).isEqualTo(schedule.getLocation());
+        assertThat(responseDto.getIsDone()).isFalse();
+        assertThat(responseDto.getHasDiary()).isTrue();
+        assertThat(responseDto.getDiary().getId()).isNotNull();
     }
 
     @Test
