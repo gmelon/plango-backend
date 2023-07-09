@@ -1,6 +1,6 @@
 package dev.gmelon.plango.web;
 
-import dev.gmelon.plango.service.auth.dto.LoginRequestDto;
+import dev.gmelon.plango.config.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import io.restassured.RestAssured;
 import io.restassured.config.SessionConfig;

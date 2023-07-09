@@ -3,7 +3,6 @@ package dev.gmelon.plango.web.s3;
 import dev.gmelon.plango.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.URL;
-import org.hibernate.validator.internal.constraintvalidators.hv.URLValidator;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 public class S3Controller {
 
-    private final URLValidator urlValidator = new URLValidator();
     private final S3Service s3Service;
 
     @PostMapping

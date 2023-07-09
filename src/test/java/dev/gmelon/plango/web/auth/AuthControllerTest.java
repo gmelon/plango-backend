@@ -1,10 +1,9 @@
 package dev.gmelon.plango.web.auth;
 
-import dev.gmelon.plango.auth.PasswordEncoder;
+import dev.gmelon.plango.config.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
-import dev.gmelon.plango.service.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.web.TestAuthUtil;
 import io.restassured.RestAssured;
@@ -18,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -1,4 +1,4 @@
-package dev.gmelon.plango.service.auth.dto;
+package dev.gmelon.plango.config.auth.dto;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -13,7 +13,7 @@ public class LoginRequestDto {
 
     // TODO validation error message 작성하기
     @NotBlank
-    @Email // TODO 이메일 regex 작성
+    @Email
     private String email;
 
     @NotBlank

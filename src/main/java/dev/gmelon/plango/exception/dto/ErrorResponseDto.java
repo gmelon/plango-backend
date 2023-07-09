@@ -1,5 +1,6 @@
 package dev.gmelon.plango.exception.dto;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ public class ErrorResponseDto {
 
     private String message;
 
+    @Builder
     public ErrorResponseDto(String message) {
         this.message = message;
     }

@@ -4,9 +4,10 @@ import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
+import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
-import dev.gmelon.plango.exception.UnauthorizedException;
+import dev.gmelon.plango.config.auth.exception.UnauthorizedException;
 import dev.gmelon.plango.service.schedule.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,7 @@ class ScheduleServiceTest {
                 .email("a@a.com")
                 .password("passwordA")
                 .name("nameA")
+                .role(MemberRole.ROLE_USER)
                 .build();
         memberRepository.save(memberA);
 
@@ -54,6 +56,7 @@ class ScheduleServiceTest {
                 .email("b@b.com")
                 .password("passwordB")
                 .name("nameB")
+                .role(MemberRole.ROLE_USER)
                 .build();
         memberRepository.save(memberB);
     }

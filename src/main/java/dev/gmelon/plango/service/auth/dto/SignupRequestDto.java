@@ -1,9 +1,11 @@
 package dev.gmelon.plango.service.auth.dto;
 
 import dev.gmelon.plango.domain.member.Member;
+import dev.gmelon.plango.domain.member.MemberRole;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -17,6 +19,7 @@ public class SignupRequestDto {
     private String email;
 
     @NotBlank
+    @Length(min=8)
     private String password;
 
     @NotBlank
@@ -38,6 +41,7 @@ public class SignupRequestDto {
                 .email(email)
                 .password(password)
                 .name(name)
+                .role(MemberRole.ROLE_USER)
                 .build();
     }
 }
