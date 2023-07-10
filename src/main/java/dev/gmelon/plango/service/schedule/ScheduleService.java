@@ -44,14 +44,14 @@ public class ScheduleService {
 
         validateMember(schedule, member);
 
-        return ScheduleResponseDto.of(schedule);
+        return ScheduleResponseDto.from(schedule);
     }
 
     public List<ScheduleListResponseDto> findAllByDate(Long memberId, LocalDate requestDate, boolean noDiaryOnly) {
         List<Schedule> schedules = findSchedulesByMemberAndDate(memberId, requestDate, noDiaryOnly);
 
         return schedules.stream()
-                .map(ScheduleListResponseDto::of)
+                .map(ScheduleListResponseDto::from)
                 .collect(Collectors.toList());
     }
 

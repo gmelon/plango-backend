@@ -12,7 +12,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     List<Schedule> findByMemberId(Long memberId);
 
-    // TODO 더 좋은 방법이 있을거같은데.. 찾아보기
+    // TODO 리팩토링
     List<Schedule> findByMemberIdAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(Long memberId, LocalDateTime start, LocalDateTime end);
 
     List<Schedule> findByMemberIdAndStartTimeBetweenAndDiaryNotNullOrderByStartTimeAscEndTimeAsc(Long memberId, LocalDateTime start, LocalDateTime end);
@@ -20,5 +20,11 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     List<Schedule> findByMemberIdAndStartTimeBetweenAndDiaryNullOrderByStartTimeAscEndTimeAsc(Long memberId, LocalDateTime start, LocalDateTime end);
 
     Optional<Schedule> findByDiaryId(Long diaryId);
+
+    long countByMemberId(Long memberId);
+
+    long countByMemberIdAndDoneIsTrue(Long memberId);
+
+    long countByMemberIdAndDiaryNotNull(Long memberId);
 
 }

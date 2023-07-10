@@ -33,7 +33,7 @@ public class ScheduleResponseDto {
 
     private DiaryOfScheduleResponseDto diary;
 
-    public static ScheduleResponseDto of(Schedule schedule) {
+    public static ScheduleResponseDto from(Schedule schedule) {
         ScheduleResponseDtoBuilder builder = ScheduleResponseDto.builder()
                 .id(schedule.getId())
                 .title(schedule.getTitle())
@@ -46,7 +46,7 @@ public class ScheduleResponseDto {
 
         if (schedule.getDiary() != null) {
             builder = builder.hasDiary(true)
-                    .diary(DiaryOfScheduleResponseDto.of(schedule.getDiary()));
+                    .diary(DiaryOfScheduleResponseDto.from(schedule.getDiary()));
         }
 
         return builder.build();
@@ -71,7 +71,7 @@ public class ScheduleResponseDto {
     public static class DiaryOfScheduleResponseDto {
         private Long id;
 
-        public static DiaryOfScheduleResponseDto of(Diary diary) {
+        public static DiaryOfScheduleResponseDto from(Diary diary) {
             return DiaryOfScheduleResponseDto.builder()
                     .id(diary.getId())
                     .build();

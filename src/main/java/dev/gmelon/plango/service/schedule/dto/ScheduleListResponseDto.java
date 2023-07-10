@@ -28,7 +28,7 @@ public class ScheduleListResponseDto {
 
     private Boolean isDone;
 
-    public static ScheduleListResponseDto of(Schedule schedule) {
+    public static ScheduleListResponseDto from(Schedule schedule) {
         return ScheduleListResponseDto.builder()
                 .id(schedule.getId())
                 .title(schedule.getTitle())
