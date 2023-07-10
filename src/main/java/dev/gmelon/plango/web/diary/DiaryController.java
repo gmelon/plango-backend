@@ -18,7 +18,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 @RestController
 public class DiaryController {
 
@@ -32,7 +32,7 @@ public class DiaryController {
                        HttpServletResponse response) {
         Long diaryId = diaryService.create(memberId, scheduleId, requestDto);
 
-        response.addHeader(HttpHeaders.LOCATION, "/api/v1/diaries/" + diaryId);
+        response.addHeader(HttpHeaders.LOCATION, "/api/diaries/" + diaryId);
     }
 
     @GetMapping("/diaries/{diaryId}")

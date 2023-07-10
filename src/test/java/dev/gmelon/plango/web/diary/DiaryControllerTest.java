@@ -98,7 +98,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .when().post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .then().log().all().extract();
 
         // then
@@ -126,7 +126,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberB)
-                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .when().post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .then().log().all().extract();
 
         // then
@@ -146,7 +146,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .when().post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         // when
@@ -186,7 +186,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .when().post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         // when
@@ -203,7 +203,7 @@ class DiaryControllerTest {
     @Test
     void 존재하지_않는_기록_단건_조회() {
         // given
-        String requestUrl = "/api/v1/diaries/1";
+        String requestUrl = "/api/diaries/1";
 
         // when
         ExtractableResponse<Response> response = RestAssured
@@ -229,7 +229,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .when().post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdDiaryId = parseIdFrom(createdDiaryLocation);
 
@@ -237,7 +237,7 @@ class DiaryControllerTest {
         ExtractableResponse<Response> response = RestAssured
                 .given().log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().get("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .when().get("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .then().log().all().extract();
 
         // then
@@ -269,14 +269,14 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .when().post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         // when
         ExtractableResponse<Response> response = RestAssured
                 .given().log().all()
                 .cookie(loginCookieOfMemberB)
-                .when().get("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .when().get("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .then().log().all().extract();
 
         // then
@@ -286,7 +286,7 @@ class DiaryControllerTest {
     @Test
     void 존재하지_않는_계획_id로_기록_단건_조회() {
         // given
-        String requestUrl = "/api/v1/schedules/" + (scheduleOfMemberA.getId() + 1) + "/diary";
+        String requestUrl = "/api/schedules/" + (scheduleOfMemberA.getId() + 1) + "/diary";
 
         // when
         ExtractableResponse<Response> response = RestAssured
@@ -312,7 +312,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(createRequest).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .when().post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdDiaryId = parseIdFrom(createdDiaryLocation);
 
@@ -353,7 +353,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(createRequest).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .when().post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         DiaryEditRequestDto editRequest = DiaryEditRequestDto.builder()
@@ -388,7 +388,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(createRequest).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .when().post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdDiaryId = parseIdFrom(createdDiaryLocation);
 
@@ -417,7 +417,7 @@ class DiaryControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(createRequest).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .when().post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdDiaryId = parseIdFrom(createdDiaryLocation);
 
@@ -494,7 +494,7 @@ class DiaryControllerTest {
                 .given()
                 .param("date", "2023-06-26").log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().get("/api/v1/diaries")
+                .when().get("/api/diaries")
                 .then().log().all().extract();
 
         // then

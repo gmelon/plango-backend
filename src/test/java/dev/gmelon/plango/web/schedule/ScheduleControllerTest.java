@@ -91,7 +91,7 @@ class ScheduleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules")
+                .when().post("/api/schedules")
                 .then().log().all().extract();
 
         // then
@@ -123,7 +123,7 @@ class ScheduleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules")
+                .when().post("/api/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         // when
@@ -161,7 +161,7 @@ class ScheduleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(scheduleRequest).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules")
+                .when().post("/api/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         DiaryCreateRequestDto diaryRequest = DiaryCreateRequestDto.builder()
@@ -201,7 +201,7 @@ class ScheduleControllerTest {
         ExtractableResponse<Response> response = RestAssured
                 .given()
                 .cookie(loginCookieOfMemberA)
-                .when().get("/api/v1/schedules/1")
+                .when().get("/api/schedules/1")
                 .then().log().all().extract();
 
         // then
@@ -223,7 +223,7 @@ class ScheduleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules")
+                .when().post("/api/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         // when
@@ -253,7 +253,7 @@ class ScheduleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(createRequest).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules")
+                .when().post("/api/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdScheduleId = parseScheduleIdFrom(createdScheduleLocation);
 
@@ -299,7 +299,7 @@ class ScheduleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules")
+                .when().post("/api/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
 
         ScheduleEditRequestDto editRequet = ScheduleEditRequestDto.builder()
@@ -344,7 +344,7 @@ class ScheduleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().patch("/api/v1/schedules/" + schedule.getId() + "/done")
+                .when().patch("/api/schedules/" + schedule.getId() + "/done")
                 .then().log().all().extract();
 
         // then
@@ -374,7 +374,7 @@ class ScheduleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberB)
-                .when().patch("/api/v1/schedules/" + schedule.getId() + "/done")
+                .when().patch("/api/schedules/" + schedule.getId() + "/done")
                 .then().log().all().extract();
 
         // then
@@ -395,7 +395,7 @@ class ScheduleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(createRequest).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules")
+                .when().post("/api/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdScheduleId = parseScheduleIdFrom(createdScheduleLocation);
 
@@ -425,7 +425,7 @@ class ScheduleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().post("/api/v1/schedules")
+                .when().post("/api/schedules")
                 .thenReturn().header(HttpHeaders.LOCATION);
         Long createdScheduleId = parseScheduleIdFrom(createdScheduleLocation);
 
@@ -507,7 +507,7 @@ class ScheduleControllerTest {
                 .param("noDiaryOnly", true)
                 .log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().get("/api/v1/schedules")
+                .when().get("/api/schedules")
                 .then().log().all().extract();
 
         // then
@@ -587,7 +587,7 @@ class ScheduleControllerTest {
                 .param("date", "2023-06-26")
                 .log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().get("/api/v1/schedules")
+                .when().get("/api/schedules")
                 .then().log().all().extract();
 
         // then
@@ -643,7 +643,7 @@ class ScheduleControllerTest {
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
                     .body(request).log().all()
                     .cookie(loginCookieOfMemberA)
-                    .when().post("/api/v1/schedules")
+                    .when().post("/api/schedules")
                     .then().log().all();
         }
 
@@ -652,7 +652,7 @@ class ScheduleControllerTest {
                 .given()
                 .param("yearMonth", "2023-06").log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().get("/api/v1/schedules")
+                .when().get("/api/schedules")
                 .then().log().all().extract();
 
         // then

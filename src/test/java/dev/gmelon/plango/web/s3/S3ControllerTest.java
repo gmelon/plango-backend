@@ -58,7 +58,7 @@ class S3ControllerTest {
                 // TODO ByteArrayInputStream 대체제가 있을지
                 .multiPart("file", "image.jpg", new ByteArrayInputStream(" ".getBytes()))
                 .log().all()
-                .when().post("/api/v1/s3")
+                .when().post("/api/s3")
                 .then().log().all().extract();
 
         // then
@@ -73,7 +73,7 @@ class S3ControllerTest {
                 .cookie(loginCookieOfMemberA)
                 .multiPart("file", "image.jpg", InputStream.nullInputStream())
                 .log().all()
-                .when().post("/api/v1/s3")
+                .when().post("/api/s3")
                 .then().log().all().extract();
 
         // then
@@ -96,7 +96,7 @@ class S3ControllerTest {
                 .param("savedFileUrl", savedFileUrl)
                 .cookie(loginCookieOfMemberA)
                 .log().all()
-                .when().delete("/api/v1/s3")
+                .when().delete("/api/s3")
                 .then().log().all().extract();
 
         // then
@@ -120,7 +120,7 @@ class S3ControllerTest {
                 .param("savedFileUrl", "invalid url")
                 .cookie(loginCookieOfMemberA)
                 .log().all()
-                .when().delete("/api/v1/s3")
+                .when().delete("/api/s3")
                 .then().log().all().extract();
 
         // then

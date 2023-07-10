@@ -54,7 +54,7 @@ class AuthControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
-                .when().post("/api/v1/auth/signup")
+                .when().post("/api/auth/signup")
                 .then().log().all().extract();
 
         // then
@@ -78,7 +78,7 @@ class AuthControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
-                .when().post("/api/v1/auth/signup")
+                .when().post("/api/auth/signup")
                 .then().log().all();
 
         // when
@@ -86,7 +86,7 @@ class AuthControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request).log().all()
-                .when().post("/api/v1/auth/signup")
+                .when().post("/api/auth/signup")
                 .then().log().all().extract();
 
         // then
@@ -114,7 +114,7 @@ class AuthControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(loginRequest).log().all()
-                .when().post("/api/v1/auth/login")
+                .when().post("/api/auth/login")
                 .then().log().all().extract();
 
         // then
@@ -135,7 +135,7 @@ class AuthControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(loginRequest).log().all()
-                .when().post("/api/v1/auth/login")
+                .when().post("/api/auth/login")
                 .then().log().all().extract();
 
         // then
@@ -158,7 +158,7 @@ class AuthControllerTest {
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .cookie(loginCookie).log().all()
-                .when().post("/api/v1/auth/logout")
+                .when().post("/api/auth/logout")
                 .then().log().all().extract();
 
         // then

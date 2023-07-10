@@ -16,7 +16,7 @@ import java.time.YearMonth;
 import java.util.List;
 
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/schedules")
+@RequestMapping("/api/schedules")
 @RestController
 public class ScheduleController {
 
@@ -29,7 +29,7 @@ public class ScheduleController {
                        HttpServletResponse response) {
         Long scheduleId = scheduleService.create(memberId, requestDto);
 
-        response.addHeader(HttpHeaders.LOCATION, "/api/v1/schedules/" + scheduleId);
+        response.addHeader(HttpHeaders.LOCATION, "/api/schedules/" + scheduleId);
     }
 
     @GetMapping("/{scheduleId}")

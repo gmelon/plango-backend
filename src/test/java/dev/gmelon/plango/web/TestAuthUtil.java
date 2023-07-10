@@ -20,7 +20,7 @@ public class TestAuthUtil {
         RestAssured.given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(requestDto).log().all()
-                .when().post("/api/v1/auth/signup")
+                .when().post("/api/auth/signup")
                 .then().log().all();
     }
 
@@ -33,7 +33,7 @@ public class TestAuthUtil {
         return RestAssured.given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(loginRequestDto).log().all()
-                .when().post("/api/v1/auth/login")
+                .when().post("/api/auth/login")
                 .thenReturn().sessionId();
     }
 

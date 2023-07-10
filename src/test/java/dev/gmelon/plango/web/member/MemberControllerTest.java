@@ -56,7 +56,7 @@ class MemberControllerTest {
         ExtractableResponse<Response> response = RestAssured
                 .given().log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().get("/api/v1/members/profile")
+                .when().get("/api/members/profile")
                 .then().log().all().extract();
 
         // then
@@ -73,7 +73,7 @@ class MemberControllerTest {
         ExtractableResponse<Response> response = RestAssured
                 .given().log().all()
                 .cookie(loginCookieOfMemberA)
-                .when().get("/api/v1/members/statistics")
+                .when().get("/api/members/statistics")
                 .then().log().all().extract();
 
         // then

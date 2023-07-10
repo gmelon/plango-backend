@@ -35,7 +35,7 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests()
                 .antMatchers("/", "/h2-console", "/error", "/favicon.ico", "/health").permitAll()
-                .antMatchers("/api/v1/auth/signup", "/api/v1/auth/login", "/api/v1/auth/logout").permitAll()
+                .antMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/logout").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jsonEmailPasswordAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
@@ -44,7 +44,7 @@ public class SecurityConfig {
                     exception.accessDeniedHandler(new CustomAccessDeniedHandler(objectMapper));
                 })
                 .logout()
-                .logoutUrl("/api/v1/auth/logout")
+                .logoutUrl("/api/auth/logout")
                 .logoutSuccessHandler(new CustomLogoutSuccessHandler())
                 .and()
                 .csrf().disable() // TODO 확인
@@ -55,7 +55,7 @@ public class SecurityConfig {
 
     @Bean
     public JsonEmailPasswordAuthenticationFilter jsonEmailPasswordAuthenticationFilter() {
-        JsonEmailPasswordAuthenticationFilter filter = new JsonEmailPasswordAuthenticationFilter("/api/v1/auth/login", objectMapper);
+        JsonEmailPasswordAuthenticationFilter filter = new JsonEmailPasswordAuthenticationFilter("/api/auth/login", objectMapper);
         filter.setSecurityContextRepository(new HttpSessionSecurityContextRepository());
         filter.setAuthenticationManager(authenticationManager());
 

@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
 @Validated // TODO validated가 더 깔끔한 응답을 내려주는 것 같음
-@RequestMapping("/api/v1/s3")
+@RequestMapping("/api/s3")
 @RestController
 public class S3Controller {
 
