@@ -1,7 +1,6 @@
 package dev.gmelon.plango.web.member;
 
 import dev.gmelon.plango.config.auth.LoginMember;
-import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.service.member.MemberService;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
 import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
@@ -18,13 +17,13 @@ public class MemberController {
     private final MemberService memberService;
 
     @GetMapping("/profile")
-    public MemberProfileResponseDto getMyProfile(@LoginMember Member member) {
-        return memberService.getMyProfile(member.getId());
+    public MemberProfileResponseDto getMyProfile(@LoginMember Long memberId) {
+        return memberService.getMyProfile(memberId);
     }
 
     @GetMapping("/statistics")
-    public MemberStatisticsResponseDto getMyStatistics(@LoginMember Member member) {
-        return memberService.getMyStatistics(member.getId());
+    public MemberStatisticsResponseDto getMyStatistics(@LoginMember Long memberId) {
+        return memberService.getMyStatistics(memberId);
     }
 
 }
