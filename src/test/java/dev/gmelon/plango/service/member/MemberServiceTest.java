@@ -48,7 +48,8 @@ class MemberServiceTest {
         MemberProfileResponseDto response = memberService.getMyProfile(memberA.getId());
 
         // then
-        assertThat(response.getEmail()).isEqualTo(memberA.getEmail());
+        assertThat(response.getId()).isEqualTo(memberA.getId());
+        assertThat(response.getName()).isEqualTo(memberA.getName());
         assertThat(response.getName()).isEqualTo(memberA.getName());
     }
 

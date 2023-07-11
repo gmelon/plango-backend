@@ -69,6 +69,7 @@ class MemberControllerTest {
         assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
 
         MemberProfileResponseDto responseDto = response.as(MemberProfileResponseDto.class);
+        assertThat(responseDto.getId()).isEqualTo(memberA.getId());
         assertThat(responseDto.getEmail()).isEqualTo(memberA.getEmail());
         assertThat(responseDto.getName()).isEqualTo(memberA.getName());
     }
