@@ -10,6 +10,10 @@ import java.util.Optional;
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
+    List<Schedule> findAllById(Long id);
+
+    void deleteAllById(Long id);
+
     List<Schedule> findByMemberId(Long memberId);
 
     // TODO 리팩토링

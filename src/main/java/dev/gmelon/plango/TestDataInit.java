@@ -48,8 +48,6 @@ public class TestDataInit {
                         .member(memberA)
                         .build());
         scheduleRepository.saveAll(schedules);
-
-        Class<Integer> c = Integer.class;
     }
 
 }

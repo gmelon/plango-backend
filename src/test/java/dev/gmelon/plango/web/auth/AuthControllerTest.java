@@ -1,8 +1,13 @@
 package dev.gmelon.plango.web.auth;
 
 import dev.gmelon.plango.config.auth.dto.LoginRequestDto;
+import dev.gmelon.plango.domain.diary.Diary;
+import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
+import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.schedule.Schedule;
+import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.web.TestAuthUtil;
@@ -20,6 +25,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
 
+import java.time.LocalDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Sql(value = "classpath:/reset.sql")
@@ -30,6 +37,10 @@ class AuthControllerTest {
     private MemberRepository memberRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private ScheduleRepository scheduleRepository;
+    @Autowired
+    private DiaryRepository diaryRepository;
 
     @LocalServerPort
     private int port;
@@ -166,4 +177,118 @@ class AuthControllerTest {
         assertThat(response.sessionId()).isNull();
     }
 
+    @Test
+    void 회원이_스스로_회원_탈퇴() {
+        // given
+        SignupRequestDto signupRequest = SignupRequestDto.builder()
+                .email("a@a.com")
+                .password("passwordA")
+                .name("nameA")
+                .build();
+        Cookie loginCookie = TestAuthUtil.signupAndGetCookie(signupRequest);
+        Member member = memberRepository.findByEmail(signupRequest.getEmail()).get();
+
+        Diary diary = Diary.builder()
+                .title("기록 제목")
+                .build();
+        Schedule schedule = Schedule.builder()
+                .title("계획 제목")
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now())
+                .diary(diary)
+                .member(member)
+                .build();
+        scheduleRepository.save(schedule);
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .cookie(loginCookie).log().all()
+                .when().delete("/api/auth/signout")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        assertThat(scheduleRepository.findAllById(member.getId())).hasSize(0);
+        assertThat(diaryRepository.findByTitle(diary.getTitle())).isEmpty();
+    }
+
+    @Test
+    void 관리자를_통한_회원_탈퇴() {
+        // given
+        Member member = Member.builder()
+                .email("a@a.com")
+                .name("nameA")
+                .password("passwordA")
+                .role(MemberRole.ROLE_USER)
+                .build();
+        memberRepository.save(member);
+
+        Diary diary = Diary.builder()
+                .title("기록 제목")
+                .build();
+        Schedule schedule = Schedule.builder()
+                .title("계획 제목")
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now())
+                .diary(diary)
+                .member(member)
+                .build();
+        scheduleRepository.save(schedule);
+
+        Member admin = Member.builder()
+                .email("admin@admin.com")
+                .name("admin")
+                .password(passwordEncoder.encode("passwordA"))
+                .role(MemberRole.ROLE_ADMIN)
+                .build();
+        memberRepository.save(admin);
+        SignupRequestDto loginRequest = SignupRequestDto.builder()
+                .email(admin.getEmail())
+                .password("passwordA")
+                .build();
+        Cookie adminCookie = TestAuthUtil.loginAndGetCookie(loginRequest);
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .cookie(adminCookie).log().all()
+                .when().delete("/api/auth/signout/" + member.getId())
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        assertThat(scheduleRepository.findAllById(member.getId())).hasSize(0);
+        assertThat(diaryRepository.findByTitle(diary.getTitle())).isEmpty();
+    }
+
+    @Test
+    void 일반_회원이_다른_회원의_회원_탈퇴_시도() {
+        // given
+        SignupRequestDto signupRequestA = SignupRequestDto.builder()
+                .email("a@a.com")
+                .password("passwordA")
+                .name("nameA")
+                .build();
+        Cookie loginCookieA = TestAuthUtil.signupAndGetCookie(signupRequestA);
+
+        SignupRequestDto signupRequestB = SignupRequestDto.builder()
+                .email("b@b.com")
+                .password("passwordB")
+                .name("nameB")
+                .build();
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .cookie(loginCookieA).log().all()
+                .when().delete("/api/auth/signout/2")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+    }
 }

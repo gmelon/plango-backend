@@ -43,6 +43,14 @@ public class Member extends BaseTimeEntity {
         this.role = role;
     }
 
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
+    }
+
+    public void editName(String newName) {
+        this.name = newName;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;

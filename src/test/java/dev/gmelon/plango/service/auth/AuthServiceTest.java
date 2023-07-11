@@ -1,7 +1,11 @@
 package dev.gmelon.plango.service.auth;
 
+import dev.gmelon.plango.domain.diary.Diary;
+import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
+import dev.gmelon.plango.domain.schedule.Schedule;
+import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
+
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -24,6 +30,10 @@ class AuthServiceTest {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private ScheduleRepository scheduleRepository;
+    @Autowired
+    private DiaryRepository diaryRepository;
 
 
     @BeforeEach
@@ -66,7 +76,37 @@ class AuthServiceTest {
                 .hasMessage("이미 존재하는 회원입니다.");
     }
 
-//    @Test
+    @Test
+    void 회원_탈퇴() {
+        // given
+        Member member = Member.builder()
+                .email("a@a.com")
+                .name("nameA")
+                .password(passwordEncoder.encode("passwordA"))
+                .build();
+        memberRepository.save(member);
+
+        Diary diary = Diary.builder()
+                .title("기록 제목")
+                .build();
+        Schedule schedule = Schedule.builder()
+                .title("계획 제목")
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now())
+                .diary(diary)
+                .member(member)
+                .build();
+        scheduleRepository.save(schedule);
+
+        // when
+        authService.signout(member.getId());
+
+        // then
+        assertThat(scheduleRepository.findAllById(member.getId())).hasSize(0);
+        assertThat(diaryRepository.findByTitle(diary.getTitle())).isEmpty();
+    }
+
+    //    @Test
 //    void 정상_값으로_로그인() {
 //        // given
 //        String unencodedPassword = "passwordA";

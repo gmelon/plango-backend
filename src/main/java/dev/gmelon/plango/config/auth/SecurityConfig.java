@@ -2,13 +2,16 @@ package dev.gmelon.plango.config.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.auth.handler.*;
-import dev.gmelon.plango.domain.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authorization.AuthorizationEventPublisher;
+import org.springframework.security.authorization.SpringAuthorizationEventPublisher;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,11 +21,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 @RequiredArgsConstructor
-@Configuration
+@EnableMethodSecurity
 @EnableWebSecurity
+@Configuration
 public class SecurityConfig {
 
-    private final MemberRepository memberRepository;
+    private final CustomUserDetailsService customUserDetailsService;
     private final ObjectMapper objectMapper;
 
     @Bean
@@ -34,7 +38,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests()
-                .antMatchers("/", "/h2-console", "/error", "/favicon.ico", "/health").permitAll()
+                .antMatchers("/", "/h2-console/**", "/error", "/favicon.ico", "/health").permitAll()
                 .antMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/logout").permitAll()
                 .anyRequest().authenticated()
                 .and()
@@ -46,6 +50,8 @@ public class SecurityConfig {
                 .logout()
                 .logoutUrl("/api/auth/logout")
                 .logoutSuccessHandler(new CustomLogoutSuccessHandler())
+                .and()
+                .headers().frameOptions().disable()
                 .and()
                 .csrf().disable() // TODO 확인
                 .formLogin().disable()
@@ -59,7 +65,12 @@ public class SecurityConfig {
         filter.setSecurityContextRepository(new HttpSessionSecurityContextRepository());
         filter.setAuthenticationManager(authenticationManager());
 
-//        filter.setRememberMeServices(new TokenBasedRememberMeServices());
+//        TokenBasedRememberMeServices rememberMeServices = new TokenBasedRememberMeServices("remember-me", customUserDetailsService);
+//        rememberMeServices.setAlwaysRemember(true);
+//        rememberMeServices.setTokenValiditySeconds(2592000); // 30days
+//        filter.setRememberMeServices(rememberMeServices);
+
+        //        filter.setRememberMeServices(new SpringSessionRememberMeServices());
 
         filter.setAuthenticationSuccessHandler(new CustomAuthenticationSuccessHandler());
         filter.setAuthenticationFailureHandler(new CustomAuthenticationFailureHandler(objectMapper));
@@ -70,10 +81,15 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(new CustomUserDetailsService(memberRepository));
+        provider.setUserDetailsService(customUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
 
         return new ProviderManager(provider);
+    }
+
+    @Bean
+    public AuthorizationEventPublisher authorizationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+        return new SpringAuthorizationEventPublisher(applicationEventPublisher);
     }
 
 }

@@ -11,12 +11,10 @@ public class TestAuthUtil {
 
     public static Cookie signupAndGetCookie(SignupRequestDto requestDto) {
         signup(requestDto);
-        String cookieValue = loginAndGetCookie(requestDto);
-
-        return new Cookie.Builder(SessionConfig.DEFAULT_SESSION_ID_NAME, cookieValue).build();
+        return loginAndGetCookie(requestDto);
     }
 
-    private static void signup(SignupRequestDto requestDto) {
+    public static void signup(SignupRequestDto requestDto) {
         RestAssured.given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(requestDto).log().all()
@@ -24,17 +22,19 @@ public class TestAuthUtil {
                 .then().log().all();
     }
 
-    private static String loginAndGetCookie(SignupRequestDto signupRequestDto) {
+    public static Cookie loginAndGetCookie(SignupRequestDto signupRequestDto) {
         LoginRequestDto loginRequestDto = LoginRequestDto.builder()
                 .email(signupRequestDto.getEmail())
                 .password(signupRequestDto.getPassword())
                 .build();
 
-        return RestAssured.given()
+        String cookieValue = RestAssured.given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(loginRequestDto).log().all()
                 .when().post("/api/auth/login")
                 .thenReturn().sessionId();
+
+        return new Cookie.Builder(SessionConfig.DEFAULT_SESSION_ID_NAME, cookieValue).build();
     }
 
 }
