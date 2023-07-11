@@ -44,12 +44,12 @@ public class AuthService {
     public void signout(Long memberId) {
         deleteAllDiaryImages(memberId);
 
-        scheduleRepository.deleteAllById(memberId);
+        scheduleRepository.deleteAllByMemberId(memberId);
         memberRepository.deleteById(memberId);
     }
 
     private void deleteAllDiaryImages(Long memberId) {
-        List<Schedule> schedules = scheduleRepository.findAllById(memberId);
+        List<Schedule> schedules = scheduleRepository.findAllByMemberId(memberId);
         schedules.stream()
                 .filter(schedule ->  Objects.nonNull(schedule.getDiary()))
                 .map(schedule -> schedule.getDiary().getImageUrl())

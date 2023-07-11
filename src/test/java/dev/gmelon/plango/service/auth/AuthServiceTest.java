@@ -4,6 +4,7 @@ import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
+import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
@@ -83,6 +84,7 @@ class AuthServiceTest {
                 .email("a@a.com")
                 .name("nameA")
                 .password(passwordEncoder.encode("passwordA"))
+                .role(MemberRole.ROLE_USER)
                 .build();
         memberRepository.save(member);
 
@@ -102,8 +104,9 @@ class AuthServiceTest {
         authService.signout(member.getId());
 
         // then
-        assertThat(scheduleRepository.findAllById(member.getId())).hasSize(0);
+        assertThat(scheduleRepository.findAllByMemberId(member.getId())).hasSize(0);
         assertThat(diaryRepository.findByTitle(diary.getTitle())).isEmpty();
+        assertThat(memberRepository.findById(member.getId())).isEmpty();
     }
 
     //    @Test

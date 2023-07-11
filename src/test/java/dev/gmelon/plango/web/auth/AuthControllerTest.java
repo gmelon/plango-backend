@@ -48,7 +48,6 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         RestAssured.port = port;
-        memberRepository.deleteAll();
     }
 
     @Test
@@ -210,8 +209,9 @@ class AuthControllerTest {
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-        assertThat(scheduleRepository.findAllById(member.getId())).hasSize(0);
+        assertThat(scheduleRepository.findAllByMemberId(member.getId())).hasSize(0);
         assertThat(diaryRepository.findByTitle(diary.getTitle())).isEmpty();
+        assertThat(memberRepository.findById(member.getId())).isEmpty();
     }
 
     @Test
@@ -260,8 +260,9 @@ class AuthControllerTest {
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-        assertThat(scheduleRepository.findAllById(member.getId())).hasSize(0);
+        assertThat(scheduleRepository.findAllByMemberId(member.getId())).hasSize(0);
         assertThat(diaryRepository.findByTitle(diary.getTitle())).isEmpty();
+        assertThat(memberRepository.findById(member.getId())).isEmpty();
     }
 
     @Test

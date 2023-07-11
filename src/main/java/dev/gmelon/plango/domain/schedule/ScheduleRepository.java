@@ -10,11 +10,9 @@ import java.util.Optional;
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
-    List<Schedule> findAllById(Long id);
+    List<Schedule> findAllByMemberId(Long memberid);
 
-    void deleteAllById(Long id);
-
-    List<Schedule> findByMemberId(Long memberId);
+    void deleteAllByMemberId(Long memberId);
 
     // TODO 리팩토링
     List<Schedule> findByMemberIdAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(Long memberId, LocalDateTime start, LocalDateTime end);
