@@ -24,7 +24,13 @@ public class ScheduleListResponseDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime endTime;
 
-    private String location;
+    private Double latitude;
+
+    private Double longitude;
+
+    private String roadAddress;
+
+    private String placeName;
 
     private Boolean isDone;
 
@@ -35,19 +41,25 @@ public class ScheduleListResponseDto {
                 .content(schedule.getContent())
                 .startTime(schedule.getStartTime())
                 .endTime(schedule.getEndTime())
-                .location(schedule.getLocation())
+                .latitude(schedule.getLatitude())
+                .longitude(schedule.getLongitude())
+                .roadAddress(schedule.getRoadAddress())
+                .placeName(schedule.getPlaceName())
                 .isDone(schedule.isDone())
                 .build();
     }
 
     @Builder
-    public ScheduleListResponseDto(Long id, String title, String content, LocalDateTime startTime, LocalDateTime endTime, String location, boolean isDone) {
+    public ScheduleListResponseDto(Long id, String title, String content, LocalDateTime startTime, LocalDateTime endTime, Double latitude, Double longitude, String roadAddress, String placeName, Boolean isDone) {
         this.id = id;
         this.title = title;
         this.content = content;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.location = location;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.roadAddress = roadAddress;
+        this.placeName = placeName;
         this.isDone = isDone;
     }
 }

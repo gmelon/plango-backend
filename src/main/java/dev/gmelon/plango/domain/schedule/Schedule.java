@@ -38,7 +38,13 @@ public class Schedule extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDateTime endTime;
 
-    private String location;
+    private Double latitude;
+
+    private Double longitude;
+
+    private String roadAddress;
+
+    private String placeName;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT 0", nullable = false)
     private boolean done;
@@ -52,12 +58,15 @@ public class Schedule extends BaseTimeEntity {
     private Diary diary;
 
     @Builder
-    public Schedule(String title, String content, LocalDateTime startTime, LocalDateTime endTime, String location, boolean done, Member member, Diary diary) {
+    public Schedule(String title, String content, LocalDateTime startTime, LocalDateTime endTime, Double latitude, Double longitude, String roadAddress, String placeName, boolean done, Member member, Diary diary) {
         this.title = title;
         this.content = content;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.location = location;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.roadAddress = roadAddress;
+        this.placeName = placeName;
         this.done = done;
         this.member = member;
         this.diary = diary;
@@ -68,7 +77,10 @@ public class Schedule extends BaseTimeEntity {
         this.content = editor.getContent();
         this.startTime = editor.getStartTime();
         this.endTime = editor.getEndTime();
-        this.location = editor.getLocation();
+        this.latitude = editor.getLatitude();
+        this.longitude = editor.getLongitude();
+        this.roadAddress = editor.getRoadAddress();
+        this.placeName = editor.getPlaceName();
     }
 
     public void addDiary(Diary diary) {

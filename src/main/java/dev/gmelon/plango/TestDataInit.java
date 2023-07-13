@@ -34,17 +34,25 @@ public class TestDataInit {
         Member memberA = memberRepository.findByEmail(request.getEmail()).get();
 
         List<Schedule> schedules = List.of(Schedule.builder()
-                        .title("계획 제목 1")
-                        .content("계획 본문 1")
+                        .title("일정 제목 1")
+                        .content("일정 본문 1")
                         .startTime(LocalDateTime.now().withMinute(0))
                         .endTime(LocalDateTime.now().plusHours(3).withMinute(0))
+                        .latitude(36.3674097)
+                        .longitude(127.3454477)
+                        .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                        .placeName("충남대학교 공과대학 5호관")
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("계획 제목 2")
-                        .content("계획 본문 2")
+                        .title("일정 제목 2")
+                        .content("일정 본문 2")
                         .startTime(LocalDateTime.now().plusHours(2).withMinute(0))
                         .endTime(LocalDateTime.now().plusHours(5).withMinute(0))
+                        .latitude(36.3682999)
+                        .longitude(127.3420364)
+                        .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                        .placeName("충남대학교 인문대학")
                         .member(memberA)
                         .build());
         scheduleRepository.saveAll(schedules);

@@ -82,7 +82,10 @@ class ScheduleControllerTest {
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
-                .location("계획 장소")
+                .latitude(36.3674097)
+                .longitude(127.3454477)
+                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                .placeName("충남대학교 공과대학 5호관")
                 .build();
 
         // when
@@ -104,7 +107,10 @@ class ScheduleControllerTest {
         assertThat(createdSchedule.getContent()).isEqualTo(request.getContent());
         assertThat(createdSchedule.getStartTime()).isEqualTo(request.getStartTime());
         assertThat(createdSchedule.getEndTime()).isEqualTo(request.getEndTime());
-        assertThat(createdSchedule.getLocation()).isEqualTo(request.getLocation());
+        assertThat(createdSchedule.getLatitude()).isEqualTo(request.getLatitude());
+        assertThat(createdSchedule.getLongitude()).isEqualTo(request.getLongitude());
+        assertThat(createdSchedule.getRoadAddress()).isEqualTo(request.getRoadAddress());
+        assertThat(createdSchedule.getPlaceName()).isEqualTo(request.getPlaceName());
         assertThat(createdSchedule.isDone()).isFalse();
     }
 
@@ -116,7 +122,10 @@ class ScheduleControllerTest {
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
-                .location("계획 장소")
+                .latitude(36.3674097)
+                .longitude(127.3454477)
+                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                .placeName("충남대학교 공과대학 5호관")
                 .build();
         String createdScheduleLocation = RestAssured
                 .given()
@@ -140,7 +149,10 @@ class ScheduleControllerTest {
         assertThat(responseDto.getContent()).isEqualTo(request.getContent());
         assertThat(responseDto.getStartTime()).isEqualTo(request.getStartTime());
         assertThat(responseDto.getEndTime()).isEqualTo(request.getEndTime());
-        assertThat(responseDto.getLocation()).isEqualTo(request.getLocation());
+        assertThat(responseDto.getLatitude()).isEqualTo(request.getLatitude());
+        assertThat(responseDto.getLongitude()).isEqualTo(request.getLongitude());
+        assertThat(responseDto.getRoadAddress()).isEqualTo(request.getRoadAddress());
+        assertThat(responseDto.getPlaceName()).isEqualTo(request.getPlaceName());
         assertThat(responseDto.getIsDone()).isFalse();
         assertThat(responseDto.getHasDiary()).isFalse();
         assertThat(responseDto.getDiary()).isNull();
@@ -154,7 +166,10 @@ class ScheduleControllerTest {
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
-                .location("계획 장소")
+                .latitude(36.3674097)
+                .longitude(127.3454477)
+                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                .placeName("충남대학교 공과대학 5호관")
                 .build();
         String createdScheduleLocation = RestAssured
                 .given()
@@ -189,7 +204,10 @@ class ScheduleControllerTest {
         assertThat(responseDto.getContent()).isEqualTo(scheduleRequest.getContent());
         assertThat(responseDto.getStartTime()).isEqualTo(scheduleRequest.getStartTime());
         assertThat(responseDto.getEndTime()).isEqualTo(scheduleRequest.getEndTime());
-        assertThat(responseDto.getLocation()).isEqualTo(scheduleRequest.getLocation());
+        assertThat(responseDto.getLatitude()).isEqualTo(scheduleRequest.getLatitude());
+        assertThat(responseDto.getLongitude()).isEqualTo(scheduleRequest.getLongitude());
+        assertThat(responseDto.getRoadAddress()).isEqualTo(scheduleRequest.getRoadAddress());
+        assertThat(responseDto.getPlaceName()).isEqualTo(scheduleRequest.getPlaceName());
         assertThat(responseDto.getIsDone()).isFalse();
         assertThat(responseDto.getHasDiary()).isTrue();
         assertThat(responseDto.getDiary().getId()).isNotNull();
@@ -246,7 +264,10 @@ class ScheduleControllerTest {
                 .content("계획 본문")
                 .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
                 .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
-                .location("계획 장소")
+                .latitude(36.3674097)
+                .longitude(127.3454477)
+                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                .placeName("충남대학교 공과대학 5호관")
                 .build();
         String createdScheduleLocation = RestAssured
                 .given()
@@ -262,7 +283,10 @@ class ScheduleControllerTest {
                 .content("수정된 본문")
                 .startTime(LocalDateTime.of(2024, 7, 27, 11, 0, 0))
                 .endTime(LocalDateTime.of(2024, 7, 27, 12, 0, 0))
-                .location("수정된 장소")
+                .latitude(36.3682999)
+                .longitude(127.3420364)
+                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                .placeName("충남대학교 인문대학")
                 .build();
 
         // when
@@ -282,7 +306,10 @@ class ScheduleControllerTest {
         assertThat(foundSchedule.getContent()).isEqualTo(editRequet.getContent());
         assertThat(foundSchedule.getStartTime()).isEqualTo(editRequet.getStartTime());
         assertThat(foundSchedule.getEndTime()).isEqualTo(editRequet.getEndTime());
-        assertThat(foundSchedule.getLocation()).isEqualTo(editRequet.getLocation());
+        assertThat(foundSchedule.getLatitude()).isEqualTo(editRequet.getLatitude());
+        assertThat(foundSchedule.getLongitude()).isEqualTo(editRequet.getLongitude());
+        assertThat(foundSchedule.getRoadAddress()).isEqualTo(editRequet.getRoadAddress());
+        assertThat(foundSchedule.getPlaceName()).isEqualTo(editRequet.getPlaceName());
     }
 
     @Test

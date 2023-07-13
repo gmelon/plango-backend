@@ -28,15 +28,24 @@ public class ScheduleCreateRequestDto {
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime endTime;
 
-    private String location;
+    private Double latitude;
+
+    private Double longitude;
+
+    private String roadAddress;
+
+    private String placeName;
 
     @Builder
-    public ScheduleCreateRequestDto(String title, String content, LocalDateTime startTime, LocalDateTime endTime, String location) {
+    public ScheduleCreateRequestDto(String title, String content, LocalDateTime startTime, LocalDateTime endTime, Double latitude, Double longitude, String roadAddress, String placeName) {
         this.title = title;
         this.content = content;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.location = location;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.roadAddress = roadAddress;
+        this.placeName = placeName;
     }
 
     public Schedule toEntity(Member member) {
@@ -45,7 +54,10 @@ public class ScheduleCreateRequestDto {
                 .content(content)
                 .startTime(startTime)
                 .endTime(endTime)
-                .location(location)
+                .latitude(latitude)
+                .longitude(longitude)
+                .roadAddress(roadAddress)
+                .placeName(placeName)
                 .member(member)
                 .build();
     }

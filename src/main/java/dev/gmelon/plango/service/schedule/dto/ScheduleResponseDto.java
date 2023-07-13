@@ -25,7 +25,13 @@ public class ScheduleResponseDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime endTime;
 
-    private String location;
+    private Double latitude;
+
+    private Double longitude;
+
+    private String roadAddress;
+
+    private String placeName;
 
     private Boolean isDone;
 
@@ -40,27 +46,36 @@ public class ScheduleResponseDto {
                 .content(schedule.getContent())
                 .startTime(schedule.getStartTime())
                 .endTime(schedule.getEndTime())
-                .location(schedule.getLocation())
+                .latitude(schedule.getLatitude())
+                .longitude(schedule.getLongitude())
+                .roadAddress(schedule.getRoadAddress())
+                .placeName(schedule.getPlaceName())
                 .isDone(schedule.isDone())
                 .hasDiary(false);
 
+        builder = addDiaryWhenExists(schedule, builder);
+        return builder.build();
+    }
+
+    private static ScheduleResponseDtoBuilder addDiaryWhenExists(Schedule schedule, ScheduleResponseDtoBuilder builder) {
         if (schedule.getDiary() != null) {
             builder = builder.hasDiary(true)
                     .diary(DiaryOfScheduleResponseDto.from(schedule.getDiary()));
         }
-
-        return builder.build();
+        return builder;
     }
 
     @Builder
-    public ScheduleResponseDto(Long id, String title, String content, LocalDateTime startTime, LocalDateTime endTime,
-                               String location, Boolean isDone, Boolean hasDiary, DiaryOfScheduleResponseDto diary) {
+    public ScheduleResponseDto(Long id, String title, String content, LocalDateTime startTime, LocalDateTime endTime, Double latitude, Double longitude, String roadAddress, String placeName, Boolean isDone, Boolean hasDiary, DiaryOfScheduleResponseDto diary) {
         this.id = id;
         this.title = title;
         this.content = content;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.location = location;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.roadAddress = roadAddress;
+        this.placeName = placeName;
         this.isDone = isDone;
         this.hasDiary = hasDiary;
         this.diary = diary;
