@@ -6,6 +6,7 @@ import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleEditor;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.config.auth.exception.UnauthorizedException;
+import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.schedule.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -25,6 +27,7 @@ public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
     private final MemberRepository memberRepository;
+    private final S3Repository s3Repository;
 
     @Transactional
     public Long create(Long memberId, ScheduleCreateRequestDto requestDto) {
@@ -93,7 +96,16 @@ public class ScheduleService {
 
         validateMember(schedule, member);
 
+        Optional<String> diaryImageUrl = getDiaryImageUrl(schedule);
         scheduleRepository.delete(schedule);
+        diaryImageUrl.ifPresent(s3Repository::delete);
+    }
+
+    private Optional<String> getDiaryImageUrl(Schedule schedule) {
+        if (schedule.getDiary() != null) {
+            return Optional.ofNullable(schedule.getDiary().getImageUrl());
+        }
+        return Optional.empty();
     }
 
     public List<ScheduleCountResponseDto> getCountOfDaysInMonth(Long memberId, YearMonth requestMonth) {
