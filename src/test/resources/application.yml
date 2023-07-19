@@ -1,6 +1,8 @@
 spring:
   profiles:
-    active: s3
+    active:
+      - s3
+      - auth
   session:
     store-type: none
   jackson:
