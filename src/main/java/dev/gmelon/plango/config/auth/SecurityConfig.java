@@ -3,6 +3,7 @@ package dev.gmelon.plango.config.auth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.auth.handler.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +19,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+
+import javax.sql.DataSource;
 
 @RequiredArgsConstructor
 @EnableMethodSecurity
@@ -27,7 +33,11 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
+    private final DataSource dataSource;
     private final ObjectMapper objectMapper;
+
+    @Value("${remember-me.token-key}")
+    private String rememberMeTokenKey;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -43,6 +53,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jsonEmailPasswordAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .rememberMe(rm -> rm.rememberMeServices(getRememberMeServices()))
                 .exceptionHandling(exception -> {
                     exception.authenticationEntryPoint(new CustomAuthenticationEntryPoint(objectMapper));
                     exception.accessDeniedHandler(new CustomAccessDeniedHandler(objectMapper));
@@ -64,18 +75,29 @@ public class SecurityConfig {
         JsonEmailPasswordAuthenticationFilter filter = new JsonEmailPasswordAuthenticationFilter("/api/auth/login", objectMapper);
         filter.setSecurityContextRepository(new HttpSessionSecurityContextRepository());
         filter.setAuthenticationManager(authenticationManager());
-
-//        TokenBasedRememberMeServices rememberMeServices = new TokenBasedRememberMeServices("remember-me", customUserDetailsService);
-//        rememberMeServices.setAlwaysRemember(true);
-//        rememberMeServices.setTokenValiditySeconds(2592000); // 30days
-//        filter.setRememberMeServices(rememberMeServices);
-
-        //        filter.setRememberMeServices(new SpringSessionRememberMeServices());
-
         filter.setAuthenticationSuccessHandler(new CustomAuthenticationSuccessHandler());
         filter.setAuthenticationFailureHandler(new CustomAuthenticationFailureHandler(objectMapper));
+        filter.setRememberMeServices(getRememberMeServices());
 
         return filter;
+    }
+
+    private PersistentTokenBasedRememberMeServices getRememberMeServices() {
+        PersistentTokenBasedRememberMeServices rememberMeServices = new PersistentTokenBasedRememberMeServices(
+                rememberMeTokenKey,
+                customUserDetailsService,
+                persistentTokenRepository()
+        );
+        rememberMeServices.setAlwaysRemember(true);
+        rememberMeServices.setTokenValiditySeconds(2592000); // 30 days
+        return rememberMeServices;
+    }
+
+    @Bean
+    public PersistentTokenRepository persistentTokenRepository() {
+        JdbcTokenRepositoryImpl jdbcTokenRepository = new JdbcTokenRepositoryImpl();
+        jdbcTokenRepository.setDataSource(dataSource);
+        return jdbcTokenRepository;
     }
 
     @Bean

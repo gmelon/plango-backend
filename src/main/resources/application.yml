@@ -4,10 +4,12 @@ spring:
       local:
         - local
         - local-s3
+        - local-auth
       real:
         - real
         - real-db
         - real-s3
+        - real-auth
   session:
     store-type: jdbc
   jackson:

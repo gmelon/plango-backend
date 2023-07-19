@@ -7,3 +7,6 @@ create table schedule (id bigint not null auto_increment, created_time timestamp
 alter table member add constraint UK_mbmcqelty0fbrvxp1q58dn57t unique (email);
 alter table schedule add constraint FKcr6tygrrvq97973x0ixfkfa6g foreign key (diary_id) references diary(id);
 alter table schedule add constraint FKn7js9p799qcts7le20pec9bxr foreign key (member_id) references member(id);
+
+# security
+create table persistent_logins (username varchar(64) not null, series varchar(64) primary key, token varchar(64) not null, last_used timestamp not null);
