@@ -28,18 +28,18 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(nullable = false, unique = true)
+    private String nickname;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private MemberRole role;
 
     @Builder
-    public Member(String email, String password, String name, MemberRole role) {
+    public Member(String email, String password, String nickname, MemberRole role) {
         this.email = email;
         this.password = password;
-        this.name = name;
+        this.nickname = nickname;
         this.role = role;
     }
 
@@ -47,8 +47,8 @@ public class Member extends BaseTimeEntity {
         this.password = newPassword;
     }
 
-    public void editName(String newName) {
-        this.name = newName;
+    public void editNickname(String newNickname) {
+        this.nickname = newNickname;
     }
 
     @Override

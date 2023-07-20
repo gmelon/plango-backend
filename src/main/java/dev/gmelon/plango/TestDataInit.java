@@ -28,7 +28,7 @@ public class TestDataInit {
         SignupRequestDto request = SignupRequestDto.builder()
                 .email("hsh1769@naver.com")
                 .password("1234")
-                .name("현상혁")
+                .nickname("현상혁")
                 .build();
         authService.signup(request);
         Member memberA = memberRepository.findByEmail(request.getEmail()).get();

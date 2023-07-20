@@ -11,20 +11,20 @@ public class MemberProfileResponseDto {
 
     private Long id;
     private String email;
-    private String name;
+    private String nickname;
 
     public static MemberProfileResponseDto from(Member member) {
         return MemberProfileResponseDto.builder()
                 .id(member.getId())
                 .email(member.getEmail())
-                .name(member.getName())
+                .nickname(member.getNickname())
                 .build();
     }
 
     @Builder
-    public MemberProfileResponseDto(Long id, String email, String name) {
+    public MemberProfileResponseDto(Long id, String email, String nickname) {
         this.id = id;
         this.email = email;
-        this.name = name;
+        this.nickname = nickname;
     }
 }

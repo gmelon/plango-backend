@@ -50,7 +50,7 @@ class AuthServiceTest {
         SignupRequestDto request = SignupRequestDto.builder()
                 .email("a@a.com")
                 .password(unencodedPassword)
-                .name("nameA")
+                .nickname("nameA")
                 .build();
 
         // when
@@ -59,20 +59,48 @@ class AuthServiceTest {
         // then
         Member member = assertDoesNotThrow(() -> memberRepository.findByEmail(request.getEmail()).get());
         assertThat(passwordEncoder.matches(unencodedPassword, member.getPassword())).isTrue();
-        assertThat(member.getName()).isEqualTo(request.getName());
+        assertThat(member.getNickname()).isEqualTo(request.getNickname());
     }
 
     @Test
     void 이미_존재하는_이메일로_회원가입() {
-        SignupRequestDto request = SignupRequestDto.builder()
+        SignupRequestDto firstRequest = SignupRequestDto.builder()
                 .email("a@a.com")
                 .password("passwordA")
-                .name("nameA")
+                .nickname("nameA")
                 .build();
-        authService.signup(request);
+        authService.signup(firstRequest);
+
+        SignupRequestDto secondRequest = SignupRequestDto.builder()
+                .email("a@a.com")
+                .password("passwordA")
+                .nickname("nameB")
+                .build();
 
         // when, then
-        assertThatThrownBy(() -> authService.signup(request))
+        assertThatThrownBy(() -> authService.signup(secondRequest))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("이미 존재하는 회원입니다.");
+    }
+
+
+    @Test
+    void 이미_존재하는_닉네임으로_회원가입() {
+        SignupRequestDto firstRequest = SignupRequestDto.builder()
+                .email("a@a.com")
+                .password("passwordA")
+                .nickname("nameA")
+                .build();
+        authService.signup(firstRequest);
+
+        SignupRequestDto secondRequest = SignupRequestDto.builder()
+                .email("b@b.com")
+                .password("passwordA")
+                .nickname("nameA")
+                .build();
+
+        // when, then
+        assertThatThrownBy(() -> authService.signup(secondRequest))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("이미 존재하는 회원입니다.");
     }
@@ -82,7 +110,7 @@ class AuthServiceTest {
         // given
         Member member = Member.builder()
                 .email("a@a.com")
-                .name("nameA")
+                .nickname("nameA")
                 .password(passwordEncoder.encode("passwordA"))
                 .role(MemberRole.ROLE_USER)
                 .build();
@@ -109,43 +137,4 @@ class AuthServiceTest {
         assertThat(memberRepository.findById(member.getId())).isEmpty();
     }
 
-    //    @Test
-//    void 정상_값으로_로그인() {
-//        // given
-//        String unencodedPassword = "passwordA";
-//
-//        SignupRequestDto signupRequest = SignupRequestDto.builder()
-//                .email("a@a.com")
-//                .password(unencodedPassword)
-//                .name("nameA")
-//                .build();
-//        authService.signup(signupRequest);
-//
-//        LoginRequestDto loginRequest = LoginRequestDto.builder()
-//                .email(signupRequest.getEmail())
-//                .password(unencodedPassword)
-//                .build();
-//
-//        // when
-//        Member loginedMember = authService.login(loginRequest);
-//
-//        // then
-//        assertThat(loginedMember.getEmail()).isEqualTo(signupRequest.getEmail());
-//        assertThat(passwordEncoder.matches(unencodedPassword, loginedMember.getPassword())).isTrue();
-//        assertThat(loginedMember.getName()).isEqualTo(signupRequest.getName());
-//    }
-//
-//    @Test
-//    void 존재하지_않는_회원으로_로그인() {
-//        // given
-//        LoginRequestDto request = LoginRequestDto.builder()
-//                .email("a@a.com")
-//                .password("passwordA")
-//                .build();
-//
-//        // when, then
-//        assertThatThrownBy(() -> authService.login(request))
-//                .isInstanceOf(IllegalArgumentException.class)
-//                .hasMessage("아이디 또는 비밀번호가 올바르지 않습니다.");
-//    }
 }

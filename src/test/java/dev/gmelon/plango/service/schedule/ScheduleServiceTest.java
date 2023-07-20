@@ -47,7 +47,7 @@ class ScheduleServiceTest {
         memberA = Member.builder()
                 .email("a@a.com")
                 .password("passwordA")
-                .name("nameA")
+                .nickname("nameA")
                 .role(MemberRole.ROLE_USER)
                 .build();
         memberRepository.save(memberA);
@@ -55,7 +55,7 @@ class ScheduleServiceTest {
         memberB = Member.builder()
                 .email("b@b.com")
                 .password("passwordB")
-                .name("nameB")
+                .nickname("nameB")
                 .role(MemberRole.ROLE_USER)
                 .build();
         memberRepository.save(memberB);

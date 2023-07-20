@@ -24,7 +24,7 @@ public class TestAuthUtil {
 
     public static Cookie loginAndGetCookie(SignupRequestDto signupRequestDto) {
         LoginRequestDto loginRequestDto = LoginRequestDto.builder()
-                .email(signupRequestDto.getEmail())
+                .emailOrNickname(signupRequestDto.getEmail())
                 .password(signupRequestDto.getPassword())
                 .build();
 

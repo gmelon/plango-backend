@@ -3,7 +3,7 @@ package dev.gmelon.plango.service.member;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
-import dev.gmelon.plango.service.member.dto.MemberEditNameRequestDto;
+import dev.gmelon.plango.service.member.dto.MemberEditNicknameRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
 import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
@@ -16,7 +16,6 @@ import org.springframework.test.context.jdbc.Sql;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 
 @Sql(value = "classpath:/reset.sql")
 @SpringBootTest
@@ -36,7 +35,7 @@ class MemberServiceTest {
         memberA = Member.builder()
                 .email("a@a.com")
                 .password(passwordEncoder.encode("passwordA"))
-                .name("nameA")
+                .nickname("nameA")
                 .role(MemberRole.ROLE_USER)
                 .build();
         memberRepository.save(memberA);
@@ -49,8 +48,8 @@ class MemberServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(memberA.getId());
-        assertThat(response.getName()).isEqualTo(memberA.getName());
-        assertThat(response.getName()).isEqualTo(memberA.getName());
+        assertThat(response.getNickname()).isEqualTo(memberA.getNickname());
+        assertThat(response.getNickname()).isEqualTo(memberA.getNickname());
     }
 
     @Test
@@ -102,15 +101,15 @@ class MemberServiceTest {
     @Test
     void 이름_변경() {
         // given
-        MemberEditNameRequestDto request = MemberEditNameRequestDto.builder()
-                .name("nameB")
+        MemberEditNicknameRequestDto request = MemberEditNicknameRequestDto.builder()
+                .nickname("nameB")
                 .build();
 
         // when
-        memberService.editName(memberA.getId(), request);
+        memberService.editNickname(memberA.getId(), request);
 
         //then
         Member foundMemberA = memberRepository.findById(memberA.getId()).get();
-        assertThat(foundMemberA.getName()).isEqualTo(request.getName());
+        assertThat(foundMemberA.getNickname()).isEqualTo(request.getNickname());
     }
 }

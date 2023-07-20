@@ -23,13 +23,13 @@ public class SignupRequestDto {
     private String password;
 
     @NotBlank
-    private String name;
+    private String nickname;
 
     @Builder
-    public SignupRequestDto(String email, String password, String name) {
+    public SignupRequestDto(String email, String password, String nickname) {
         this.email = email;
         this.password = password;
-        this.name = name;
+        this.nickname = nickname;
     }
 
     public void setPassword(String password) {
@@ -40,7 +40,7 @@ public class SignupRequestDto {
         return Member.builder()
                 .email(email)
                 .password(password)
-                .name(name)
+                .nickname(nickname)
                 .role(MemberRole.ROLE_USER)
                 .build();
     }

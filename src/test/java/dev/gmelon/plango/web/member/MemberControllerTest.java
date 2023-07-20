@@ -4,7 +4,7 @@ import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
-import dev.gmelon.plango.service.member.dto.MemberEditNameRequestDto;
+import dev.gmelon.plango.service.member.dto.MemberEditNicknameRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
 import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
@@ -49,7 +49,7 @@ class MemberControllerTest {
         SignupRequestDto memberASignupRequest = SignupRequestDto.builder()
                 .email("a@a.com")
                 .password("passwordA")
-                .name("nameA")
+                .nickname("nameA")
                 .build();
         loginCookieOfMemberA = TestAuthUtil.signupAndGetCookie(memberASignupRequest);
 
@@ -71,7 +71,7 @@ class MemberControllerTest {
         MemberProfileResponseDto responseDto = response.as(MemberProfileResponseDto.class);
         assertThat(responseDto.getId()).isEqualTo(memberA.getId());
         assertThat(responseDto.getEmail()).isEqualTo(memberA.getEmail());
-        assertThat(responseDto.getName()).isEqualTo(memberA.getName());
+        assertThat(responseDto.getNickname()).isEqualTo(memberA.getNickname());
     }
 
     @Test
@@ -145,8 +145,8 @@ class MemberControllerTest {
     @Test
     void 이름_변경() {
         // given
-        MemberEditNameRequestDto request = MemberEditNameRequestDto.builder()
-                .name("nameB")
+        MemberEditNicknameRequestDto request = MemberEditNicknameRequestDto.builder()
+                .nickname("nameB")
                 .build();
 
         // when
@@ -155,13 +155,13 @@ class MemberControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request)
                 .cookie(loginCookieOfMemberA)
-                .when().patch("/api/members/name")
+                .when().patch("/api/members/nickname")
                 .then().log().all().extract();
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
         Member foundMemberA = memberRepository.findById(memberA.getId()).get();
 
-        assertThat(foundMemberA.getName()).isEqualTo(request.getName());
+        assertThat(foundMemberA.getNickname()).isEqualTo(request.getNickname());
     }
 }

@@ -3,7 +3,7 @@ package dev.gmelon.plango.service.member;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
-import dev.gmelon.plango.service.member.dto.MemberEditNameRequestDto;
+import dev.gmelon.plango.service.member.dto.MemberEditNicknameRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
 import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
@@ -53,9 +53,9 @@ public class MemberService {
     }
 
     @Transactional
-    public void editName(Long memberId, MemberEditNameRequestDto requestDto) {
+    public void editNickname(Long memberId, MemberEditNicknameRequestDto requestDto) {
         Member member = findMemberById(memberId);
-        member.editName(requestDto.getName());
+        member.editNickname(requestDto.getNickname());
     }
 
     private Member findMemberById(Long memberId) {

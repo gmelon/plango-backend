@@ -56,7 +56,7 @@ class AuthControllerTest {
         SignupRequestDto request = SignupRequestDto.builder()
                 .email("a@a.com")
                 .password("passwordA")
-                .name("nameA")
+                .nickname("nameA")
                 .build();
 
         // when
@@ -73,29 +73,35 @@ class AuthControllerTest {
 
         Member member = memberRepository.findByEmail(request.getEmail()).get();
         assertThat(passwordEncoder.matches(request.getPassword(), member.getPassword())).isTrue();
-        assertThat(member.getName()).isEqualTo(request.getName());
+        assertThat(member.getNickname()).isEqualTo(request.getNickname());
     }
 
     @Test
     void 이미_존재하는_이메일로_회원가입() {
         // given
-        SignupRequestDto request = SignupRequestDto.builder()
+        SignupRequestDto firstRequest = SignupRequestDto.builder()
                 .email("a@a.com")
                 .password("passwordA")
-                .name("nameA")
+                .nickname("nameA")
                 .build();
         RestAssured
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(request).log().all()
+                .body(firstRequest).log().all()
                 .when().post("/api/auth/signup")
                 .then().log().all();
+
+        SignupRequestDto secondRequest = SignupRequestDto.builder()
+                .email("a@a.com")
+                .password("passwordA")
+                .nickname("nameB")
+                .build();
 
         // when
         ExtractableResponse<Response> response = RestAssured
                 .given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(request).log().all()
+                .body(secondRequest).log().all()
                 .when().post("/api/auth/signup")
                 .then().log().all().extract();
 
@@ -105,17 +111,51 @@ class AuthControllerTest {
     }
 
     @Test
-    void 정상_값으로_로그인() {
+    void 이미_존재하는_닉네임으로_회원가입() {
+        // given
+        SignupRequestDto firstRequest = SignupRequestDto.builder()
+                .email("a@a.com")
+                .password("passwordA")
+                .nickname("nameA")
+                .build();
+        RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(firstRequest).log().all()
+                .when().post("/api/auth/signup")
+                .then().log().all();
+
+        SignupRequestDto secondRequest = SignupRequestDto.builder()
+                .email("b@b.com")
+                .password("passwordA")
+                .nickname("nameA")
+                .build();
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(secondRequest).log().all()
+                .when().post("/api/auth/signup")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("이미 존재하는 회원입니다.");
+    }
+
+    @Test
+    void 정상_이메일로_로그인() {
         // given
         SignupRequestDto signupRequest = SignupRequestDto.builder()
                 .email("a@a.com")
                 .password("passwordA")
-                .name("nameA")
+                .nickname("nameA")
                 .build();
         TestAuthUtil.signupAndGetCookie(signupRequest);
 
         LoginRequestDto loginRequest = LoginRequestDto.builder()
-                .email("a@a.com")
+                .emailOrNickname("a@a.com")
                 .password("passwordA")
                 .build();
 
@@ -133,10 +173,59 @@ class AuthControllerTest {
     }
 
     @Test
-    void 존재하지_않는_회원으로_로그인() {
+    void 존재하지_않는_이메일로_로그인() {
         // given
         LoginRequestDto loginRequest = LoginRequestDto.builder()
+                .emailOrNickname("a@a.com")
+                .password("passwordA")
+                .build();
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(loginRequest).log().all()
+                .when().post("/api/auth/login")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("아이디 또는 비밀번호가 올바르지 않습니다.");
+    }
+
+    @Test
+    void 정상_닉네임으로_로그인() {
+        // given
+        SignupRequestDto signupRequest = SignupRequestDto.builder()
                 .email("a@a.com")
+                .password("passwordA")
+                .nickname("nameA")
+                .build();
+        TestAuthUtil.signupAndGetCookie(signupRequest);
+
+        LoginRequestDto loginRequest = LoginRequestDto.builder()
+                .emailOrNickname("nameA")
+                .password("passwordA")
+                .build();
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(loginRequest).log().all()
+                .when().post("/api/auth/login")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.header("Set-Cookie")).isNotBlank();
+    }
+
+    @Test
+    void 존재하지_않는_닉네임으로_로그인() {
+        // given
+        LoginRequestDto loginRequest = LoginRequestDto.builder()
+                .emailOrNickname("nameA")
                 .password("passwordA")
                 .build();
 
@@ -159,7 +248,7 @@ class AuthControllerTest {
         SignupRequestDto signupRequest = SignupRequestDto.builder()
                 .email("a@a.com")
                 .password("passwordA")
-                .name("nameA")
+                .nickname("nameA")
                 .build();
         Cookie loginCookie = TestAuthUtil.signupAndGetCookie(signupRequest);
 
@@ -182,7 +271,7 @@ class AuthControllerTest {
         SignupRequestDto signupRequest = SignupRequestDto.builder()
                 .email("a@a.com")
                 .password("passwordA")
-                .name("nameA")
+                .nickname("nameA")
                 .build();
         Cookie loginCookie = TestAuthUtil.signupAndGetCookie(signupRequest);
         Member member = memberRepository.findByEmail(signupRequest.getEmail()).get();
@@ -219,7 +308,7 @@ class AuthControllerTest {
         // given
         Member member = Member.builder()
                 .email("a@a.com")
-                .name("nameA")
+                .nickname("nameA")
                 .password("passwordA")
                 .role(MemberRole.ROLE_USER)
                 .build();
@@ -239,7 +328,7 @@ class AuthControllerTest {
 
         Member admin = Member.builder()
                 .email("admin@admin.com")
-                .name("admin")
+                .nickname("admin")
                 .password(passwordEncoder.encode("passwordA"))
                 .role(MemberRole.ROLE_ADMIN)
                 .build();
@@ -271,14 +360,14 @@ class AuthControllerTest {
         SignupRequestDto signupRequestA = SignupRequestDto.builder()
                 .email("a@a.com")
                 .password("passwordA")
-                .name("nameA")
+                .nickname("nameA")
                 .build();
         Cookie loginCookieA = TestAuthUtil.signupAndGetCookie(signupRequestA);
 
         SignupRequestDto signupRequestB = SignupRequestDto.builder()
                 .email("b@b.com")
                 .password("passwordB")
-                .name("nameB")
+                .nickname("nameB")
                 .build();
 
         // when

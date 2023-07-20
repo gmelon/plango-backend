@@ -16,14 +16,15 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final MemberRepository memberRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Member member = findMemberByEmail(email);
+    public UserDetails loadUserByUsername(String emailOrNickname) throws UsernameNotFoundException {
+        Member member = findMemberByEmailOrNickname(emailOrNickname);
         return new MemberPrincipal(member);
     }
 
-    private Member findMemberByEmail(String email) {
-        return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다."));
+    private Member findMemberByEmailOrNickname(String emailOrNickname) {
+        return memberRepository.findByEmail(emailOrNickname)
+                .orElseGet(() -> memberRepository.findByNickname(emailOrNickname)
+                        .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.")));
     }
 
 }

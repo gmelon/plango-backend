@@ -25,17 +25,30 @@ public class AuthService {
 
     @Transactional
     public void signup(SignupRequestDto requestDto) {
-        validateEmailAlreadyExists(requestDto);
+        validateUniqueColumns(requestDto);
 
         String encodePassword = passwordEncoder.encode(requestDto.getPassword());
         requestDto.setPassword(encodePassword);
         memberRepository.save(requestDto.toEntity());
     }
 
-    private void validateEmailAlreadyExists(SignupRequestDto requestDto) {
+    private void validateUniqueColumns(SignupRequestDto requestDto) {
+        validateEmailIsUnique(requestDto);
+        validateNicknameIsUnique(requestDto);
+    }
+
+    private void validateEmailIsUnique(SignupRequestDto requestDto) {
         boolean isEmailAlreadyExists = memberRepository.findByEmail(requestDto.getEmail())
                 .isPresent();
         if (isEmailAlreadyExists) {
+            throw new IllegalArgumentException("이미 존재하는 회원입니다.");
+        }
+    }
+
+    private void validateNicknameIsUnique(SignupRequestDto requestDto) {
+        boolean isNicknameAlreadyExists = memberRepository.findByNickname(requestDto.getNickname())
+                .isPresent();
+        if (isNicknameAlreadyExists) {
             throw new IllegalArgumentException("이미 존재하는 회원입니다.");
         }
     }

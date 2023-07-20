@@ -44,7 +44,7 @@ class S3ControllerTest {
         SignupRequestDto memberASignupRequest = SignupRequestDto.builder()
                 .email("a@a.com")
                 .password("passwordA")
-                .name("nameA")
+                .nickname("nameA")
                 .build();
         loginCookieOfMemberA = TestAuthUtil.signupAndGetCookie(memberASignupRequest);
     }

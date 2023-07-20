@@ -31,10 +31,10 @@ public class JsonEmailPasswordAuthenticationFilter extends AbstractAuthenticatio
 
         LoginRequestDto requestDto = objectMapper.readValue(request.getInputStream(), LoginRequestDto.class);
 
-        String email = (requestDto.getEmail() != null) ? requestDto.getEmail().trim() : "";
+        String emailOrNickname = (requestDto.getEmailOrNickname() != null) ? requestDto.getEmailOrNickname().trim() : "";
         String password = (requestDto.getPassword() != null) ? requestDto.getPassword() : "";
         UsernamePasswordAuthenticationToken authRequest = UsernamePasswordAuthenticationToken.unauthenticated(
-                email,
+                emailOrNickname,
                 password
         );
 

@@ -2,7 +2,7 @@ package dev.gmelon.plango.web.member;
 
 import dev.gmelon.plango.config.auth.LoginMember;
 import dev.gmelon.plango.service.member.MemberService;
-import dev.gmelon.plango.service.member.dto.MemberEditNameRequestDto;
+import dev.gmelon.plango.service.member.dto.MemberEditNicknameRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
 import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
@@ -34,10 +34,10 @@ public class MemberController {
         memberService.changePassword(memberId, requestDto);
     }
 
-    @PatchMapping("/name")
-    public void editName(@LoginMember Long memberId,
-                     @RequestBody @Valid MemberEditNameRequestDto requestDto) {
-        memberService.editName(memberId, requestDto);
+    @PatchMapping("/nickname")
+    public void editNickname(@LoginMember Long memberId,
+                             @RequestBody @Valid MemberEditNicknameRequestDto requestDto) {
+        memberService.editNickname(memberId, requestDto);
     }
 
 }

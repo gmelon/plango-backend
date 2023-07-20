@@ -60,13 +60,13 @@ class DiaryControllerTest {
         SignupRequestDto memberASignupRequest = SignupRequestDto.builder()
                 .email("a@a.com")
                 .password("passwordA")
-                .name("nameA")
+                .nickname("nameA")
                 .build();
         loginCookieOfMemberA = TestAuthUtil.signupAndGetCookie(memberASignupRequest);
         SignupRequestDto memberBSignupRequest = SignupRequestDto.builder()
                 .email("b@b.com")
                 .password("passwordB")
-                .name("nameB")
+                .nickname("nameB")
                 .build();
         loginCookieOfMemberB = TestAuthUtil.signupAndGetCookie(memberBSignupRequest);
         memberA = memberRepository.findByEmail(memberASignupRequest.getEmail()).get();

@@ -8,13 +8,13 @@ import javax.validation.constraints.NotBlank;
 
 @NoArgsConstructor
 @Getter
-public class MemberEditNameRequestDto {
+public class MemberEditNicknameRequestDto {
 
     @NotBlank
-    private String name;
+    private String nickname;
 
     @Builder
-    public MemberEditNameRequestDto(String name) {
-        this.name = name;
+    public MemberEditNicknameRequestDto(String nickname) {
+        this.nickname = nickname;
     }
 }
