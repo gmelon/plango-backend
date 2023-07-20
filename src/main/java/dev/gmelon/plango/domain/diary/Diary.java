@@ -22,7 +22,6 @@ public class Diary extends BaseTimeEntity {
     @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String title;
 
     @Column(columnDefinition = "TEXT")

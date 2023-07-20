@@ -6,13 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.URL;
 
-import javax.validation.constraints.NotBlank;
-
 @NoArgsConstructor
 @Getter
 public class DiaryCreateRequestDto {
 
-    @NotBlank
     private String title;
 
     private String content;

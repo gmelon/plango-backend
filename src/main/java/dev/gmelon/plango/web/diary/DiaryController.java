@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -23,6 +24,18 @@ import java.util.List;
 public class DiaryController {
 
     private final DiaryService diaryService;
+    private final DiaryCreateRequestValidator diaryCreateRequestValidator;
+    private final DiaryEditRequestValidator diaryEditRequestValidator;
+
+    @InitBinder("diaryCreateRequestDto")
+    public void diaryCreateRequestDtoInitBinder(WebDataBinder webDataBinder) {
+        webDataBinder.addValidators(diaryCreateRequestValidator);
+    }
+
+    @InitBinder("diaryEditRequestDto")
+    public void diaryEditRequestDtoInitBinder(WebDataBinder webDataBinder) {
+        webDataBinder.addValidators(diaryEditRequestValidator);
+    }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/schedules/{scheduleId}/diary")

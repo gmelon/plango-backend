@@ -84,6 +84,46 @@ class DiaryControllerTest {
     }
 
     @Test
+    void 기록_생성_시_제목_또는_사진은_필수_값() {
+        // given
+        DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
+                .content("기록 본문")
+                .build();
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request).log().all()
+                .cookie(loginCookieOfMemberA)
+                .when().post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @Test
+    void 기록_수정_시_제목_또는_사진은_필수_값() {
+        // given
+        DiaryEditRequestDto request = DiaryEditRequestDto.builder()
+                .content("기록 본문")
+                .build();
+
+        // when
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request).log().all()
+                .cookie(loginCookieOfMemberA)
+                .when().put("/api/diaries/1")
+                .then().log().all().extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @Test
     void 자신의_계획에_기록_생성() {
         // given
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
