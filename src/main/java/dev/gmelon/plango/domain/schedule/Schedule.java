@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.proxy.HibernateProxy;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Objects;
 
 import static javax.persistence.CascadeType.ALL;
@@ -32,11 +33,11 @@ public class Schedule extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @Column(nullable = false)
-    private LocalDateTime startTime;
+    private LocalDate date;
 
-    @Column(nullable = false)
-    private LocalDateTime endTime;
+    private LocalTime startTime;
+
+    private LocalTime endTime;
 
     private Double latitude;
 
@@ -58,9 +59,10 @@ public class Schedule extends BaseTimeEntity {
     private Diary diary;
 
     @Builder
-    public Schedule(String title, String content, LocalDateTime startTime, LocalDateTime endTime, Double latitude, Double longitude, String roadAddress, String placeName, boolean done, Member member, Diary diary) {
+    public Schedule(String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime, Double latitude, Double longitude, String roadAddress, String placeName, boolean done, Member member, Diary diary) {
         this.title = title;
         this.content = content;
+        this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
         this.latitude = latitude;
@@ -75,6 +77,7 @@ public class Schedule extends BaseTimeEntity {
     public void edit(ScheduleEditor editor) {
         this.title = editor.getTitle();
         this.content = editor.getContent();
+        this.date = editor.getDate();
         this.startTime = editor.getStartTime();
         this.endTime = editor.getEndTime();
         this.latitude = editor.getLatitude();

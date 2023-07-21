@@ -1,4 +1,4 @@
-package dev.gmelon.plango.web.diary;
+package dev.gmelon.plango.web.diary.validator;
 
 import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import org.springframework.stereotype.Component;

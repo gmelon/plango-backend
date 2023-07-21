@@ -7,7 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @NoArgsConstructor
 @Getter
@@ -49,11 +50,14 @@ public class DiaryResponseDto {
 
         private String title;
 
-        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
-        private LocalDateTime startTime;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
+        private LocalDate date;
 
-        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
-        private LocalDateTime endTime;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss", timezone = "Asia/Seoul")
+        private LocalTime startTime;
+
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss", timezone = "Asia/Seoul")
+        private LocalTime endTime;
 
         private String placeName;
 
@@ -61,6 +65,7 @@ public class DiaryResponseDto {
             return ScheduleOfDiaryResponseDto.builder()
                     .id(schedule.getId())
                     .title(schedule.getTitle())
+                    .date(schedule.getDate())
                     .startTime(schedule.getStartTime())
                     .endTime(schedule.getEndTime())
                     .placeName(schedule.getPlaceName())
@@ -68,9 +73,10 @@ public class DiaryResponseDto {
         }
 
         @Builder
-        public ScheduleOfDiaryResponseDto(Long id, String title, LocalDateTime startTime, LocalDateTime endTime, String placeName) {
+        public ScheduleOfDiaryResponseDto(Long id, String title, LocalDate date, LocalTime startTime, LocalTime endTime, String placeName) {
             this.id = id;
             this.title = title;
+            this.date = date;
             this.startTime = startTime;
             this.endTime = endTime;
             this.placeName = placeName;

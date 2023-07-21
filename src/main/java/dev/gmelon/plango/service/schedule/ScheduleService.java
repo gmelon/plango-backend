@@ -1,11 +1,11 @@
 package dev.gmelon.plango.service.schedule;
 
+import dev.gmelon.plango.config.auth.exception.UnauthorizedException;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleEditor;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
-import dev.gmelon.plango.config.auth.exception.UnauthorizedException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.schedule.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -13,8 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
@@ -32,8 +30,6 @@ public class ScheduleService {
     @Transactional
     public Long create(Long memberId, ScheduleCreateRequestDto requestDto) {
         Member member = findMemberById(memberId);
-
-        // TODO request에서 startTime < endTime 인지 검증!!
 
         Schedule requestSchedule = requestDto.toEntity(member);
 
@@ -59,13 +55,10 @@ public class ScheduleService {
     }
 
     private List<Schedule> findSchedulesByMemberAndDate(Long memberId, LocalDate requestDate, boolean noDiaryOnly) {
-        LocalDateTime startDateTime = LocalDateTime.of(requestDate, LocalTime.of(0, 0, 0));
-        LocalDateTime endDateTime = LocalDateTime.of(requestDate, LocalTime.of(23, 59, 59));
-
         if (noDiaryOnly) {
-            return scheduleRepository.findByMemberIdAndStartTimeBetweenAndDiaryNullOrderByStartTimeAscEndTimeAsc(memberId, startDateTime, endDateTime);
+            return scheduleRepository.findByMemberIdAndDateAndDiaryNullOrderByStartTimeAndEndTimeAsc(memberId, requestDate);
         }
-        return scheduleRepository.findByMemberIdAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(memberId, startDateTime, endDateTime);
+        return scheduleRepository.findByMemberIdAndDateOrderByStartTimeAndEndTimeAsc(memberId, requestDate);
     }
 
     @Transactional
@@ -109,17 +102,14 @@ public class ScheduleService {
     }
 
     public List<ScheduleCountResponseDto> getCountOfDaysInMonth(Long memberId, YearMonth requestMonth) {
-        LocalDate startDate = LocalDate.of(requestMonth.getYear(), requestMonth.getMonth(), 1);
-        LocalDate endDate = LocalDate.of(requestMonth.getYear(), requestMonth.getMonth(), requestMonth.lengthOfMonth());
+        LocalDate startDate = requestMonth.atDay(1);
+        LocalDate endDate = requestMonth.atEndOfMonth();
 
-        LocalDateTime startDateTime = LocalDateTime.of(startDate, LocalTime.of(0, 0, 0));
-        LocalDateTime endDateTime = LocalDateTime.of(endDate, LocalTime.of(23, 59, 59));
-
-        List<Schedule> schedules = scheduleRepository.findByMemberIdAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(memberId, startDateTime, endDateTime);
+        List<Schedule> schedules = scheduleRepository.findByMemberIdAndDateBetween(memberId, startDate, endDate);
 
         // TODO DB단에서 처리할 수 있도록 리팩토링 하기
         return schedules.stream()
-                .collect(Collectors.groupingBy((Schedule schedule) -> schedule.getStartTime().toLocalDate(), Collectors.counting()))
+                .collect(Collectors.groupingBy(Schedule::getDate, Collectors.counting()))
                 .entrySet().stream()
                 .map(entry -> ScheduleCountResponseDto.builder()
                         .date(entry.getKey())

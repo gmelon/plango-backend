@@ -1,12 +1,12 @@
 package dev.gmelon.plango.service.diary;
 
+import dev.gmelon.plango.config.auth.exception.UnauthorizedException;
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
-import dev.gmelon.plango.config.auth.exception.UnauthorizedException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
@@ -17,8 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,12 +63,8 @@ public class DiaryService {
     }
 
     public List<DiaryListResponseDto> findAllByDate(Long memberId, LocalDate requestDate) {
-        LocalDateTime startDateTime = LocalDateTime.of(requestDate, LocalTime.of(0, 0, 0));
-        LocalDateTime endDateTime = LocalDateTime.of(requestDate, LocalTime.of(23, 59, 59));
+        List<Schedule> schedules = scheduleRepository.findByMemberIdAndDateAndDiaryNotNullOrderByStartTimeAndEndTimeAsc(memberId, requestDate);
 
-        List<Schedule> schedules = scheduleRepository.findByMemberIdAndStartTimeBetweenAndDiaryNotNullOrderByStartTimeAscEndTimeAsc(memberId, startDateTime, endDateTime);
-
-        // TODO fetch join
         return schedules.stream()
                 .map(DiaryListResponseDto::from)
                 .collect(Collectors.toList());

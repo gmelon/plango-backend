@@ -3,10 +3,13 @@ package dev.gmelon.plango.web.schedule;
 import dev.gmelon.plango.config.auth.LoginMember;
 import dev.gmelon.plango.service.schedule.ScheduleService;
 import dev.gmelon.plango.service.schedule.dto.*;
+import dev.gmelon.plango.web.schedule.validator.ScheduleCreateRequestValidator;
+import dev.gmelon.plango.web.schedule.validator.ScheduleEditRequestValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -21,6 +24,19 @@ import java.util.List;
 public class ScheduleController {
 
     private final ScheduleService scheduleService;
+    private final ScheduleCreateRequestValidator scheduleCreateRequestValidator;
+    private final ScheduleEditRequestValidator scheduleEditRequestValidator;
+
+    @InitBinder("scheduleCreateRequestDto")
+
+    public void scheduleCreateRequestDtoInitBinder(WebDataBinder webDataBinder) {
+        webDataBinder.addValidators(scheduleCreateRequestValidator);
+    }
+
+    @InitBinder("scheduleEditRequestDto")
+    public void scheduleEditRequestDtoInitBinder(WebDataBinder webDataBinder) {
+        webDataBinder.addValidators(scheduleEditRequestValidator);
+    }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping

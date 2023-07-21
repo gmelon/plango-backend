@@ -1,5 +1,6 @@
 package dev.gmelon.plango.service.diary;
 
+import dev.gmelon.plango.config.auth.exception.UnauthorizedException;
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
@@ -7,7 +8,6 @@ import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
-import dev.gmelon.plango.config.auth.exception.UnauthorizedException;
 import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryListResponseDto;
@@ -19,7 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -66,8 +66,9 @@ class DiaryServiceTest {
         scheduleOfMemberA = Schedule.builder()
                 .title("계획 제목")
                 .content("계획 본문")
-                .startTime(LocalDateTime.of(2023, 6, 25, 10, 0, 0))
-                .endTime(LocalDateTime.of(2023, 6, 25, 11, 0, 0))
+                .date(LocalDate.of(2023, 6, 25))
+                .startTime(LocalTime.of(10, 0, 0))
+                .endTime(LocalTime.of(11, 0, 0))
                 .placeName("계획 장소")
                 .member(memberA)
                 .build();
@@ -134,6 +135,7 @@ class DiaryServiceTest {
 
         assertThat(responseDto.getSchedule().getId()).isEqualTo(scheduleOfMemberA.getId());
         assertThat(responseDto.getSchedule().getTitle()).isEqualTo(scheduleOfMemberA.getTitle());
+        assertThat(responseDto.getSchedule().getDate()).isEqualTo(scheduleOfMemberA.getDate());
         assertThat(responseDto.getSchedule().getStartTime()).isEqualTo(scheduleOfMemberA.getStartTime());
         assertThat(responseDto.getSchedule().getEndTime()).isEqualTo(scheduleOfMemberA.getEndTime());
         assertThat(responseDto.getSchedule().getPlaceName()).isEqualTo(scheduleOfMemberA.getPlaceName());
@@ -191,6 +193,7 @@ class DiaryServiceTest {
 
         assertThat(responseDto.getSchedule().getId()).isEqualTo(scheduleOfMemberA.getId());
         assertThat(responseDto.getSchedule().getTitle()).isEqualTo(scheduleOfMemberA.getTitle());
+        assertThat(responseDto.getSchedule().getDate()).isEqualTo(scheduleOfMemberA.getDate());
         assertThat(responseDto.getSchedule().getStartTime()).isEqualTo(scheduleOfMemberA.getStartTime());
         assertThat(responseDto.getSchedule().getEndTime()).isEqualTo(scheduleOfMemberA.getEndTime());
     }
@@ -331,56 +334,64 @@ class DiaryServiceTest {
         List<Schedule> schedules = List.of(
                 Schedule.builder()
                         .title("계획 1")
-                        .startTime(LocalDateTime.of(2023, 6, 25, 23, 59, 59))
-                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .date(LocalDate.of(2023, 6, 25))
+                        .startTime(LocalTime.of(23, 59, 59))
+                        .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
                         .diary(Diary.builder().title("기록 1").build())
                         .build(),
                 Schedule.builder()
                         .title("계획 2")
-                        .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
-                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
+                        .date(LocalDate.of(2023, 6, 26))
+                        .startTime(LocalTime.of(0, 0, 0))
+                        .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
                         .diary(Diary.builder().title("기록 2").build())
                         .build(),
                 Schedule.builder()
                         .title("계획 3")
-                        .startTime(LocalDateTime.of(2023, 6, 26, 0, 0, 0))
-                        .endTime(LocalDateTime.of(2023, 6, 26, 0, 0, 1))
+                        .date(LocalDate.of(2023, 6, 26))
+                        .startTime(LocalTime.of(0, 0, 0))
+                        .endTime(LocalTime.of(0, 0, 1))
                         .member(memberA)
                         .diary(Diary.builder().title("기록 3").build())
                         .build(),
                 Schedule.builder()
                         .title("계획 4")
-                        .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
-                        .endTime(LocalDateTime.of(2023, 6, 26, 12, 0, 0))
+                        .date(LocalDate.of(2023, 6, 26))
+                        .startTime(LocalTime.of(10, 0, 0))
+                        .endTime(LocalTime.of(12, 0, 0))
                         .member(memberA)
                         .diary(Diary.builder().title("기록 4").build())
                         .build(),
                 Schedule.builder()
                         .title("계획 5")
-                        .startTime(LocalDateTime.of(2023, 6, 26, 23, 59, 59))
-                        .endTime(LocalDateTime.of(2023, 6, 27, 0, 0, 0))
+                        .date(LocalDate.of(2023, 6, 26))
+                        .startTime(LocalTime.of(23, 59, 59))
+                        .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
                         .diary(Diary.builder().title("기록 5").build())
                         .build(),
                 Schedule.builder()
                         .title("계획 6")
-                        .startTime(LocalDateTime.of(2023, 6, 26, 23, 59, 59))
-                        .endTime(LocalDateTime.of(2023, 6, 27, 0, 0, 0))
+                        .date(LocalDate.of(2023, 6, 26))
+                        .startTime(LocalTime.of(23, 59, 59))
+                        .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("계획 7")
-                        .startTime(LocalDateTime.of(2023, 6, 26, 10, 0, 0))
-                        .endTime(LocalDateTime.of(2023, 6, 26, 11, 0, 0))
+                        .date(LocalDate.of(2023, 6, 26))
+                        .startTime(LocalTime.of(10, 0, 0))
+                        .endTime(LocalTime.of(11, 0, 0))
                         .member(memberB)
                         .diary(Diary.builder().title("기록 7").build())
                         .build(),
                 Schedule.builder()
                         .title("계획 8")
-                        .startTime(LocalDateTime.of(2023, 6, 26, 15, 0, 0))
-                        .endTime(LocalDateTime.of(2023, 6, 26, 22, 0, 1))
+                        .date(LocalDate.of(2023, 6, 26))
+                        .startTime(LocalTime.of(15, 0, 0))
+                        .endTime(LocalTime.of(22, 0, 0))
                         .member(memberB)
                         .diary(Diary.builder().title("기록 8").build())
                         .build()

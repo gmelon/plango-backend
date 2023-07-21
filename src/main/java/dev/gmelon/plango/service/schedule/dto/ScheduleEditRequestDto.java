@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @NoArgsConstructor
 @Getter
@@ -19,13 +19,14 @@ public class ScheduleEditRequestDto {
 
     private String content;
 
-    @NotNull
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime startTime;
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate date;
 
-    @NotNull
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime endTime;
+    @DateTimeFormat(pattern = "HH:mm:ss")
+    private LocalTime startTime;
+
+    @DateTimeFormat(pattern = "HH:mm:ss")
+    private LocalTime endTime;
 
     private Double latitude;
 
@@ -36,9 +37,10 @@ public class ScheduleEditRequestDto {
     private String placeName;
 
     @Builder
-    public ScheduleEditRequestDto(String title, String content, LocalDateTime startTime, LocalDateTime endTime, Double latitude, Double longitude, String roadAddress, String placeName) {
+    public ScheduleEditRequestDto(String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime, Double latitude, Double longitude, String roadAddress, String placeName) {
         this.title = title;
         this.content = content;
+        this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
         this.latitude = latitude;
@@ -51,6 +53,7 @@ public class ScheduleEditRequestDto {
         return ScheduleEditor.builder()
                 .title(title)
                 .content(content)
+                .date(date)
                 .startTime(startTime)
                 .endTime(endTime)
                 .latitude(latitude)

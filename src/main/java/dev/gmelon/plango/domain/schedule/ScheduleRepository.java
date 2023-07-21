@@ -1,9 +1,11 @@
 package dev.gmelon.plango.domain.schedule;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,12 +16,37 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     void deleteAllByMemberId(Long memberId);
 
-    // TODO 리팩토링
-    List<Schedule> findByMemberIdAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(Long memberId, LocalDateTime start, LocalDateTime end);
+    @Query("SELECT s FROM Schedule s " +
+            "WHERE s.member.id = :memberId " +
+            "AND s.date = :date " +
+            "ORDER BY CASE WHEN s.startTime IS NULL THEN 0 ELSE 1 END, " +
+            "CASE WHEN s.startTime IS NULL THEN s.modifiedDate ELSE s.startTime END ASC, " +
+            "s.endTime ASC")
+    List<Schedule> findByMemberIdAndDateOrderByStartTimeAndEndTimeAsc(@Param("memberId") Long memberId, @Param("date") LocalDate date);
 
-    List<Schedule> findByMemberIdAndStartTimeBetweenAndDiaryNotNullOrderByStartTimeAscEndTimeAsc(Long memberId, LocalDateTime start, LocalDateTime end);
+    @Query("SELECT s FROM Schedule s " +
+            "WHERE s.member.id = :memberId " +
+            "AND s.diary IS NULL " +
+            "AND s.date = :date " +
+            "ORDER BY CASE WHEN s.startTime IS NULL THEN 0 ELSE 1 END, " +
+            "CASE WHEN s.startTime IS NULL THEN s.modifiedDate ELSE s.startTime END ASC, " +
+            "s.endTime ASC")
+    List<Schedule> findByMemberIdAndDateAndDiaryNullOrderByStartTimeAndEndTimeAsc(@Param("memberId") Long memberId, @Param("date") LocalDate date);
 
-    List<Schedule> findByMemberIdAndStartTimeBetweenAndDiaryNullOrderByStartTimeAscEndTimeAsc(Long memberId, LocalDateTime start, LocalDateTime end);
+    @Query("SELECT s FROM Schedule s join fetch s.diary " +
+            "WHERE s.member.id = :memberId " +
+            "AND s.diary IS NOT NULL " +
+            "AND s.date = :date " +
+            "ORDER BY CASE WHEN s.startTime IS NULL THEN 0 ELSE 1 END, " +
+            "CASE WHEN s.startTime IS NULL THEN s.modifiedDate ELSE s.startTime END ASC, " +
+            "s.endTime ASC")
+    List<Schedule> findByMemberIdAndDateAndDiaryNotNullOrderByStartTimeAndEndTimeAsc(@Param("memberId") Long memberId, @Param("date") LocalDate date);
+
+    @Query("SELECT s FROM Schedule s " +
+            "WHERE s.member.id = :memberId " +
+            "AND s.date >= :startDate " +
+            "AND s.date <= :endDate")
+    List<Schedule> findByMemberIdAndDateBetween(@Param("memberId") Long memberId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     Optional<Schedule> findByDiaryId(Long diaryId);
 

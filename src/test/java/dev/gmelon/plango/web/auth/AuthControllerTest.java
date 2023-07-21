@@ -25,7 +25,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -281,8 +282,9 @@ class AuthControllerTest {
                 .build();
         Schedule schedule = Schedule.builder()
                 .title("계획 제목")
-                .startTime(LocalDateTime.now())
-                .endTime(LocalDateTime.now())
+                .date(LocalDate.now())
+                .startTime(LocalTime.now())
+                .endTime(LocalTime.now())
                 .diary(diary)
                 .member(member)
                 .build();
@@ -319,8 +321,9 @@ class AuthControllerTest {
                 .build();
         Schedule schedule = Schedule.builder()
                 .title("계획 제목")
-                .startTime(LocalDateTime.now())
-                .endTime(LocalDateTime.now())
+                .date(LocalDate.now())
+                .startTime(LocalTime.now())
+                .endTime(LocalTime.now())
                 .diary(diary)
                 .member(member)
                 .build();

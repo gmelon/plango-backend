@@ -6,6 +6,8 @@ import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryListResponseDto;
 import dev.gmelon.plango.service.diary.dto.DiaryResponseDto;
+import dev.gmelon.plango.web.diary.validator.DiaryCreateRequestValidator;
+import dev.gmelon.plango.web.diary.validator.DiaryEditRequestValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
