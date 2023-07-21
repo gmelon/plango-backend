@@ -1,5 +1,6 @@
 package dev.gmelon.plango.service.auth;
 
+import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
@@ -56,6 +57,7 @@ public class AuthService {
     @Transactional
     public void signout(Long memberId) {
         deleteAllDiaryImages(memberId);
+        deleteProfileImage(memberId);
 
         scheduleRepository.deleteAllByMemberId(memberId);
         memberRepository.deleteById(memberId);
@@ -68,5 +70,15 @@ public class AuthService {
                 .map(schedule -> schedule.getDiary().getImageUrl())
                 .filter(Objects::nonNull)
                 .forEach(s3Repository::delete);
+    }
+
+    private void deleteProfileImage(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        String profileImageUrl = member.getProfileImageUrl();
+        if (profileImageUrl != null) {
+            s3Repository.delete(profileImageUrl);
+        }
     }
 }

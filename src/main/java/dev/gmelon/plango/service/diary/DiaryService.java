@@ -80,7 +80,7 @@ public class DiaryService {
         Diary diary = schedule.getDiary();
         String prevDiaryImageUrl = diary.getImageUrl();
 
-        diary.edit(requestDto.toDiaryEditor());
+        diary.edit(requestDto.toEditor());
         deletePrevImageIfChanged(prevDiaryImageUrl, requestDto);
     }
 

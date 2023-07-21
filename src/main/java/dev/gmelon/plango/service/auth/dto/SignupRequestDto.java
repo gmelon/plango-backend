@@ -25,11 +25,14 @@ public class SignupRequestDto {
     @NotBlank
     private String nickname;
 
+    private String profileImageUrl;
+
     @Builder
-    public SignupRequestDto(String email, String password, String nickname) {
+    public SignupRequestDto(String email, String password, String nickname, String profileImageUrl) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
     }
 
     public void setPassword(String password) {
@@ -41,6 +44,7 @@ public class SignupRequestDto {
                 .email(email)
                 .password(password)
                 .nickname(nickname)
+                .profileImageUrl(profileImageUrl)
                 .role(MemberRole.ROLE_USER)
                 .build();
     }

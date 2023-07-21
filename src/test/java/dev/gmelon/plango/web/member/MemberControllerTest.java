@@ -4,7 +4,7 @@ import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
-import dev.gmelon.plango.service.member.dto.MemberEditNicknameRequestDto;
+import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
 import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
@@ -50,6 +50,7 @@ class MemberControllerTest {
                 .email("a@a.com")
                 .password("passwordA")
                 .nickname("nameA")
+                .profileImageUrl("https://plango-backend/imageA.jpg")
                 .build();
         loginCookieOfMemberA = TestAuthUtil.signupAndGetCookie(memberASignupRequest);
 
@@ -72,6 +73,7 @@ class MemberControllerTest {
         assertThat(responseDto.getId()).isEqualTo(memberA.getId());
         assertThat(responseDto.getEmail()).isEqualTo(memberA.getEmail());
         assertThat(responseDto.getNickname()).isEqualTo(memberA.getNickname());
+        assertThat(responseDto.getProfileImageUrl()).isEqualTo(memberA.getProfileImageUrl());
     }
 
     @Test
@@ -143,10 +145,11 @@ class MemberControllerTest {
     }
 
     @Test
-    void 이름_변경() {
+    void 프로필_수정() {
         // given
-        MemberEditNicknameRequestDto request = MemberEditNicknameRequestDto.builder()
+        MemberEditProfileRequestDto request = MemberEditProfileRequestDto.builder()
                 .nickname("nameB")
+                .profileImageUrl("https://plango-backend/imageB.jpg")
                 .build();
 
         // when
@@ -155,7 +158,7 @@ class MemberControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request)
                 .cookie(loginCookieOfMemberA)
-                .when().patch("/api/members/nickname")
+                .when().patch("/api/members/profile")
                 .then().log().all().extract();
 
         // then
@@ -163,5 +166,6 @@ class MemberControllerTest {
         Member foundMemberA = memberRepository.findById(memberA.getId()).get();
 
         assertThat(foundMemberA.getNickname()).isEqualTo(request.getNickname());
+        assertThat(foundMemberA.getProfileImageUrl()).isEqualTo(request.getProfileImageUrl());
     }
 }

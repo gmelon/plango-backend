@@ -3,7 +3,7 @@ package dev.gmelon.plango.service.member;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
-import dev.gmelon.plango.service.member.dto.MemberEditNicknameRequestDto;
+import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
 import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
@@ -36,6 +36,7 @@ class MemberServiceTest {
                 .email("a@a.com")
                 .password(passwordEncoder.encode("passwordA"))
                 .nickname("nameA")
+                .profileImageUrl("https://plango-backend/imageA.jpg")
                 .role(MemberRole.ROLE_USER)
                 .build();
         memberRepository.save(memberA);
@@ -50,6 +51,7 @@ class MemberServiceTest {
         assertThat(response.getId()).isEqualTo(memberA.getId());
         assertThat(response.getNickname()).isEqualTo(memberA.getNickname());
         assertThat(response.getNickname()).isEqualTo(memberA.getNickname());
+        assertThat(response.getProfileImageUrl()).isEqualTo(memberA.getProfileImageUrl());
     }
 
     @Test
@@ -99,17 +101,19 @@ class MemberServiceTest {
     }
 
     @Test
-    void 이름_변경() {
+    void 프로필_수정() {
         // given
-        MemberEditNicknameRequestDto request = MemberEditNicknameRequestDto.builder()
+        MemberEditProfileRequestDto request = MemberEditProfileRequestDto.builder()
                 .nickname("nameB")
+                .profileImageUrl("https://plango-backend/imageB.jpg")
                 .build();
 
         // when
-        memberService.editNickname(memberA.getId(), request);
+        memberService.editProfile(memberA.getId(), request);
 
         //then
         Member foundMemberA = memberRepository.findById(memberA.getId()).get();
         assertThat(foundMemberA.getNickname()).isEqualTo(request.getNickname());
+        assertThat(foundMemberA.getProfileImageUrl()).isEqualTo(request.getProfileImageUrl());
     }
 }

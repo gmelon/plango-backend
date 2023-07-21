@@ -3,7 +3,8 @@ package dev.gmelon.plango.service.member;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
-import dev.gmelon.plango.service.member.dto.MemberEditNicknameRequestDto;
+import dev.gmelon.plango.infrastructure.s3.S3Repository;
+import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
 import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
@@ -18,6 +19,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final ScheduleRepository scheduleRepository;
+    private final S3Repository s3Repository;
     private final PasswordEncoder passwordEncoder;
 
     public MemberProfileResponseDto getMyProfile(Long memberId) {
@@ -53,9 +55,36 @@ public class MemberService {
     }
 
     @Transactional
-    public void editNickname(Long memberId, MemberEditNicknameRequestDto requestDto) {
+    public void editProfile(Long memberId, MemberEditProfileRequestDto requestDto) {
+        validateNicknameIsUnique(requestDto);
+
         Member member = findMemberById(memberId);
-        member.editNickname(requestDto.getNickname());
+
+        String prevProfileImageUrl = member.getProfileImageUrl();
+        member.edit(requestDto.toEditor());
+
+        deletePrevImageIfChanged(prevProfileImageUrl, requestDto);
+    }
+
+    private void validateNicknameIsUnique(MemberEditProfileRequestDto requestDto) {
+        boolean isNicknameAlreadyExists = memberRepository.findByNickname(requestDto.getNickname())
+                .isPresent();
+        if (isNicknameAlreadyExists) {
+            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
+        }
+    }
+
+    private void deletePrevImageIfChanged(String prevProfileImageUrl, MemberEditProfileRequestDto requestDto) {
+        if (prevProfileImageUrl == null) {
+            return;
+        }
+        if (isImageChangedOrDeleted(prevProfileImageUrl, requestDto)) {
+            s3Repository.delete(prevProfileImageUrl);
+        }
+    }
+
+    private boolean isImageChangedOrDeleted(String prevProfileImageUrl, MemberEditProfileRequestDto requestDto) {
+        return requestDto.getProfileImageUrl() == null || !prevProfileImageUrl.equals(requestDto.getProfileImageUrl());
     }
 
     private Member findMemberById(Long memberId) {

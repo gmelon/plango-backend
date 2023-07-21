@@ -49,7 +49,7 @@ public class ScheduleEditRequestDto {
         this.placeName = placeName;
     }
 
-    public ScheduleEditor toScheduleEditor() {
+    public ScheduleEditor toEditor() {
         return ScheduleEditor.builder()
                 .title(title)
                 .content(content)

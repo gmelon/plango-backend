@@ -31,24 +31,28 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false, unique = true)
     private String nickname;
 
+    private String profileImageUrl;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private MemberRole role;
 
     @Builder
-    public Member(String email, String password, String nickname, MemberRole role) {
+    public Member(String email, String password, String nickname, String profileImageUrl, MemberRole role) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
         this.role = role;
+    }
+
+    public void edit(MemberEditor editor) {
+        this.nickname = editor.getNickname();
+        this.profileImageUrl = editor.getProfileImageUrl();
     }
 
     public void changePassword(String newPassword) {
         this.password = newPassword;
-    }
-
-    public void editNickname(String newNickname) {
-        this.nickname = newNickname;
     }
 
     @Override

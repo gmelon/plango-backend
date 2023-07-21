@@ -24,7 +24,7 @@ public class DiaryEditRequestDto {
         this.imageUrl = imageUrl;
     }
 
-    public DiaryEditor toDiaryEditor() {
+    public DiaryEditor toEditor() {
         return DiaryEditor.builder()
                 .title(title)
                 .content(content)

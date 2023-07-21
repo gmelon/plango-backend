@@ -68,7 +68,7 @@ public class ScheduleService {
 
         validateMember(schedule, member);
 
-        ScheduleEditor scheduleEditor = requestDto.toScheduleEditor();
+        ScheduleEditor scheduleEditor = requestDto.toEditor();
         schedule.edit(scheduleEditor);
     }
 
