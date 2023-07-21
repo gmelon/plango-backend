@@ -81,7 +81,7 @@ class AuthServiceTest {
         // when, then
         assertThatThrownBy(() -> authService.signup(secondRequest))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("이미 존재하는 회원입니다.");
+                .hasMessage("이미 존재하는 이메일입니다.");
     }
 
 
@@ -103,7 +103,7 @@ class AuthServiceTest {
         // when, then
         assertThatThrownBy(() -> authService.signup(secondRequest))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("이미 존재하는 회원입니다.");
+                .hasMessage("이미 존재하는 닉네임입니다.");
     }
 
     @Test

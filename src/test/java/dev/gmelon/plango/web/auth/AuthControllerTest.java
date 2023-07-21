@@ -108,7 +108,7 @@ class AuthControllerTest {
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("이미 존재하는 회원입니다.");
+        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("이미 존재하는 이메일입니다.");
     }
 
     @Test
@@ -142,7 +142,7 @@ class AuthControllerTest {
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("이미 존재하는 회원입니다.");
+        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("이미 존재하는 닉네임입니다.");
     }
 
     @Test
