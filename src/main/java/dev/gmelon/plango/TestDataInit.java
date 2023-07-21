@@ -28,8 +28,8 @@ public class TestDataInit {
     public void dataInit() {
         SignupRequestDto request = SignupRequestDto.builder()
                 .email("hsh1769@naver.com")
-                .password("1234")
-                .nickname("현상혁")
+                .password("1111")
+                .nickname("gmelon")
                 .build();
         authService.signup(request);
         Member memberA = memberRepository.findByEmail(request.getEmail()).get();
