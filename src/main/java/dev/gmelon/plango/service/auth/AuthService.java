@@ -42,7 +42,7 @@ public class AuthService {
         boolean isEmailAlreadyExists = memberRepository.findByEmail(requestDto.getEmail())
                 .isPresent();
         if (isEmailAlreadyExists) {
-            throw new IllegalArgumentException("이미 존재하는 회원입니다.");
+            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
         }
     }
 
@@ -50,7 +50,7 @@ public class AuthService {
         boolean isNicknameAlreadyExists = memberRepository.findByNickname(requestDto.getNickname())
                 .isPresent();
         if (isNicknameAlreadyExists) {
-            throw new IllegalArgumentException("이미 존재하는 회원입니다.");
+            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
         }
     }
 

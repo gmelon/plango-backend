@@ -30,6 +30,7 @@ public class TestDataInit {
                 .email("hsh1769@naver.com")
                 .password("1111")
                 .nickname("gmelon")
+                .profileImageUrl("https://avatars.githubusercontent.com/u/33623106?v=4")
                 .build();
         authService.signup(request);
         Member memberA = memberRepository.findByEmail(request.getEmail()).get();

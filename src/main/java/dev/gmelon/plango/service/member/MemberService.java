@@ -56,9 +56,8 @@ public class MemberService {
 
     @Transactional
     public void editProfile(Long memberId, MemberEditProfileRequestDto requestDto) {
-        validateNicknameIsUnique(requestDto);
-
         Member member = findMemberById(memberId);
+        validateNicknameIsUnique(requestDto, member.getNickname());
 
         String prevProfileImageUrl = member.getProfileImageUrl();
         member.edit(requestDto.toEditor());
@@ -66,7 +65,11 @@ public class MemberService {
         deletePrevImageIfChanged(prevProfileImageUrl, requestDto);
     }
 
-    private void validateNicknameIsUnique(MemberEditProfileRequestDto requestDto) {
+    private void validateNicknameIsUnique(MemberEditProfileRequestDto requestDto, String currentMemberNickname) {
+        if (requestDto.getNickname().equals(currentMemberNickname)) {
+            return;
+        }
+
         boolean isNicknameAlreadyExists = memberRepository.findByNickname(requestDto.getNickname())
                 .isPresent();
         if (isNicknameAlreadyExists) {
