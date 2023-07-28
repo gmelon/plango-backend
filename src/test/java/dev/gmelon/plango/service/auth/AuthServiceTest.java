@@ -7,6 +7,8 @@ import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.exception.member.DuplicateEmailException;
+import dev.gmelon.plango.exception.member.DuplicateNicknameException;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -80,8 +82,7 @@ class AuthServiceTest {
 
         // when, then
         assertThatThrownBy(() -> authService.signup(secondRequest))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("이미 존재하는 이메일입니다.");
+                .isInstanceOf(DuplicateEmailException.class);
     }
 
 
@@ -102,8 +103,7 @@ class AuthServiceTest {
 
         // when, then
         assertThatThrownBy(() -> authService.signup(secondRequest))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("이미 존재하는 닉네임입니다.");
+                .isInstanceOf(DuplicateNicknameException.class);
     }
 
     @Test

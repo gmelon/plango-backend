@@ -9,6 +9,7 @@ import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
+import dev.gmelon.plango.exception.dto.InputInvalidErrorResponseDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.web.TestAuthUtil;
 import io.restassured.RestAssured;
@@ -108,7 +109,8 @@ class AuthControllerTest {
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("이미 존재하는 이메일입니다.");
+        assertThat(response.as(InputInvalidErrorResponseDto.class).getField()).isEqualTo("email");
+        assertThat(response.as(InputInvalidErrorResponseDto.class).getMessage()).isEqualTo("이미 존재하는 이메일입니다.");
     }
 
     @Test
@@ -142,7 +144,8 @@ class AuthControllerTest {
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("이미 존재하는 닉네임입니다.");
+        assertThat(response.as(InputInvalidErrorResponseDto.class).getField()).isEqualTo("nickname");
+        assertThat(response.as(InputInvalidErrorResponseDto.class).getMessage()).isEqualTo("이미 존재하는 닉네임입니다.");
     }
 
     @Test
@@ -382,6 +385,6 @@ class AuthControllerTest {
                 .then().log().all().extract();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
     }
 }

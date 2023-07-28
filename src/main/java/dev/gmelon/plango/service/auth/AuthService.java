@@ -4,6 +4,9 @@ import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.exception.member.DuplicateEmailException;
+import dev.gmelon.plango.exception.member.NoSuchMemberException;
+import dev.gmelon.plango.exception.member.DuplicateNicknameException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +45,7 @@ public class AuthService {
         boolean isEmailAlreadyExists = memberRepository.findByEmail(requestDto.getEmail())
                 .isPresent();
         if (isEmailAlreadyExists) {
-            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+            throw new DuplicateEmailException();
         }
     }
 
@@ -50,7 +53,7 @@ public class AuthService {
         boolean isNicknameAlreadyExists = memberRepository.findByNickname(requestDto.getNickname())
                 .isPresent();
         if (isNicknameAlreadyExists) {
-            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
+            throw new DuplicateNicknameException();
         }
     }
 
@@ -74,7 +77,7 @@ public class AuthService {
 
     private void deleteProfileImage(Long memberId) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(NoSuchMemberException::new);
 
         String profileImageUrl = member.getProfileImageUrl();
         if (profileImageUrl != null) {

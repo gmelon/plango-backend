@@ -1,5 +1,6 @@
 package dev.gmelon.plango.service.s3;
 
+import dev.gmelon.plango.exception.s3.FileUploadFailureException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,7 @@ public class S3Service {
         try (InputStream inputStream = file.getInputStream()) {
             return s3Repository.upload(Objects.requireNonNull(file.getOriginalFilename()), inputStream, file.getContentType(), file.getSize());
         } catch (IOException e) {
-            // TODO 사용자 예외 UploadFailException? (500)
-            throw new RuntimeException("파일 업로드에 실패했습니다.");
+            throw new FileUploadFailureException();
         }
     }
 

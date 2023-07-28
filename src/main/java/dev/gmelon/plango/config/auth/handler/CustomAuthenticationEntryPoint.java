@@ -21,9 +21,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        ErrorResponseDto errorResponse = ErrorResponseDto.builder()
-                .message("로그인이 필요합니다.")
-                .build();
+        ErrorResponseDto errorResponse = ErrorResponseDto.unAuthorized();
 
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(UTF_8.name());

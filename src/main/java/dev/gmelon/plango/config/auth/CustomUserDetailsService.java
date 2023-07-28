@@ -3,6 +3,7 @@ package dev.gmelon.plango.config.auth;
 import dev.gmelon.plango.config.auth.dto.MemberPrincipal;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
+import dev.gmelon.plango.exception.ErrorMessages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,10 +23,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     private Member findMemberByEmailOrNickname(String emailOrNickname) {
-        // TODO 예외 어떻게 처리할지? 현재는 이메일/닉네임이 잘못되면 예외 발생
         return memberRepository.findByEmail(emailOrNickname)
                 .orElseGet(() -> memberRepository.findByNickname(emailOrNickname)
-                        .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.")));
+                        .orElseThrow(() -> new UsernameNotFoundException(ErrorMessages.LOGIN_FAILURE_ERROR_MESSAGE)));
     }
 
 }

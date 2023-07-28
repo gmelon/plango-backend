@@ -1,5 +1,6 @@
 package dev.gmelon.plango.web.s3;
 
+import dev.gmelon.plango.exception.s3.EmptyFileException;
 import dev.gmelon.plango.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.URL;
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
-@Validated // TODO validated가 더 깔끔한 응답을 내려주는 것 같음
+@Validated
 @RequestMapping("/api/s3")
 @RestController
 public class S3Controller {
@@ -18,7 +19,7 @@ public class S3Controller {
     @PostMapping
     public String upload(@RequestParam MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("빈 파일입니다.");
+            throw new EmptyFileException();
         }
         return s3Service.upload(file);
     }

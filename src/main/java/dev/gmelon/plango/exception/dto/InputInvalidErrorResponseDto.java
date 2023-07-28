@@ -1,0 +1,56 @@
+package dev.gmelon.plango.exception.dto;
+
+import dev.gmelon.plango.exception.InputInvalidException;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.validator.internal.engine.path.PathImpl;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+
+@NoArgsConstructor
+@Getter
+public class InputInvalidErrorResponseDto {
+
+    private String field;
+    private String message;
+
+    @Builder
+    public InputInvalidErrorResponseDto(String field, String message) {
+        this.field = field;
+        this.message = message;
+    }
+
+    public static InputInvalidErrorResponseDto from(InputInvalidException exception) {
+        return InputInvalidErrorResponseDto.builder()
+                .field(exception.getField())
+                .message(exception.getMessage())
+                .build();
+    }
+
+    public static InputInvalidErrorResponseDto from(MethodArgumentNotValidException exception) {
+        FieldError firstFieldError = exception.getFieldErrors().get(0);
+        return InputInvalidErrorResponseDto.builder()
+                .field(firstFieldError.getField())
+                .message(firstFieldError.getDefaultMessage())
+                .build();
+    }
+
+    public static InputInvalidErrorResponseDto from(ConstraintViolationException exception) {
+        ConstraintViolation<?> constraintViolation = exception.getConstraintViolations().iterator().next();
+        String field = getField(constraintViolation);
+
+        return InputInvalidErrorResponseDto.builder()
+                .field(field)
+                .message(constraintViolation.getMessage())
+                .build();
+    }
+
+    private static String getField(ConstraintViolation<?> constraintViolation) {
+        PathImpl propertyPath = (PathImpl) constraintViolation.getPropertyPath();
+        return propertyPath.getLeafNode().asString();
+    }
+}

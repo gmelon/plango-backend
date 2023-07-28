@@ -1,12 +1,15 @@
 package dev.gmelon.plango.service.diary;
 
-import dev.gmelon.plango.config.auth.exception.UnauthorizedException;
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.exception.diary.NoSuchDiaryException;
+import dev.gmelon.plango.exception.member.NoSuchMemberException;
+import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
+import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
@@ -118,22 +121,22 @@ public class DiaryService {
 
     private void validateMember(Schedule schedule, Member member) {
         if (!schedule.getMember().equals(member)) {
-            throw new UnauthorizedException();
+            throw new ScheduleAccessDeniedException();
         }
     }
 
     private Schedule findScheduleById(Long scheduleId) {
         return scheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계획입니다."));
+                .orElseThrow(NoSuchScheduleException::new);
     }
 
     private Schedule findScheduleByDiaryId(Long diaryId) {
         return scheduleRepository.findByDiaryId(diaryId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계획입니다."));
+                .orElseThrow(NoSuchDiaryException::new);
     }
 
     private Member findMemberById(Long memberId) {
         return memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(NoSuchMemberException::new);
     }
 }

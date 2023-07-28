@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.http.HttpStatus.SC_FORBIDDEN;
+import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RequiredArgsConstructor
@@ -22,13 +22,11 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        ErrorResponseDto errorResponse = ErrorResponseDto.builder()
-                .message("권한이 없는 자원입니다.")
-                .build();
+        ErrorResponseDto errorResponse = ErrorResponseDto.notFound();
 
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(UTF_8.name());
-        response.setStatus(SC_FORBIDDEN);
+        response.setStatus(SC_NOT_FOUND);
 
         objectMapper.writeValue(response.getWriter(), errorResponse);
     }

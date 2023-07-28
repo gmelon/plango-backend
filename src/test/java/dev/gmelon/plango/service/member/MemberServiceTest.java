@@ -3,6 +3,7 @@ package dev.gmelon.plango.service.member;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.exception.member.PasswordMismatchException;
 import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
 import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
@@ -93,8 +94,7 @@ class MemberServiceTest {
 
         // when, then
         assertThatThrownBy(() -> memberService.changePassword(memberA.getId(), request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("이전 비밀번호가 일치하지 않습니다.");
+                .isInstanceOf(PasswordMismatchException.class);
 
         Member foundMemberA = memberRepository.findById(memberA.getId()).get();
         assertThat(passwordEncoder.matches("passwordA", foundMemberA.getPassword())).isTrue();

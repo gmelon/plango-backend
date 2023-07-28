@@ -275,8 +275,8 @@ class ScheduleControllerTest {
                 .then().log().all().extract();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("존재하지 않는 계획입니다.");
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("존재하지 않는 일정입니다.");
     }
 
     @Test
@@ -305,8 +305,7 @@ class ScheduleControllerTest {
                 .then().log().all().extract();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
-        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("권한이 없는 자원입니다.");
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
     }
 
     @Test
@@ -404,8 +403,7 @@ class ScheduleControllerTest {
                 .then().log().all().extract();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
-        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("권한이 없는 자원입니다.");
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
     }
 
     @ParameterizedTest
@@ -465,7 +463,7 @@ class ScheduleControllerTest {
                 .then().log().all().extract();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
     }
 
     @Test
@@ -526,8 +524,7 @@ class ScheduleControllerTest {
                 .then().log().all().extract();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
-        assertThat(response.as(ErrorResponseDto.class).getMessage()).isEqualTo("권한이 없는 자원입니다.");
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
         assertThat(scheduleRepository.findById(createdScheduleId)).isPresent();
     }
 

@@ -1,6 +1,5 @@
 package dev.gmelon.plango.service.schedule;
 
-import dev.gmelon.plango.config.auth.exception.UnauthorizedException;
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
@@ -8,6 +7,8 @@ import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
+import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
 import dev.gmelon.plango.service.schedule.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -171,8 +172,7 @@ class ScheduleServiceTest {
     void 존재하지_않는_계획_단건_조회() {
         // when, then
         assertThatThrownBy(() -> scheduleService.findById(memberA.getId(), 1L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("존재하지 않는 계획입니다.");
+                .isInstanceOf(NoSuchScheduleException.class);
     }
 
     @Test
@@ -190,7 +190,7 @@ class ScheduleServiceTest {
 
         // when, then
         assertThatThrownBy(() -> scheduleService.findById(memberB.getId(), createdScheduleId))
-                .isInstanceOf(UnauthorizedException.class);
+                .isInstanceOf(ScheduleAccessDeniedException.class);
     }
 
     @Test
@@ -261,7 +261,7 @@ class ScheduleServiceTest {
 
         // when, then
         assertThatThrownBy(() -> scheduleService.edit(memberB.getId(), createdScheduleId, editRequet))
-                .isInstanceOf(UnauthorizedException.class);
+                .isInstanceOf(ScheduleAccessDeniedException.class);
 
         Schedule foundSchedule = assertDoesNotThrow(() -> scheduleRepository.findById(createdScheduleId).get());
         assertThat(foundSchedule)
@@ -313,7 +313,7 @@ class ScheduleServiceTest {
 
         // when, then
         assertThatThrownBy(() -> scheduleService.editDone(memberB.getId(), createdScheduleId, request))
-                .isInstanceOf(UnauthorizedException.class);
+                .isInstanceOf(ScheduleAccessDeniedException.class);
     }
 
     @Test
@@ -351,7 +351,7 @@ class ScheduleServiceTest {
 
         // when, then
         assertThatThrownBy(() -> scheduleService.delete(memberB.getId(), createdScheduleId))
-                .isInstanceOf(UnauthorizedException.class);
+                .isInstanceOf(ScheduleAccessDeniedException.class);
     }
 
     @Test

@@ -1,6 +1,5 @@
 package dev.gmelon.plango.service.diary;
 
-import dev.gmelon.plango.config.auth.exception.UnauthorizedException;
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
@@ -8,6 +7,9 @@ import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.exception.diary.NoSuchDiaryException;
+import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
+import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
 import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryListResponseDto;
@@ -107,7 +109,7 @@ class DiaryServiceTest {
 
         // when
         assertThatThrownBy(() -> diaryService.create(memberB.getId(), scheduleOfMemberA.getId(), request))
-                .isInstanceOf(UnauthorizedException.class);
+                .isInstanceOf(ScheduleAccessDeniedException.class);
     }
 
     @Test
@@ -157,15 +159,14 @@ class DiaryServiceTest {
 
         // when, then
         assertThatThrownBy(() -> diaryService.findById(memberB.getId(), diary.getId()))
-                .isInstanceOf(UnauthorizedException.class);
+                .isInstanceOf(ScheduleAccessDeniedException.class);
     }
 
     @Test
     void 존재하지_않는_기록_단건_조회() {
         // when, then
         assertThatThrownBy(() -> diaryService.findById(memberB.getId(), 1L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("존재하지 않는 계획입니다.");
+                .isInstanceOf(NoSuchDiaryException.class);
     }
 
     @Test
@@ -214,15 +215,14 @@ class DiaryServiceTest {
 
         // when, then
         assertThatThrownBy(() -> diaryService.findByScheduleId(memberB.getId(), schedule.getId()))
-                .isInstanceOf(UnauthorizedException.class);
+                .isInstanceOf(ScheduleAccessDeniedException.class);
     }
 
     @Test
     void 존재하지_않는_계획_id로_기록_단건_조회() {
         // when, then
         assertThatThrownBy(() -> diaryService.findByScheduleId(memberB.getId(), scheduleOfMemberA.getId() + 1))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("존재하지 않는 계획입니다.");
+                .isInstanceOf(NoSuchScheduleException.class);
     }
 
     @Test
@@ -278,7 +278,7 @@ class DiaryServiceTest {
 
         // when, then
         assertThatThrownBy(() -> diaryService.edit(memberB.getId(), diary.getId(), requestDto))
-                .isInstanceOf(UnauthorizedException.class);
+                .isInstanceOf(ScheduleAccessDeniedException.class);
 
         Diary foundDiary = assertDoesNotThrow(() -> diaryRepository.findById(diary.getId()).get());
         assertThat(foundDiary)
@@ -324,7 +324,7 @@ class DiaryServiceTest {
 
         // when, then
         assertThatThrownBy(() -> diaryService.delete(memberB.getId(), diary.getId()))
-                .isInstanceOf(UnauthorizedException.class);
+                .isInstanceOf(ScheduleAccessDeniedException.class);
         assertThat(diaryRepository.findById(diary.getId())).isPresent();
     }
 

@@ -1,6 +1,7 @@
 package dev.gmelon.plango.config.auth.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.gmelon.plango.exception.ErrorMessages;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.AuthenticationException;
@@ -23,7 +24,7 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
         ErrorResponseDto errorResponse = ErrorResponseDto.builder()
-                .message("아이디 또는 비밀번호가 올바르지 않습니다.")
+                .message(ErrorMessages.LOGIN_FAILURE_ERROR_MESSAGE)
                 .build();
 
         response.setContentType(APPLICATION_JSON_VALUE);

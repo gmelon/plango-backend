@@ -3,6 +3,9 @@ package dev.gmelon.plango.service.member;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.exception.member.NoSuchMemberException;
+import dev.gmelon.plango.exception.member.DuplicateNicknameException;
+import dev.gmelon.plango.exception.member.PasswordMismatchException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
@@ -50,7 +53,7 @@ public class MemberService {
 
     private void validatePreviousPassword(PasswordChangeRequestDto requestDto, Member member) {
         if (!passwordEncoder.matches(requestDto.getPreviousPassword(), member.getPassword())) {
-            throw new IllegalArgumentException("이전 비밀번호가 일치하지 않습니다.");
+            throw new PasswordMismatchException();
         }
     }
 
@@ -73,7 +76,7 @@ public class MemberService {
         boolean isNicknameAlreadyExists = memberRepository.findByNickname(requestDto.getNickname())
                 .isPresent();
         if (isNicknameAlreadyExists) {
-            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
+            throw new DuplicateNicknameException();
         }
     }
 
@@ -92,6 +95,6 @@ public class MemberService {
 
     private Member findMemberById(Long memberId) {
         return memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(NoSuchMemberException::new);
     }
 }
