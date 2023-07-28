@@ -284,7 +284,7 @@ class AuthControllerTest {
                 .title("기록 제목")
                 .build();
         Schedule schedule = Schedule.builder()
-                .title("계획 제목")
+                .title("일정 제목")
                 .date(LocalDate.now())
                 .startTime(LocalTime.now())
                 .endTime(LocalTime.now())
@@ -323,7 +323,7 @@ class AuthControllerTest {
                 .title("기록 제목")
                 .build();
         Schedule schedule = Schedule.builder()
-                .title("계획 제목")
+                .title("일정 제목")
                 .date(LocalDate.now())
                 .startTime(LocalTime.now())
                 .endTime(LocalTime.now())

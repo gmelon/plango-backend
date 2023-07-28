@@ -66,19 +66,19 @@ class DiaryServiceTest {
         memberRepository.save(memberB);
 
         scheduleOfMemberA = Schedule.builder()
-                .title("계획 제목")
-                .content("계획 본문")
+                .title("일정 제목")
+                .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 25))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
-                .placeName("계획 장소")
+                .placeName("일정 장소")
                 .member(memberA)
                 .build();
         scheduleRepository.save(scheduleOfMemberA);
     }
 
     @Test
-    void 자신의_계획에_기록_생성() {
+    void 자신의_일정에_기록_생성() {
         // given
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
@@ -99,7 +99,7 @@ class DiaryServiceTest {
     }
 
     @Test
-    void 타인의_계획에_기록_생성() {
+    void 타인의_일정에_기록_생성() {
         // given
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
                 .title("기록 제목")
@@ -170,7 +170,7 @@ class DiaryServiceTest {
     }
 
     @Test
-    void 계획_id로_기록_단건_조회() {
+    void 일정_id로_기록_단건_조회() {
         // given
         Diary diary = Diary.builder()
                 .title("기록 제목")
@@ -200,7 +200,7 @@ class DiaryServiceTest {
     }
 
     @Test
-    void 타인의_계획_id로_기록_단건_조회() {
+    void 타인의_일정_id로_기록_단건_조회() {
         // given
         Diary diary = Diary.builder()
                 .title("기록 제목")
@@ -219,7 +219,7 @@ class DiaryServiceTest {
     }
 
     @Test
-    void 존재하지_않는_계획_id로_기록_단건_조회() {
+    void 존재하지_않는_일정_id로_기록_단건_조회() {
         // when, then
         assertThatThrownBy(() -> diaryService.findByScheduleId(memberB.getId(), scheduleOfMemberA.getId() + 1))
                 .isInstanceOf(NoSuchScheduleException.class);
@@ -333,7 +333,7 @@ class DiaryServiceTest {
         // given
         List<Schedule> schedules = List.of(
                 Schedule.builder()
-                        .title("계획 1")
+                        .title("일정 1")
                         .date(LocalDate.of(2023, 6, 25))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
@@ -341,7 +341,7 @@ class DiaryServiceTest {
                         .diary(Diary.builder().title("기록 1").build())
                         .build(),
                 Schedule.builder()
-                        .title("계획 2")
+                        .title("일정 2")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 0))
@@ -349,7 +349,7 @@ class DiaryServiceTest {
                         .diary(Diary.builder().title("기록 2").build())
                         .build(),
                 Schedule.builder()
-                        .title("계획 3")
+                        .title("일정 3")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 1))
@@ -357,7 +357,7 @@ class DiaryServiceTest {
                         .diary(Diary.builder().title("기록 3").build())
                         .build(),
                 Schedule.builder()
-                        .title("계획 4")
+                        .title("일정 4")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
@@ -365,7 +365,7 @@ class DiaryServiceTest {
                         .diary(Diary.builder().title("기록 4").build())
                         .build(),
                 Schedule.builder()
-                        .title("계획 5")
+                        .title("일정 5")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
@@ -373,14 +373,14 @@ class DiaryServiceTest {
                         .diary(Diary.builder().title("기록 5").build())
                         .build(),
                 Schedule.builder()
-                        .title("계획 6")
+                        .title("일정 6")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("계획 7")
+                        .title("일정 7")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
@@ -388,7 +388,7 @@ class DiaryServiceTest {
                         .diary(Diary.builder().title("기록 7").build())
                         .build(),
                 Schedule.builder()
-                        .title("계획 8")
+                        .title("일정 8")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(15, 0, 0))
                         .endTime(LocalTime.of(22, 0, 0))
@@ -406,6 +406,6 @@ class DiaryServiceTest {
         assertThat(responseDtos).extracting(DiaryListResponseDto::getTitle)
                 .isEqualTo(expectedTitleIndex.stream().map(index -> "기록 " + index).collect(Collectors.toList()));
         assertThat(responseDtos).extracting(responseDto -> responseDto.getSchedule().getTitle())
-                .isEqualTo(expectedTitleIndex.stream().map(index -> "계획 " + index).collect(Collectors.toList()));
+                .isEqualTo(expectedTitleIndex.stream().map(index -> "일정 " + index).collect(Collectors.toList()));
     }
 }

@@ -63,11 +63,11 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 계획_생성() {
+    void 일정_생성() {
         // given
         ScheduleCreateRequestDto request = ScheduleCreateRequestDto.builder()
-                .title("계획 제목")
-                .content("계획 본문")
+                .title("일정 제목")
+                .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
@@ -96,11 +96,11 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 기록이_없는_계획_단건_조회() {
+    void 기록이_없는_일정_단건_조회() {
         // given
         Schedule schedule = Schedule.builder()
-                .title("계획 제목")
-                .content("계획 본문")
+                .title("일정 제목")
+                .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
@@ -132,11 +132,11 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 기록이_있는_계획_단건_조회() {
+    void 기록이_있는_일정_단건_조회() {
         // given
         Schedule schedule = Schedule.builder()
-                .title("계획 제목")
-                .content("계획 본문")
+                .title("일정 제목")
+                .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
@@ -169,18 +169,18 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 존재하지_않는_계획_단건_조회() {
+    void 존재하지_않는_일정_단건_조회() {
         // when, then
         assertThatThrownBy(() -> scheduleService.findById(memberA.getId(), 1L))
                 .isInstanceOf(NoSuchScheduleException.class);
     }
 
     @Test
-    void 타인의_계획_단건_조회() {
+    void 타인의_일정_단건_조회() {
         // given
         Schedule schedule = Schedule.builder()
-                .title("계획 제목")
-                .content("계획 본문")
+                .title("일정 제목")
+                .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
@@ -194,11 +194,11 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 계획_수정() {
+    void 일정_수정() {
         // given
         Schedule schedule = Schedule.builder()
-                .title("계획 제목")
-                .content("계획 본문")
+                .title("일정 제목")
+                .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
@@ -239,11 +239,11 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 타인의_계획_수정() {
+    void 타인의_일정_수정() {
         // given
         Schedule schedule = Schedule.builder()
-                .title("계획 제목")
-                .content("계획 본문")
+                .title("일정 제목")
+                .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
@@ -272,11 +272,11 @@ class ScheduleServiceTest {
 
     @ParameterizedTest
     @CsvSource(value = {"false:true", "true:false", "false:false", "true:true"}, delimiter = ':')
-    void 계획_완료_여부_변경(boolean given, boolean expected) {
+    void 일정_완료_여부_변경(boolean given, boolean expected) {
         // given
         Schedule schedule = Schedule.builder()
-                .title("계획 제목")
-                .content("계획 본문")
+                .title("일정 제목")
+                .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
@@ -296,11 +296,11 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 타인의_계획_완료_여부_변경() {
+    void 타인의_일정_완료_여부_변경() {
         // given
         Schedule schedule = Schedule.builder()
-                .title("계획 제목")
-                .content("계획 본문")
+                .title("일정 제목")
+                .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
@@ -317,11 +317,11 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 계획_삭제() {
+    void 일정_삭제() {
         // given
         Schedule schedule = Schedule.builder()
-                .title("계획 제목")
-                .content("계획 본문")
+                .title("일정 제목")
+                .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
@@ -337,11 +337,11 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 타인의_계획_삭제() {
+    void 타인의_일정_삭제() {
         // given
         Schedule schedule = Schedule.builder()
-                .title("계획 제목")
-                .content("계획 본문")
+                .title("일정 제목")
+                .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
@@ -355,26 +355,26 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 날짜별_기록이_없는_계획_목록_조회() {
+    void 날짜별_기록이_없는_일정_목록_조회() {
         // given
-        // memberA 계획 추가
+        // memberA 일정 추가
         List<Schedule> memberARequests = List.of(
                 Schedule.builder()
-                        .title("계획 1")
+                        .title("일정 1")
                         .date(LocalDate.of(2023, 6, 25))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("계획 2")
+                        .title("일정 2")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("계획 3")
+                        .title("일정 3")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 1))
@@ -382,7 +382,7 @@ class ScheduleServiceTest {
                         .diary(Diary.builder().title("").build())
                         .build(),
                 Schedule.builder()
-                        .title("계획 4")
+                        .title("일정 4")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
@@ -390,17 +390,17 @@ class ScheduleServiceTest {
                         .diary(Diary.builder().title("").build())
                         .build(),
                 Schedule.builder()
-                        .title("계획 5")
+                        .title("일정 5")
                         .date(LocalDate.of(2023, 6, 26))
                         .member(memberA)
                         .build()
         );
         scheduleRepository.saveAll(memberARequests);
 
-        // memberB 계획 추가
+        // memberB 일정 추가
         List<Schedule> memberBRequests = List.of(
                 Schedule.builder()
-                        .title("계획 6")
+                        .title("일정 6")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
@@ -408,7 +408,7 @@ class ScheduleServiceTest {
                         .diary(Diary.builder().title("").build())
                         .build(),
                 Schedule.builder()
-                        .title("계획 7")
+                        .title("일정 7")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(15, 0, 0))
                         .endTime(LocalTime.of(22, 0, 1))
@@ -423,7 +423,7 @@ class ScheduleServiceTest {
         List<ScheduleListResponseDto> responseDtos = scheduleService.findAllByDate(memberA.getId(), targetDate, true);
 
         // then
-        List<String> expectedScheduleTitles = List.of("계획 5", "계획 2");
+        List<String> expectedScheduleTitles = List.of("일정 5", "일정 2");
 
         assertThat(responseDtos)
                 .extracting(ScheduleListResponseDto::getTitle).isEqualTo(expectedScheduleTitles);
@@ -433,12 +433,12 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 날짜별_전체_계획_목록_조회() {
+    void 날짜별_전체_일정_목록_조회() {
         // given
-        // memberA 계획 추가
+        // memberA 일정 추가
         List<Schedule> memberARequests = List.of(
                 Schedule.builder()
-                        .title("계획 1")
+                        .title("일정 1")
                         .date(LocalDate.of(2023, 6, 25))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
@@ -446,25 +446,25 @@ class ScheduleServiceTest {
                         .diary(Diary.builder().title("").build())
                         .build(),
                 Schedule.builder()
-                        .title("계획 2")
+                        .title("일정 2")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("계획 3")
+                        .title("일정 3")
                         .date(LocalDate.of(2023, 6, 26))
                         .member(memberA)
                         .diary(Diary.builder().title("").build())
                         .build(),
                 Schedule.builder()
-                        .title("계획 4")
+                        .title("일정 4")
                         .date(LocalDate.of(2023, 6, 26))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("계획 5")
+                        .title("일정 5")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
@@ -473,10 +473,10 @@ class ScheduleServiceTest {
         );
         scheduleRepository.saveAll(memberARequests);
 
-        // memberB 계획 추가
+        // memberB 일정 추가
         List<Schedule> memberBRequests = List.of(
                 Schedule.builder()
-                        .title("계획 6")
+                        .title("일정 6")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
@@ -484,7 +484,7 @@ class ScheduleServiceTest {
                         .diary(Diary.builder().title("").build())
                         .build(),
                 Schedule.builder()
-                        .title("계획 7")
+                        .title("일정 7")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(15, 0, 0))
                         .endTime(LocalTime.of(22, 0, 1))
@@ -499,7 +499,7 @@ class ScheduleServiceTest {
         List<ScheduleListResponseDto> responseDtos = scheduleService.findAllByDate(memberA.getId(), targetDate, false);
 
         // then
-        List<String> expectedScheduleTitles = List.of("계획 3", "계획 4", "계획 2", "계획 5");
+        List<String> expectedScheduleTitles = List.of("일정 3", "일정 4", "일정 2", "일정 5");
 
         assertThat(responseDtos)
                 .extracting(ScheduleListResponseDto::getTitle).isEqualTo(expectedScheduleTitles);
@@ -509,49 +509,49 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 월별로_계획이_존재하는_날짜의_목록_조회() {
+    void 월별로_일정이_존재하는_날짜의_목록_조회() {
         // given
         List<Schedule> requests = List.of(
                 Schedule.builder()
-                        .title("계획 제목")
+                        .title("일정 제목")
                         .date(LocalDate.of(2023, 5, 31))
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("계획 제목")
+                        .title("일정 제목")
                         .date(LocalDate.of(2023, 6, 1))
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("계획 제목")
+                        .title("일정 제목")
                         .date(LocalDate.of(2023, 6, 1))
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("계획 제목")
+                        .title("일정 제목")
                         .date(LocalDate.of(2023, 6, 15))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("계획 제목")
+                        .title("일정 제목")
                         .date(LocalDate.of(2023, 6, 17))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("계획 제목")
+                        .title("일정 제목")
                         .date(LocalDate.of(2023, 6, 30))
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
                         .member(memberA)
                         .build(),
                 Schedule.builder()
-                        .title("계획 제목")
+                        .title("일정 제목")
                         .date(LocalDate.of(2023, 7, 1))
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
