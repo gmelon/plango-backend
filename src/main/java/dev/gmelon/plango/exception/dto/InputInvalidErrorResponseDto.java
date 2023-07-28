@@ -5,8 +5,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.internal.engine.path.PathImpl;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -28,6 +30,20 @@ public class InputInvalidErrorResponseDto {
         return InputInvalidErrorResponseDto.builder()
                 .field(exception.getField())
                 .message(exception.getMessage())
+                .build();
+    }
+
+    public static InputInvalidErrorResponseDto from(MissingServletRequestParameterException exception) {
+        return InputInvalidErrorResponseDto.builder()
+                .field(exception.getParameterName())
+                .message(exception.getLocalizedMessage())
+                .build();
+    }
+
+    public static InputInvalidErrorResponseDto from(TypeMismatchException exception) {
+        return InputInvalidErrorResponseDto.builder()
+                .field(exception.getPropertyName())
+                .message(exception.getLocalizedMessage())
                 .build();
     }
 

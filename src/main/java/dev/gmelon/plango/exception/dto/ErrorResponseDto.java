@@ -1,7 +1,6 @@
 package dev.gmelon.plango.exception.dto;
 
 import dev.gmelon.plango.exception.ErrorMessages;
-import dev.gmelon.plango.exception.PlangoException;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,9 +16,9 @@ public class ErrorResponseDto {
         this.message = message;
     }
 
-    public static ErrorResponseDto from(PlangoException exception) {
+    public static ErrorResponseDto from(Exception exception) {
         return ErrorResponseDto.builder()
-                .message(exception.getMessage())
+                .message(exception.getLocalizedMessage())
                 .build();
     }
 
