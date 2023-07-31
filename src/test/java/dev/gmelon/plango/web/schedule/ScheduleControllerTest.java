@@ -719,6 +719,7 @@ class ScheduleControllerTest {
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
                         .member(memberA)
+                        .done(true)
                         .build(),
                 Schedule.builder()
                         .title("일정 제목")
@@ -736,6 +737,7 @@ class ScheduleControllerTest {
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
                         .member(memberA)
+                        .done(true)
                         .build(),
                 Schedule.builder()
                         .title("일정 제목")
@@ -759,16 +761,18 @@ class ScheduleControllerTest {
         assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
 
         List<ScheduleCountResponseDto> expected = List.of(
-                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 1), 2),
-                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 15), 1),
-                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 17), 1),
-                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 30), 1)
+                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 1), 1, 2),
+                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 15), 0, 1),
+                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 17), 0, 1),
+                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 30), 1, 1)
         );
         for (int i = 0; i < response.jsonPath().getInt("$.size()"); i++) {
             assertThat(response.jsonPath().getString("[" + i + "].date"))
                     .isEqualTo(expected.get(i).getDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
-            assertThat(response.jsonPath().getInt("[" + i + "].count"))
-                    .isEqualTo(expected.get(i).getCount());
+            assertThat(response.jsonPath().getInt("[" + i + "].doneCount"))
+                    .isEqualTo(expected.get(i).getDoneCount());
+            assertThat(response.jsonPath().getInt("[" + i + "].totalCount"))
+                    .isEqualTo(expected.get(i).getTotalCount());
         }
     }
 

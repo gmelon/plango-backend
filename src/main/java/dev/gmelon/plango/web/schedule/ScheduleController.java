@@ -63,10 +63,10 @@ public class ScheduleController {
     }
 
     @GetMapping(params = "yearMonth")
-    public List<ScheduleCountResponseDto> getCountOfDaysInMonth(
+    public List<ScheduleCountResponseDto> getCountByDays(
             @LoginMember Long memberId,
             @DateTimeFormat(pattern = "yyyy-MM") @RequestParam("yearMonth") YearMonth requestYearMonth) {
-        return scheduleService.getCountOfDaysInMonth(memberId, requestYearMonth);
+        return scheduleService.getCountByDays(memberId, requestYearMonth);
     }
 
     @PatchMapping("/{scheduleId}")

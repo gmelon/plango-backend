@@ -1,5 +1,6 @@
 package dev.gmelon.plango.domain.schedule;
 
+import dev.gmelon.plango.service.schedule.dto.ScheduleCountResponseDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,14 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     List<Schedule> findAllByMemberId(Long memberid);
 
     void deleteAllByMemberId(Long memberId);
+
+    Optional<Schedule> findByDiaryId(Long diaryId);
+
+    long countByMemberId(Long memberId);
+
+    long countByMemberIdAndDoneIsTrue(Long memberId);
+
+    long countByMemberIdAndDiaryNotNull(Long memberId);
 
     @Query("SELECT s FROM Schedule s " +
             "WHERE s.member.id = :memberId " +
@@ -42,18 +51,14 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             "s.endTime ASC")
     List<Schedule> findByMemberIdAndDateAndDiaryNotNullOrderByStartTimeAndEndTimeAsc(@Param("memberId") Long memberId, @Param("date") LocalDate date);
 
-    @Query("SELECT s FROM Schedule s " +
+    @Query("SELECT new dev.gmelon.plango.service.schedule.dto.ScheduleCountResponseDto(s.date, sum(case when s.done = true then 1 else 0 end), count(s)) " +
+            "FROM Schedule s " +
             "WHERE s.member.id = :memberId " +
             "AND s.date >= :startDate " +
-            "AND s.date <= :endDate")
-    List<Schedule> findByMemberIdAndDateBetween(@Param("memberId") Long memberId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
-
-    Optional<Schedule> findByDiaryId(Long diaryId);
-
-    long countByMemberId(Long memberId);
-
-    long countByMemberIdAndDoneIsTrue(Long memberId);
-
-    long countByMemberIdAndDiaryNotNull(Long memberId);
+            "AND s.date <= :endDate " +
+            "GROUP BY s.date " +
+            "HAVING count(s) > 0 " +
+            "ORDER BY s.date")
+    List<ScheduleCountResponseDto> findByMemberIdAndCountOfDays(@Param("memberId") Long memberId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
 }

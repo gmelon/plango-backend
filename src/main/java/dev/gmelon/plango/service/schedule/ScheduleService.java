@@ -103,22 +103,12 @@ public class ScheduleService {
         return Optional.empty();
     }
 
-    public List<ScheduleCountResponseDto> getCountOfDaysInMonth(Long memberId, YearMonth requestMonth) {
+    public List<ScheduleCountResponseDto> getCountByDays(Long memberId, YearMonth requestMonth) {
         LocalDate startDate = requestMonth.atDay(1);
         LocalDate endDate = requestMonth.atEndOfMonth();
 
-        List<Schedule> schedules = scheduleRepository.findByMemberIdAndDateBetween(memberId, startDate, endDate);
-
-        // TODO DB단에서 처리할 수 있도록 리팩토링 하기
-        return schedules.stream()
-                .collect(Collectors.groupingBy(Schedule::getDate, Collectors.counting()))
-                .entrySet().stream()
-                .map(entry -> ScheduleCountResponseDto.builder()
-                        .date(entry.getKey())
-                        .count(entry.getValue().intValue())
-                        .build())
-                .sorted()
-                .collect(Collectors.toList());
+        // TODO 레포지토리 리팩토링
+        return scheduleRepository.findByMemberIdAndCountOfDays(memberId, startDate, endDate);
     }
 
     private void validateMember(Schedule schedule, Member member) {

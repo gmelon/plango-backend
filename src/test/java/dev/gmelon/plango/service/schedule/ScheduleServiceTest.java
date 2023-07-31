@@ -532,6 +532,7 @@ class ScheduleServiceTest {
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
                         .member(memberA)
+                        .done(true)
                         .build(),
                 Schedule.builder()
                         .title("일정 제목")
@@ -549,6 +550,7 @@ class ScheduleServiceTest {
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
                         .member(memberA)
+                        .done(true)
                         .build(),
                 Schedule.builder()
                         .title("일정 제목")
@@ -561,14 +563,14 @@ class ScheduleServiceTest {
         scheduleRepository.saveAll(requests);
 
         // when
-        List<ScheduleCountResponseDto> scheduleCountResponseDtos = scheduleService.getCountOfDaysInMonth(memberA.getId(), YearMonth.of(2023, 6));
+        List<ScheduleCountResponseDto> scheduleCountResponseDtos = scheduleService.getCountByDays(memberA.getId(), YearMonth.of(2023, 6));
 
         // then
         List<ScheduleCountResponseDto> expectedResponseDtos = List.of(
-                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 1), 2),
-                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 15), 1),
-                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 17), 1),
-                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 30), 1)
+                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 1), 1, 2),
+                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 15), 0, 1),
+                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 17), 0, 1),
+                new ScheduleCountResponseDto(LocalDate.of(2023, 6, 30), 1, 1)
         );
         assertThat(scheduleCountResponseDtos)
                 .usingRecursiveComparison()

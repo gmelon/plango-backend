@@ -9,21 +9,19 @@ import java.time.LocalDate;
 
 @NoArgsConstructor
 @Getter
-public class ScheduleCountResponseDto implements Comparable<ScheduleCountResponseDto>{
+public class ScheduleCountResponseDto{
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private LocalDate date;
 
-    private int count;
+    private long doneCount;
+
+    private long totalCount;
 
     @Builder
-    public ScheduleCountResponseDto(LocalDate date, int count) {
+    public ScheduleCountResponseDto(LocalDate date, long doneCount, long totalCount) {
         this.date = date;
-        this.count = count;
-    }
-
-    @Override
-    public int compareTo(ScheduleCountResponseDto o) {
-        return this.date.getDayOfMonth() - o.date.getDayOfMonth();
+        this.doneCount = doneCount;
+        this.totalCount = totalCount;
     }
 }
