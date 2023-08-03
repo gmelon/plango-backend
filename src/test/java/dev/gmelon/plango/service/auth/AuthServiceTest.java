@@ -118,7 +118,7 @@ class AuthServiceTest {
         memberRepository.save(member);
 
         Diary diary = Diary.builder()
-                .title("기록 제목")
+                .content("기록 본문")
                 .build();
         Schedule schedule = Schedule.builder()
                 .title("일정 제목")
@@ -135,7 +135,7 @@ class AuthServiceTest {
 
         // then
         assertThat(scheduleRepository.findAllByMemberId(member.getId())).hasSize(0);
-        assertThat(diaryRepository.findByTitle(diary.getTitle())).isEmpty();
+        assertThat(diaryRepository.findByContent(diary.getContent())).isEmpty();
         assertThat(memberRepository.findById(member.getId())).isEmpty();
     }
 

@@ -15,7 +15,6 @@ import java.time.LocalTime;
 public class DiaryResponseDto {
 
     private Long id;
-    private String title;
     private String content;
     private String imageUrl;
     private ScheduleOfDiaryResponseDto schedule;
@@ -26,7 +25,6 @@ public class DiaryResponseDto {
 
         return DiaryResponseDto.builder()
                 .id(diary.getId())
-                .title(diary.getTitle())
                 .content(diary.getContent())
                 .imageUrl(diary.getImageUrl())
                 .schedule(scheduleResponse)
@@ -34,9 +32,8 @@ public class DiaryResponseDto {
     }
 
     @Builder
-    public DiaryResponseDto(Long id, String title, String content, String imageUrl, ScheduleOfDiaryResponseDto schedule) {
+    public DiaryResponseDto(Long id, String content, String imageUrl, ScheduleOfDiaryResponseDto schedule) {
         this.id = id;
-        this.title = title;
         this.content = content;
         this.imageUrl = imageUrl;
         this.schedule = schedule;

@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 public class DiaryListResponseDto {
 
     private Long id;
-    private String title;
     private String content;
     private String imageUrl;
     private ScheduleOfDiaryListResponseDto schedule;
@@ -22,7 +21,6 @@ public class DiaryListResponseDto {
 
         return DiaryListResponseDto.builder()
                 .id(diary.getId())
-                .title(diary.getTitle())
                 .content(diary.getContent())
                 .imageUrl(diary.getImageUrl())
                 .schedule(scheduleResponse)
@@ -30,9 +28,8 @@ public class DiaryListResponseDto {
     }
 
     @Builder
-    public DiaryListResponseDto(Long id, String title, String content, String imageUrl, ScheduleOfDiaryListResponseDto schedule) {
+    public DiaryListResponseDto(Long id, String content, String imageUrl, ScheduleOfDiaryListResponseDto schedule) {
         this.id = id;
-        this.title = title;
         this.content = content;
         this.imageUrl = imageUrl;
         this.schedule = schedule;

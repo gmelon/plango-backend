@@ -23,7 +23,6 @@ import org.springframework.test.context.jdbc.Sql;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -81,7 +80,6 @@ class DiaryServiceTest {
     void 자신의_일정에_기록_생성() {
         // given
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
-                .title("기록 제목")
                 .content("기록 본문")
                 .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
@@ -93,7 +91,6 @@ class DiaryServiceTest {
         assertThat(createdDiaryId).isNotNull();
 
         Diary createdDiary = assertDoesNotThrow(() -> diaryRepository.findById(createdDiaryId).get());
-        assertThat(createdDiary.getTitle()).isEqualTo(request.getTitle());
         assertThat(createdDiary.getContent()).isEqualTo(request.getContent());
         assertThat(createdDiary.getImageUrl()).isEqualTo(request.getImageUrl());
     }
@@ -102,7 +99,6 @@ class DiaryServiceTest {
     void 타인의_일정에_기록_생성() {
         // given
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
-                .title("기록 제목")
                 .content("기록 본문")
                 .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
@@ -116,7 +112,6 @@ class DiaryServiceTest {
     void 기록_단건_조회() {
         // given
         Diary diary = Diary.builder()
-                .title("기록 제목")
                 .content("기록 본문")
                 .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
@@ -131,7 +126,6 @@ class DiaryServiceTest {
 
         // then
         assertThat(responseDto.getId()).isEqualTo(diary.getId());
-        assertThat(responseDto.getTitle()).isEqualTo(diary.getTitle());
         assertThat(responseDto.getContent()).isEqualTo(diary.getContent());
         assertThat(responseDto.getImageUrl()).isEqualTo(diary.getImageUrl());
 
@@ -147,7 +141,6 @@ class DiaryServiceTest {
     void 타인의_기록_단건_조회() {
         // given
         Diary diary = Diary.builder()
-                .title("기록 제목")
                 .content("기록 본문")
                 .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
@@ -173,7 +166,6 @@ class DiaryServiceTest {
     void 일정_id로_기록_단건_조회() {
         // given
         Diary diary = Diary.builder()
-                .title("기록 제목")
                 .content("기록 본문")
                 .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
@@ -188,7 +180,6 @@ class DiaryServiceTest {
 
         // then
         assertThat(responseDto.getId()).isEqualTo(diary.getId());
-        assertThat(responseDto.getTitle()).isEqualTo(diary.getTitle());
         assertThat(responseDto.getContent()).isEqualTo(diary.getContent());
         assertThat(responseDto.getImageUrl()).isEqualTo(diary.getImageUrl());
 
@@ -203,7 +194,6 @@ class DiaryServiceTest {
     void 타인의_일정_id로_기록_단건_조회() {
         // given
         Diary diary = Diary.builder()
-                .title("기록 제목")
                 .content("기록 본문")
                 .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
@@ -229,7 +219,6 @@ class DiaryServiceTest {
     void 기록_수정() {
         // given
         Diary diary = Diary.builder()
-                .title("기록 제목")
                 .content("기록 본문")
                 .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
@@ -240,7 +229,6 @@ class DiaryServiceTest {
         scheduleRepository.save(schedule);
 
         DiaryEditRequestDto requestDto = DiaryEditRequestDto.builder()
-                .title("기록 제목 B")
                 .content("기록 본문 B")
                 .imageUrl("https://plango-backend/imageB.jpg")
                 .build();
@@ -251,7 +239,6 @@ class DiaryServiceTest {
         // then
         Diary foundDiary = assertDoesNotThrow(() -> diaryRepository.findById(diary.getId()).get());
 
-        assertThat(foundDiary.getTitle()).isEqualTo(requestDto.getTitle());
         assertThat(foundDiary.getContent()).isEqualTo(requestDto.getContent());
         assertThat(foundDiary.getImageUrl()).isEqualTo(requestDto.getImageUrl());
     }
@@ -260,7 +247,6 @@ class DiaryServiceTest {
     void 타인의_기록_수정() {
         // given
         Diary diary = Diary.builder()
-                .title("기록 제목")
                 .content("기록 본문")
                 .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
@@ -271,7 +257,6 @@ class DiaryServiceTest {
         scheduleRepository.save(schedule);
 
         DiaryEditRequestDto requestDto = DiaryEditRequestDto.builder()
-                .title("기록 제목 B")
                 .content("기록 본문 B")
                 .imageUrl("https://plango-backend/imageB.jpg")
                 .build();
@@ -291,7 +276,6 @@ class DiaryServiceTest {
         // TODO s3 삭제 여부 어떻게 검증하면 좋을지 고민
         // given
         Diary diary = Diary.builder()
-                .title("기록 제목")
                 .content("기록 본문")
                 .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
@@ -312,7 +296,6 @@ class DiaryServiceTest {
     void 타인의_기록_삭제() {
         // given
         Diary diary = Diary.builder()
-                .title("기록 제목")
                 .content("기록 본문")
                 .imageUrl("https://plango-backend/imageA.jpg")
                 .build();
@@ -338,7 +321,7 @@ class DiaryServiceTest {
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
-                        .diary(Diary.builder().title("기록 1").build())
+                        .diary(Diary.builder().content("기록 1").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 2")
@@ -346,7 +329,7 @@ class DiaryServiceTest {
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
-                        .diary(Diary.builder().title("기록 2").build())
+                        .diary(Diary.builder().content("기록 2").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 3")
@@ -354,7 +337,7 @@ class DiaryServiceTest {
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 1))
                         .member(memberA)
-                        .diary(Diary.builder().title("기록 3").build())
+                        .diary(Diary.builder().content("기록 3").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 4")
@@ -362,7 +345,7 @@ class DiaryServiceTest {
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
                         .member(memberA)
-                        .diary(Diary.builder().title("기록 4").build())
+                        .diary(Diary.builder().content("기록 4").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 5")
@@ -370,7 +353,7 @@ class DiaryServiceTest {
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
-                        .diary(Diary.builder().title("기록 5").build())
+                        .diary(Diary.builder().content("기록 5").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 6")
@@ -385,7 +368,7 @@ class DiaryServiceTest {
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
                         .member(memberB)
-                        .diary(Diary.builder().title("기록 7").build())
+                        .diary(Diary.builder().content("기록 7").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 8")
@@ -393,7 +376,7 @@ class DiaryServiceTest {
                         .startTime(LocalTime.of(15, 0, 0))
                         .endTime(LocalTime.of(22, 0, 0))
                         .member(memberB)
-                        .diary(Diary.builder().title("기록 8").build())
+                        .diary(Diary.builder().content("기록 8").build())
                         .build()
         );
         scheduleRepository.saveAll(schedules);
@@ -402,10 +385,9 @@ class DiaryServiceTest {
         List<DiaryListResponseDto> responseDtos = diaryService.findAllByDate(memberA.getId(), LocalDate.of(2023, 6, 26));
 
         // then
-        List<Integer> expectedTitleIndex = List.of(2, 3, 4, 5);
-        assertThat(responseDtos).extracting(DiaryListResponseDto::getTitle)
-                .isEqualTo(expectedTitleIndex.stream().map(index -> "기록 " + index).collect(Collectors.toList()));
-        assertThat(responseDtos).extracting(responseDto -> responseDto.getSchedule().getTitle())
-                .isEqualTo(expectedTitleIndex.stream().map(index -> "일정 " + index).collect(Collectors.toList()));
+        List<String> expectedContents = List.of("기록 2", "기록 3", "기록 4", "기록 5");
+        assertThat(responseDtos)
+                .extracting(DiaryListResponseDto::getContent)
+                .isEqualTo(expectedContents);
     }
 }

@@ -17,8 +17,8 @@ public class DiaryCreateRequestValidator implements Validator {
     @Override
     public void validate(Object target, Errors errors) {
         DiaryCreateRequestDto requestDto = (DiaryCreateRequestDto) target;
-        if (!StringUtils.hasText(requestDto.getTitle()) && !StringUtils.hasText(requestDto.getImageUrl())) {
-            errors.reject("NotNull.titleOrImageUrl", "제목과 사진 중 한 가지는 필수입니다.");
+        if (!StringUtils.hasText(requestDto.getContent()) && !StringUtils.hasText(requestDto.getImageUrl())) {
+            errors.reject("NotNull.contentOrImageUrl", "내용과 사진 중 한 가지는 필수입니다.");
         }
     }
 

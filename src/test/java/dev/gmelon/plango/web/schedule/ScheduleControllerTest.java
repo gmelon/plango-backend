@@ -180,7 +180,7 @@ class ScheduleControllerTest {
         Member member = memberRepository.findAll().get(0);
 
         Diary givenDiary = Diary.builder()
-                .title("기록 제목")
+                .content("기록 본문")
                 .build();
         Schedule givenSchedule = Schedule.builder()
                 .member(member)
@@ -487,7 +487,7 @@ class ScheduleControllerTest {
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 1))
-                        .diary(Diary.builder().title("").build())
+                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .member(member)
@@ -495,7 +495,7 @@ class ScheduleControllerTest {
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
-                        .diary(Diary.builder().title("").build())
+                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .member(member)
@@ -513,7 +513,7 @@ class ScheduleControllerTest {
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
-                        .diary(Diary.builder().title("").build())
+                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .member(anotherMember)
@@ -559,7 +559,7 @@ class ScheduleControllerTest {
                         .date(LocalDate.of(2023, 6, 25))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
-                        .diary(Diary.builder().title("").build())
+                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .member(member)
@@ -572,7 +572,7 @@ class ScheduleControllerTest {
                         .member(member)
                         .title("일정 3")
                         .date(LocalDate.of(2023, 6, 26))
-                        .diary(Diary.builder().title("").build())
+                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .member(member)
@@ -597,7 +597,7 @@ class ScheduleControllerTest {
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
-                        .diary(Diary.builder().title("").build())
+                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .member(anotherMember)

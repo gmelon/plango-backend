@@ -144,7 +144,7 @@ class ScheduleServiceTest {
                 .longitude(127.3454477)
                 .roadAddress("대전광역시 유성구 온천2동 대학로 99")
                 .placeName("충남대학교 공과대학 5호관")
-                .diary(Diary.builder().title("기록 제목").build())
+                .diary(Diary.builder().content("기록 본문").build())
                 .member(memberA)
                 .build();
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
@@ -379,7 +379,7 @@ class ScheduleServiceTest {
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 1))
                         .member(memberA)
-                        .diary(Diary.builder().title("").build())
+                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 4")
@@ -387,7 +387,7 @@ class ScheduleServiceTest {
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
                         .member(memberA)
-                        .diary(Diary.builder().title("").build())
+                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 5")
@@ -405,7 +405,7 @@ class ScheduleServiceTest {
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
                         .member(memberB)
-                        .diary(Diary.builder().title("").build())
+                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 7")
@@ -443,7 +443,7 @@ class ScheduleServiceTest {
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
-                        .diary(Diary.builder().title("").build())
+                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 2")
@@ -456,7 +456,7 @@ class ScheduleServiceTest {
                         .title("일정 3")
                         .date(LocalDate.of(2023, 6, 26))
                         .member(memberA)
-                        .diary(Diary.builder().title("").build())
+                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 4")
@@ -481,7 +481,7 @@ class ScheduleServiceTest {
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
                         .member(memberB)
-                        .diary(Diary.builder().title("").build())
+                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 7")

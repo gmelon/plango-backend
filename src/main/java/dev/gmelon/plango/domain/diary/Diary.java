@@ -22,22 +22,18 @@ public class Diary extends BaseTimeEntity {
     @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
-    private String title;
-
     @Column(columnDefinition = "TEXT")
     private String content;
 
     private String imageUrl;
 
     @Builder
-    public Diary(String title, String content, String imageUrl) {
-        this.title = title;
+    public Diary(String content, String imageUrl) {
         this.content = content;
         this.imageUrl = imageUrl;
     }
 
     public void edit(DiaryEditor editor) {
-        this.title = editor.getTitle();
         this.content = editor.getContent();
         this.imageUrl = editor.getImageUrl();
     }

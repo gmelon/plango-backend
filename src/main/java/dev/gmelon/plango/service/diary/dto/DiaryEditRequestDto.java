@@ -10,23 +10,19 @@ import org.hibernate.validator.constraints.URL;
 @Getter
 public class DiaryEditRequestDto {
 
-    private String title;
-
     private String content;
 
     @URL
     private String imageUrl;
 
     @Builder
-    public DiaryEditRequestDto(String title, String content, String imageUrl) {
-        this.title = title;
+    public DiaryEditRequestDto(String content, String imageUrl) {
         this.content = content;
         this.imageUrl = imageUrl;
     }
 
     public DiaryEditor toEditor() {
         return DiaryEditor.builder()
-                .title(title)
                 .content(content)
                 .imageUrl(imageUrl)
                 .build();

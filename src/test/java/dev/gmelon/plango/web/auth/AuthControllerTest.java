@@ -256,7 +256,7 @@ class AuthControllerTest {
         Member member = memberRepository.findAll().get(0);
 
         Diary diary = Diary.builder()
-                .title("기록 제목")
+                .content("기록 본문")
                 .build();
         Schedule schedule = Schedule.builder()
                 .member(member)
@@ -275,7 +275,7 @@ class AuthControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(scheduleRepository.findAllByMemberId(member.getId())).hasSize(0);
-        assertThat(diaryRepository.findByTitle(diary.getTitle())).isEmpty();
+        assertThat(diaryRepository.findByContent(diary.getContent())).isEmpty();
         assertThat(memberRepository.findById(member.getId())).isEmpty();
     }
 
@@ -292,7 +292,7 @@ class AuthControllerTest {
         memberRepository.save(member);
 
         Diary diary = Diary.builder()
-                .title("기록 제목")
+                .content("기록 본문")
                 .build();
         Schedule schedule = Schedule.builder()
                 .member(member)
@@ -311,7 +311,7 @@ class AuthControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(scheduleRepository.findAllByMemberId(member.getId())).hasSize(0);
-        assertThat(diaryRepository.findByTitle(diary.getTitle())).isEmpty();
+        assertThat(diaryRepository.findByContent(diary.getContent())).isEmpty();
         assertThat(memberRepository.findById(member.getId())).isEmpty();
     }
 

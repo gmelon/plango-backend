@@ -6,13 +6,11 @@ import lombok.Getter;
 @Getter
 public class DiaryEditor {
 
-    private String title;
     private String content;
     private String imageUrl;
 
     @Builder
-    public DiaryEditor(String title, String content, String imageUrl) {
-        this.title = title;
+    public DiaryEditor(String content, String imageUrl) {
         this.content = content;
         this.imageUrl = imageUrl;
     }
