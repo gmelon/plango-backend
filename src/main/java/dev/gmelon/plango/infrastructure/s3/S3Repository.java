@@ -36,6 +36,7 @@ public class S3Repository {
     }
 
     private String extractFileExtension(String originalFileName) {
+        // TODO substring 실패 시 400 오류
         return originalFileName.substring(originalFileName.lastIndexOf('.'));
     }
 

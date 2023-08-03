@@ -13,7 +13,7 @@ public class MemberPrincipal extends User {
     private Long id;
 
     public MemberPrincipal(Member member) {
-        super(member.getEmail(), member.getPassword(), Collections.singletonList(new SimpleGrantedAuthority(member.getRole().toString())));
+        super(member.getEmail(), member.getPassword(), Collections.singletonList(new SimpleGrantedAuthority(member.getRole())));
         this.id = member.getId();
     }
 

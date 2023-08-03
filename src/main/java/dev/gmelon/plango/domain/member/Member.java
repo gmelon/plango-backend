@@ -46,6 +46,14 @@ public class Member extends BaseTimeEntity {
         this.role = role;
     }
 
+    public String getRole() {
+        return role.toString();
+    }
+
+    public void changeRole(MemberRole role) {
+        this.role = role;
+    }
+
     public void edit(MemberEditor editor) {
         this.nickname = editor.getNickname();
         this.profileImageUrl = editor.getProfileImageUrl();

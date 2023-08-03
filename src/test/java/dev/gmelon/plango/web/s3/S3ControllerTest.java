@@ -1,87 +1,72 @@
 package dev.gmelon.plango.web.s3;
 
 import dev.gmelon.plango.config.s3.AmazonS3TestImpl;
+import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
-import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
-import dev.gmelon.plango.web.TestAuthUtil;
-import io.restassured.RestAssured;
-import io.restassured.http.Cookie;
-import io.restassured.response.ExtractableResponse;
-import io.restassured.response.Response;
 import org.apache.http.entity.ContentType;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 
 @Sql(value = "classpath:/reset.sql")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
+@SpringBootTest
 class S3ControllerTest {
 
-    private Cookie loginCookieOfMemberA;
+    @Autowired
+    private MockMvc mockMvc;
 
     @Autowired
     private S3Repository s3Repository;
     @Autowired
     private AmazonS3TestImpl amazonS3;
 
-    @LocalServerPort
-    private int port;
-
-    @BeforeEach
-    void setUp() {
-        RestAssured.port = port;
-
-        SignupRequestDto memberASignupRequest = SignupRequestDto.builder()
-                .email("a@a.com")
-                .password("passwordA")
-                .nickname("nameA")
-                .build();
-        loginCookieOfMemberA = TestAuthUtil.signupAndGetCookie(memberASignupRequest);
-    }
-
+    @PlangoMockUser
     @Test
-    void 파일_저장_요청() throws IOException {
-        // given, when
-        ExtractableResponse<Response> response = RestAssured
-                .given()
-                .cookie(loginCookieOfMemberA)
-                // TODO ByteArrayInputStream 대체제가 있을지
-                .multiPart("file", "image.jpg", new ByteArrayInputStream(" ".getBytes()))
-                .log().all()
-                .when().post("/api/s3")
-                .then().log().all().extract();
+    void 파일_저장_요청() throws Exception {
+        // given
+        MockMultipartFile givenFile = new MockMultipartFile("file", "image.jpg", ContentType.IMAGE_JPEG.toString(), new ByteArrayInputStream(" ".getBytes()));
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(multipart("/api/s3")
+                        .file(givenFile))
+                .andReturn().getResponse();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
     }
 
+    @PlangoMockUser
     @Test
-    void 빈_파일로_파일_저장_요청() {
-        // given, when
-        ExtractableResponse<Response> response = RestAssured
-                .given()
-                .cookie(loginCookieOfMemberA)
-                .multiPart("file", "image.jpg", InputStream.nullInputStream())
-                .log().all()
-                .when().post("/api/s3")
-                .then().log().all().extract();
+    void 빈_파일로_파일_저장_요청() throws Exception {
+        // given
+        MockMultipartFile givenFile = new MockMultipartFile("file", "image.jpg", ContentType.IMAGE_JPEG.toString(), InputStream.nullInputStream());
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(multipart("/api/s3")
+                        .file(givenFile))
+                .andReturn().getResponse();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
     }
 
+    @PlangoMockUser
     @Test
-    void 파일_삭제_요청() {
+    void 파일_삭제_요청() throws Exception {
         // given
         String savedFileUrl = s3Repository.upload(
                 "image.jpg",
@@ -91,21 +76,18 @@ class S3ControllerTest {
         );
 
         // when
-        ExtractableResponse<Response> response = RestAssured
-                .given()
-                .param("savedFileUrl", savedFileUrl)
-                .cookie(loginCookieOfMemberA)
-                .log().all()
-                .when().delete("/api/s3")
-                .then().log().all().extract();
+        MockHttpServletResponse response = mockMvc.perform(delete("/api/s3")
+                        .param("savedFileUrl", savedFileUrl))
+                .andReturn().getResponse();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(amazonS3.isFileSaved()).isFalse();
     }
 
+    @PlangoMockUser
     @Test
-    void 잘못된_url로_파일_삭제_요청() {
+    void 잘못된_url로_파일_삭제_요청() throws Exception {
         // given
         s3Repository.upload(
                 "image.jpg",
@@ -115,16 +97,12 @@ class S3ControllerTest {
         );
 
         // when
-        ExtractableResponse<Response> response = RestAssured
-                .given()
-                .param("savedFileUrl", "invalid url")
-                .cookie(loginCookieOfMemberA)
-                .log().all()
-                .when().delete("/api/s3")
-                .then().log().all().extract();
+        MockHttpServletResponse response = mockMvc.perform(delete("/api/s3")
+                        .param("savedFileUrl", "invalid url"))
+                .andReturn().getResponse();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         assertThat(amazonS3.isFileSaved()).isTrue();
     }
 }

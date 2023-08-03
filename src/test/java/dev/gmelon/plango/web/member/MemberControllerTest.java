@@ -1,36 +1,39 @@
 package dev.gmelon.plango.web.member;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
-import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
 import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
-import dev.gmelon.plango.web.TestAuthUtil;
-import io.restassured.RestAssured;
-import io.restassured.http.Cookie;
-import io.restassured.response.ExtractableResponse;
-import io.restassured.response.Response;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.web.servlet.MockMvc;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 @Sql(value = "classpath:/reset.sql")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
+@SpringBootTest
 class MemberControllerTest {
 
-    private Cookie loginCookieOfMemberA;
-    private Member memberA;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
 
     @Autowired
     private ScheduleRepository scheduleRepository;
@@ -39,56 +42,39 @@ class MemberControllerTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @LocalServerPort
-    private int port;
-
-    @BeforeEach
-    void setUp() {
-        RestAssured.port = port;
-
-        SignupRequestDto memberASignupRequest = SignupRequestDto.builder()
-                .email("a@a.com")
-                .password("passwordA")
-                .nickname("nameA")
-                .profileImageUrl("https://plango-backend/imageA.jpg")
-                .build();
-        loginCookieOfMemberA = TestAuthUtil.signupAndGetCookie(memberASignupRequest);
-
-        memberA = memberRepository.findByEmail(memberASignupRequest.getEmail()).get();
-    }
-
+    @PlangoMockUser
     @Test
-    void 나의_프로필_조회() {
+    void 나의_프로필_조회() throws Exception {
         // when
-        ExtractableResponse<Response> response = RestAssured
-                .given().log().all()
-                .cookie(loginCookieOfMemberA)
-                .when().get("/api/members/profile")
-                .then().log().all().extract();
+        MockHttpServletResponse response = mockMvc.perform(get("/api/members/profile")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
 
-        MemberProfileResponseDto responseDto = response.as(MemberProfileResponseDto.class);
-        assertThat(responseDto.getId()).isEqualTo(memberA.getId());
-        assertThat(responseDto.getEmail()).isEqualTo(memberA.getEmail());
-        assertThat(responseDto.getNickname()).isEqualTo(memberA.getNickname());
-        assertThat(responseDto.getProfileImageUrl()).isEqualTo(memberA.getProfileImageUrl());
+        MemberProfileResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), MemberProfileResponseDto.class);
+        Member member = memberRepository.findAll().get(0);
+
+        assertThat(responseDto.getId()).isEqualTo(member.getId());
+        assertThat(responseDto.getEmail()).isEqualTo(member.getEmail());
+        assertThat(responseDto.getNickname()).isEqualTo(member.getNickname());
+        assertThat(responseDto.getProfileImageUrl()).isEqualTo(member.getProfileImageUrl());
     }
 
+    @PlangoMockUser
     @Test
-    void 나의_통계정보_조회() {
+    void 나의_통계정보_조회() throws Exception {
         // when
-        ExtractableResponse<Response> response = RestAssured
-                .given().log().all()
-                .cookie(loginCookieOfMemberA)
-                .when().get("/api/members/statistics")
-                .then().log().all().extract();
+        MockHttpServletResponse response = mockMvc.perform(get("/api/members/statistics")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
 
-        MemberStatisticsResponseDto responseDto = response.as(MemberStatisticsResponseDto.class);
+        MemberStatisticsResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), MemberStatisticsResponseDto.class);
+
         assertThat(responseDto.getScheduleCount()).isGreaterThanOrEqualTo(0);
         assertThat(responseDto.getDoneScheduleCount())
                 .isGreaterThanOrEqualTo(0)
@@ -96,8 +82,9 @@ class MemberControllerTest {
         assertThat(responseDto.getDiaryCount()).isGreaterThanOrEqualTo(0);
     }
 
+    @PlangoMockUser
     @Test
-    void 비밀번호_변경() {
+    void 비밀번호_변경() throws Exception {
         // given
         PasswordChangeRequestDto request = PasswordChangeRequestDto.builder()
                 .previousPassword("passwordA")
@@ -105,23 +92,21 @@ class MemberControllerTest {
                 .build();
 
         // when
-        ExtractableResponse<Response> response = RestAssured
-                .given().log().all()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(request)
-                .cookie(loginCookieOfMemberA)
-                .when().patch("/api/members/password")
-                .then().log().all().extract();
+        MockHttpServletResponse response = mockMvc.perform(patch("/api/members/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-        Member foundMemberA = memberRepository.findById(memberA.getId()).get();
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        Member member = memberRepository.findAll().get(0);
 
-        assertThat(passwordEncoder.matches(request.getNewPassword(), foundMemberA.getPassword())).isTrue();
+        assertThat(passwordEncoder.matches(request.getNewPassword(), member.getPassword())).isTrue();
     }
 
+    @PlangoMockUser
     @Test
-    void 잘못된_이전_비밀번호로_비밀번호_변경() {
+    void 잘못된_이전_비밀번호로_비밀번호_변경() throws Exception {
         // given
         PasswordChangeRequestDto request = PasswordChangeRequestDto.builder()
                 .previousPassword("passwordC")
@@ -129,23 +114,21 @@ class MemberControllerTest {
                 .build();
 
         // when
-        ExtractableResponse<Response> response = RestAssured
-                .given().log().all()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(request)
-                .cookie(loginCookieOfMemberA)
-                .when().patch("/api/members/password")
-                .then().log().all().extract();
+        MockHttpServletResponse response = mockMvc.perform(patch("/api/members/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        Member foundMemberA = memberRepository.findById(memberA.getId()).get();
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        Member member = memberRepository.findAll().get(0);
 
-        assertThat(passwordEncoder.matches("passwordA", foundMemberA.getPassword())).isTrue();
+        assertThat(passwordEncoder.matches("passwordA", member.getPassword())).isTrue();
     }
 
+    @PlangoMockUser
     @Test
-    void 프로필_수정() {
+    void 프로필_수정() throws Exception {
         // given
         MemberEditProfileRequestDto request = MemberEditProfileRequestDto.builder()
                 .nickname("nameB")
@@ -153,19 +136,16 @@ class MemberControllerTest {
                 .build();
 
         // when
-        ExtractableResponse<Response> response = RestAssured
-                .given().log().all()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(request)
-                .cookie(loginCookieOfMemberA)
-                .when().patch("/api/members/profile")
-                .then().log().all().extract();
+        MockHttpServletResponse response = mockMvc.perform(patch("/api/members/profile")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse();
 
         // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-        Member foundMemberA = memberRepository.findById(memberA.getId()).get();
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        Member member = memberRepository.findAll().get(0);
 
-        assertThat(foundMemberA.getNickname()).isEqualTo(request.getNickname());
-        assertThat(foundMemberA.getProfileImageUrl()).isEqualTo(request.getProfileImageUrl());
+        assertThat(member.getNickname()).isEqualTo(request.getNickname());
+        assertThat(member.getProfileImageUrl()).isEqualTo(request.getProfileImageUrl());
     }
 }
