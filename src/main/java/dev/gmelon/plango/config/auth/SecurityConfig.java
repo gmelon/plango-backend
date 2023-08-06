@@ -48,8 +48,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests()
-                .antMatchers("/", "/h2-console/**", "/error", "/favicon.ico", "/health").permitAll()
-                .antMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/logout").permitAll()
+                .mvcMatchers("/", "/h2-console/**", "/error", "/favicon.ico", "/health").permitAll()
+                .mvcMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/logout").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jsonEmailPasswordAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
