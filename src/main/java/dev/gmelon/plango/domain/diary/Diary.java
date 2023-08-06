@@ -7,9 +7,12 @@ import lombok.NoArgsConstructor;
 import org.hibernate.proxy.HibernateProxy;
 
 import javax.persistence.*;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
+import static javax.persistence.CascadeType.ALL;
 import static javax.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -25,17 +28,43 @@ public class Diary extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    private String imageUrl;
+    @OneToMany(mappedBy = "diary", cascade = ALL, orphanRemoval = true)
+    private List<DiaryImage> diaryImages = new ArrayList<>();
 
     @Builder
-    public Diary(String content, String imageUrl) {
+    public Diary(String content, List<String> imageUrls) {
         this.content = content;
-        this.imageUrl = imageUrl;
+        setDiaryImages(imageUrls);
     }
 
     public void edit(DiaryEditor editor) {
         this.content = editor.getContent();
-        this.imageUrl = editor.getImageUrl();
+        setDiaryImages(editor.getImageUrls());
+    }
+
+    private void setDiaryImages(List<String> imageUrls) {
+        diaryImages.clear();
+
+        if (imageUrls == null) {
+            return;
+        }
+
+        diaryImages.addAll(mapToDiaryImages(imageUrls));
+    }
+
+    private List<DiaryImage> mapToDiaryImages(List<String> imageUrls) {
+        return imageUrls.stream()
+                .map(imageUrl -> DiaryImage.builder()
+                        .diary(this)
+                        .imageUrl(imageUrl)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    public List<String> getDiaryImageUrls() {
+        return diaryImages.stream()
+                .map(DiaryImage::getImageUrl)
+                .collect(Collectors.toList());
     }
 
     @Override

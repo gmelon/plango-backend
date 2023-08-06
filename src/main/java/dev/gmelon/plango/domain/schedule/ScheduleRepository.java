@@ -17,6 +17,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     void deleteAllByMemberId(Long memberId);
 
+    // TODO 얘도 fetch join 하도록 수정
     Optional<Schedule> findByDiaryId(Long diaryId);
 
     long countByMemberId(Long memberId);
@@ -31,7 +32,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             "ORDER BY CASE WHEN s.startTime IS NULL THEN 0 ELSE 1 END, " +
             "CASE WHEN s.startTime IS NULL THEN s.modifiedDate ELSE s.startTime END ASC, " +
             "s.endTime ASC")
-    List<Schedule> findByMemberIdAndDateOrderByStartTimeAndEndTimeAsc(@Param("memberId") Long memberId, @Param("date") LocalDate date);
+    List<Schedule> findByMemberIdAndDate(@Param("memberId") Long memberId, @Param("date") LocalDate date);
 
     @Query("SELECT s FROM Schedule s " +
             "WHERE s.member.id = :memberId " +
@@ -40,16 +41,16 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             "ORDER BY CASE WHEN s.startTime IS NULL THEN 0 ELSE 1 END, " +
             "CASE WHEN s.startTime IS NULL THEN s.modifiedDate ELSE s.startTime END ASC, " +
             "s.endTime ASC")
-    List<Schedule> findByMemberIdAndDateAndDiaryNullOrderByStartTimeAndEndTimeAsc(@Param("memberId") Long memberId, @Param("date") LocalDate date);
+    List<Schedule> findByMemberIdAndDateAndDiaryNull(@Param("memberId") Long memberId, @Param("date") LocalDate date);
 
-    @Query("SELECT s FROM Schedule s join fetch s.diary " +
+    // TODO Diary를 바로 반환하도록 수정
+    @Query("SELECT distinct s FROM Schedule s join fetch s.diary d left outer join fetch d.diaryImages " +
             "WHERE s.member.id = :memberId " +
-            "AND s.diary IS NOT NULL " +
             "AND s.date = :date " +
             "ORDER BY CASE WHEN s.startTime IS NULL THEN 0 ELSE 1 END, " +
             "CASE WHEN s.startTime IS NULL THEN s.modifiedDate ELSE s.startTime END ASC, " +
             "s.endTime ASC")
-    List<Schedule> findByMemberIdAndDateAndDiaryNotNullOrderByStartTimeAndEndTimeAsc(@Param("memberId") Long memberId, @Param("date") LocalDate date);
+    List<Schedule> findByMemberIdAndDateAndDiaryNotNull(@Param("memberId") Long memberId, @Param("date") LocalDate date);
 
     @Query("SELECT new dev.gmelon.plango.service.schedule.dto.ScheduleCountResponseDto(s.date, sum(case when s.done = true then 1 else 0 end), count(s)) " +
             "FROM Schedule s " +

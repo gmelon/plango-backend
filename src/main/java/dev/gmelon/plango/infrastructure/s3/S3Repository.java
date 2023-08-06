@@ -5,11 +5,17 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import dev.gmelon.plango.exception.s3.FileUploadFailureException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -20,6 +26,21 @@ public class S3Repository {
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
+
+    public List<String> uploadAll(List<MultipartFile> files) {
+        List<String> uploadedFileUrls = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            try (InputStream inputStream = file.getInputStream()) {
+                String uploadedFileUrl = this.upload(Objects.requireNonNull(file.getOriginalFilename()), inputStream, file.getContentType(), file.getSize());
+                uploadedFileUrls.add(uploadedFileUrl);
+            } catch (IOException e) {
+                throw new FileUploadFailureException();
+            }
+        }
+
+        return uploadedFileUrls;
+    }
 
     public String upload(String originalFileName, InputStream inputStream, String contentType, Long contentLength) {
         String saveFileName = createSaveFileName(originalFileName);
@@ -45,6 +66,10 @@ public class S3Repository {
         metadata.setContentType(contentType);
         metadata.setContentLength(contentLength);
         return metadata;
+    }
+
+    public void deleteAll(List<String> savedFileUrls) {
+        savedFileUrls.forEach(this::delete);
     }
 
     public void delete(String savedFileUrl) {

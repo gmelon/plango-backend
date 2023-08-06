@@ -6,13 +6,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @NoArgsConstructor
 @Getter
 public class DiaryListResponseDto {
 
     private Long id;
     private String content;
-    private String imageUrl;
+    private List<String> imageUrls = new ArrayList<>();
     private ScheduleOfDiaryListResponseDto schedule;
 
     public static DiaryListResponseDto from(Schedule schedule) {
@@ -22,16 +25,16 @@ public class DiaryListResponseDto {
         return DiaryListResponseDto.builder()
                 .id(diary.getId())
                 .content(diary.getContent())
-                .imageUrl(diary.getImageUrl())
+                .imageUrls(diary.getDiaryImageUrls())
                 .schedule(scheduleResponse)
                 .build();
     }
 
     @Builder
-    public DiaryListResponseDto(Long id, String content, String imageUrl, ScheduleOfDiaryListResponseDto schedule) {
+    public DiaryListResponseDto(Long id, String content, List<String> imageUrls, ScheduleOfDiaryListResponseDto schedule) {
         this.id = id;
         this.content = content;
-        this.imageUrl = imageUrl;
+        this.imageUrls = imageUrls;
         this.schedule = schedule;
     }
 

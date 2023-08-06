@@ -82,6 +82,7 @@ class DiaryControllerTest {
                 .andReturn().getResponse();
 
         // then
+        System.out.println(response.getContentAsString(UTF_8));
         assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
     }
 
@@ -89,7 +90,7 @@ class DiaryControllerTest {
     @Test
     void 기록_수정_시_내용_또는_사진은_필수_값() throws Exception {
         // given
-        DiaryCreateRequestDto request = new DiaryCreateRequestDto();
+        DiaryEditRequestDto request = new DiaryEditRequestDto();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(put("/api/diaries/1")
@@ -107,7 +108,7 @@ class DiaryControllerTest {
         // given
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
                 .content("기록 본문")
-                .imageUrl("https://plango-backend/imageA.jpg")
+                .imageUrls(List.of("https://plango-backend/imageA.jpg", "https://plango-backend/imageB.jpg"))
                 .build();
 
         // when
@@ -122,7 +123,7 @@ class DiaryControllerTest {
         Long createdDiaryId = parseIdFrom(response.getHeader(HttpHeaders.LOCATION));
         Diary createdDiary = assertDoesNotThrow(() -> diaryRepository.findById(createdDiaryId).get());
         assertThat(createdDiary.getContent()).isEqualTo(request.getContent());
-        assertThat(createdDiary.getImageUrl()).isEqualTo(request.getImageUrl());
+        assertThat(createdDiary.getDiaryImageUrls()).isEqualTo(request.getImageUrls());
     }
 
     @PlangoMockUser
@@ -143,7 +144,7 @@ class DiaryControllerTest {
 
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
                 .content("기록 본문")
-                .imageUrl("https://plango-backend/imageA.jpg")
+                .imageUrls(List.of("https://plango-backend/imageA.jpg"))
                 .build();
 
         // when
@@ -162,7 +163,7 @@ class DiaryControllerTest {
         // given
         Diary givenDiary = Diary.builder()
                 .content("기록 본문")
-                .imageUrl("https://plango-backend/imageA.jpg")
+                .imageUrls(List.of("https://plango-backend/imageA.jpg", "https://plango-backend/imageB.jpg"))
                 .build();
         diaryRepository.save(givenDiary);
 
@@ -180,7 +181,7 @@ class DiaryControllerTest {
 
         assertThat(responseDto.getId()).isEqualTo(givenDiary.getId());
         assertThat(responseDto.getContent()).isEqualTo(givenDiary.getContent());
-        assertThat(responseDto.getImageUrl()).isEqualTo(givenDiary.getImageUrl());
+        assertThat(responseDto.getImageUrls()).isEqualTo(givenDiary.getDiaryImageUrls());
 
         assertThat(responseDto.getSchedule().getId()).isEqualTo(scheduleOfMemberA.getId());
         assertThat(responseDto.getSchedule().getTitle()).isEqualTo(scheduleOfMemberA.getTitle());
@@ -198,7 +199,7 @@ class DiaryControllerTest {
 
         Diary givenDiary = Diary.builder()
                 .content("기록 본문")
-                .imageUrl("https://plango-backend/imageA.jpg")
+                .imageUrls(List.of("https://plango-backend/imageA.jpg"))
                 .build();
         Schedule givenSchedule = Schedule.builder()
                 .member(anotherMember)
@@ -235,7 +236,7 @@ class DiaryControllerTest {
         // given
         Diary givenDiary = Diary.builder()
                 .content("기록 본문")
-                .imageUrl("https://plango-backend/imageA.jpg")
+                .imageUrls(List.of("https://plango-backend/imageA.jpg", "https://plango-backend/imageB.jpg"))
                 .build();
         diaryRepository.save(givenDiary);
 
@@ -253,7 +254,7 @@ class DiaryControllerTest {
 
         assertThat(responseDto.getId()).isEqualTo(givenDiary.getId());
         assertThat(responseDto.getContent()).isEqualTo(givenDiary.getContent());
-        assertThat(responseDto.getImageUrl()).isEqualTo(givenDiary.getImageUrl());
+        assertThat(responseDto.getImageUrls()).isEqualTo(givenDiary.getDiaryImageUrls());
 
         assertThat(responseDto.getSchedule().getId()).isEqualTo(scheduleOfMemberA.getId());
         assertThat(responseDto.getSchedule().getTitle()).isEqualTo(scheduleOfMemberA.getTitle());
@@ -271,7 +272,7 @@ class DiaryControllerTest {
 
         Diary givenDiary = Diary.builder()
                 .content("기록 본문")
-                .imageUrl("https://plango-backend/imageA.jpg")
+                .imageUrls(List.of("https://plango-backend/imageA.jpg"))
                 .build();
         Schedule givenSchedule = Schedule.builder()
                 .member(anotherMember)
@@ -308,7 +309,7 @@ class DiaryControllerTest {
         // given
         Diary givenDiary = Diary.builder()
                 .content("기록 본문")
-                .imageUrl("https://plango-backend/imageA.jpg")
+                .imageUrls(List.of("https://plango-backend/imageA.jpg", "https://plango-backend/imageB.jpg"))
                 .build();
         diaryRepository.save(givenDiary);
 
@@ -317,7 +318,7 @@ class DiaryControllerTest {
 
         DiaryEditRequestDto request = DiaryEditRequestDto.builder()
                 .content("기록 본문 2")
-                .imageUrl("https://plango-backend/imageB.jpg")
+                .imageUrls(List.of("https://plango-backend/imageA.jpg", "https://plango-backend/imageC.jpg"))
                 .build();
 
         // when
@@ -331,7 +332,7 @@ class DiaryControllerTest {
 
         Diary createdDiary = assertDoesNotThrow(() -> diaryRepository.findById(givenDiary.getId()).get());
         assertThat(createdDiary.getContent()).isEqualTo(request.getContent());
-        assertThat(createdDiary.getImageUrl()).isEqualTo(request.getImageUrl());
+        assertThat(createdDiary.getDiaryImageUrls()).isEqualTo(request.getImageUrls());
     }
 
     @PlangoMockUser
@@ -342,7 +343,7 @@ class DiaryControllerTest {
 
         Diary givenDiary = Diary.builder()
                 .content("기록 본문")
-                .imageUrl("https://plango-backend/imageA.jpg")
+                .imageUrls(List.of("https://plango-backend/imageA.jpg"))
                 .build();
         Schedule givenSchedule = Schedule.builder()
                 .member(anotherMember)
@@ -353,7 +354,7 @@ class DiaryControllerTest {
 
         DiaryEditRequestDto request = DiaryEditRequestDto.builder()
                 .content("기록 본문 2")
-                .imageUrl("https://plango-backend/imageB.jpg")
+                .imageUrls(List.of("https://plango-backend/imageB.jpg"))
                 .build();
 
         // when
@@ -372,7 +373,7 @@ class DiaryControllerTest {
         // given
         Diary givenDiary = Diary.builder()
                 .content("기록 본문")
-                .imageUrl("https://plango-backend/imageA.jpg")
+                .imageUrls(List.of("https://plango-backend/imageA.jpg", "https://plango-backend/imageB.jpg"))
                 .build();
         diaryRepository.save(givenDiary);
 
@@ -397,7 +398,7 @@ class DiaryControllerTest {
 
         Diary givenDiary = Diary.builder()
                 .content("기록 본문")
-                .imageUrl("https://plango-backend/imageA.jpg")
+                .imageUrls(List.of("https://plango-backend/imageA.jpg"))
                 .build();
         Schedule givenSchedule = Schedule.builder()
                 .member(anotherMember)

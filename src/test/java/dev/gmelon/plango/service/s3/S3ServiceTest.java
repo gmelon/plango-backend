@@ -1,6 +1,8 @@
 package dev.gmelon.plango.service.s3;
 
 import dev.gmelon.plango.config.s3.AmazonS3TestImpl;
+import dev.gmelon.plango.service.s3.dto.FileDeleteRequestDto;
+import dev.gmelon.plango.service.s3.dto.FileUploadResponseDto;
 import org.apache.http.entity.ContentType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,11 +37,12 @@ class S3ServiceTest {
         );
 
         // when
-        String savedFileUrl = s3Service.upload(file);
+        FileUploadResponseDto response = s3Service.uploadAll(List.of(file));
 
         // then
-        assertThat(savedFileUrl).startsWith("https://plango-backend");
-        assertThat(savedFileUrl).endsWith(".jpg");
+        String uploadedFileUrl = response.getUploadedFileUrls().get(0);
+        assertThat(uploadedFileUrl).startsWith("https://plango-backend");
+        assertThat(uploadedFileUrl).endsWith(".jpg");
         assertThat(amazonS3.isFileSaved()).isTrue();
     }
 
@@ -51,10 +55,12 @@ class S3ServiceTest {
                 ContentType.IMAGE_JPEG.toString(),
                 InputStream.nullInputStream()
         );
-        String savedFilePath = s3Service.upload(file);
+        FileUploadResponseDto uploadResponse = s3Service.uploadAll(List.of(file));
+
+        FileDeleteRequestDto deleteRequest = new FileDeleteRequestDto(uploadResponse.getUploadedFileUrls());
 
         // when
-        s3Service.delete(savedFilePath);
+        s3Service.deleteAll(deleteRequest);
 
         // then
         assertThat(amazonS3.isFileSaved()).isFalse();

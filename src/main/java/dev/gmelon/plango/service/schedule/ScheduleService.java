@@ -6,8 +6,8 @@ import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleEditor;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
-import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
 import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
+import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.schedule.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -58,9 +57,9 @@ public class ScheduleService {
 
     private List<Schedule> findSchedulesByMemberAndDate(Long memberId, LocalDate requestDate, boolean noDiaryOnly) {
         if (noDiaryOnly) {
-            return scheduleRepository.findByMemberIdAndDateAndDiaryNullOrderByStartTimeAndEndTimeAsc(memberId, requestDate);
+            return scheduleRepository.findByMemberIdAndDateAndDiaryNull(memberId, requestDate);
         }
-        return scheduleRepository.findByMemberIdAndDateOrderByStartTimeAndEndTimeAsc(memberId, requestDate);
+        return scheduleRepository.findByMemberIdAndDate(memberId, requestDate);
     }
 
     @Transactional
@@ -91,23 +90,21 @@ public class ScheduleService {
 
         validateMember(schedule, member);
 
-        Optional<String> diaryImageUrl = getDiaryImageUrl(schedule);
+        deleteDiaryImagesIfExists(schedule);
         scheduleRepository.delete(schedule);
-        diaryImageUrl.ifPresent(s3Repository::delete);
     }
 
-    private Optional<String> getDiaryImageUrl(Schedule schedule) {
+    private void deleteDiaryImagesIfExists(Schedule schedule) {
         if (schedule.getDiary() != null) {
-            return Optional.ofNullable(schedule.getDiary().getImageUrl());
+            List<String> diaryImageUrls = schedule.getDiary().getDiaryImageUrls();
+            s3Repository.deleteAll(diaryImageUrls);
         }
-        return Optional.empty();
     }
 
     public List<ScheduleCountResponseDto> getCountByDays(Long memberId, YearMonth requestMonth) {
         LocalDate startDate = requestMonth.atDay(1);
         LocalDate endDate = requestMonth.atEndOfMonth();
 
-        // TODO 레포지토리 리팩토링
         return scheduleRepository.findByMemberIdAndCountOfDays(memberId, startDate, endDate);
     }
 

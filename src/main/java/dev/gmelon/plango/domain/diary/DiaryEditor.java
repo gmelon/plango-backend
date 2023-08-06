@@ -3,15 +3,17 @@ package dev.gmelon.plango.domain.diary;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 public class DiaryEditor {
 
     private String content;
-    private String imageUrl;
+    private List<String> imageUrls;
 
     @Builder
-    public DiaryEditor(String content, String imageUrl) {
+    public DiaryEditor(String content, List<String> imageUrls) {
         this.content = content;
-        this.imageUrl = imageUrl;
+        this.imageUrls = imageUrls;
     }
 }

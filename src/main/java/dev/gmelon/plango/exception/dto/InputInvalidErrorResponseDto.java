@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 
@@ -48,10 +49,25 @@ public class InputInvalidErrorResponseDto {
     }
 
     public static InputInvalidErrorResponseDto from(MethodArgumentNotValidException exception) {
+        if (exception.hasFieldErrors()) {
+            return fieldErrorResponse(exception);
+        }
+        return objectErrorResponse(exception);
+    }
+
+    private static InputInvalidErrorResponseDto fieldErrorResponse(MethodArgumentNotValidException exception) {
         FieldError firstFieldError = exception.getFieldErrors().get(0);
         return InputInvalidErrorResponseDto.builder()
                 .field(firstFieldError.getField())
                 .message(firstFieldError.getDefaultMessage())
+                .build();
+    }
+
+    private static InputInvalidErrorResponseDto objectErrorResponse(MethodArgumentNotValidException exception) {
+        ObjectError firstError = exception.getAllErrors().get(0);
+        return InputInvalidErrorResponseDto.builder()
+                .field(firstError.getObjectName())
+                .message(firstError.getDefaultMessage())
                 .build();
     }
 

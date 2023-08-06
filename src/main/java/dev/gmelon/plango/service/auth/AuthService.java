@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -68,11 +69,12 @@ public class AuthService {
 
     private void deleteAllDiaryImages(Long memberId) {
         List<Schedule> schedules = scheduleRepository.findAllByMemberId(memberId);
-        schedules.stream()
-                .filter(schedule ->  Objects.nonNull(schedule.getDiary()))
-                .map(schedule -> schedule.getDiary().getImageUrl())
-                .filter(Objects::nonNull)
-                .forEach(s3Repository::delete);
+
+        List<String> savedDiaryImageUrls = schedules.stream()
+                .filter(schedule -> Objects.nonNull(schedule.getDiary()))
+                .flatMap(schedule -> schedule.getDiary().getDiaryImageUrls().stream())
+                .collect(Collectors.toList());
+        s3Repository.deleteAll(savedDiaryImageUrls);
     }
 
     private void deleteProfileImage(Long memberId) {

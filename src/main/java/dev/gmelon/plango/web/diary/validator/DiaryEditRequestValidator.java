@@ -17,7 +17,7 @@ public class DiaryEditRequestValidator implements Validator {
     @Override
     public void validate(Object target, Errors errors) {
         DiaryEditRequestDto requestDto = (DiaryEditRequestDto) target;
-        if (!StringUtils.hasText(requestDto.getContent()) && !StringUtils.hasText(requestDto.getImageUrl())) {
+        if (!StringUtils.hasText(requestDto.getContent()) && requestDto.getImageUrls().isEmpty()) {
             errors.reject("NotNull.contentOrImageUrl", "내용과 사진 중 한 가지는 필수입니다.");
         }
     }

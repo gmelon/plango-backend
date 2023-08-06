@@ -66,7 +66,7 @@ public class DiaryService {
     }
 
     public List<DiaryListResponseDto> findAllByDate(Long memberId, LocalDate requestDate) {
-        List<Schedule> schedules = scheduleRepository.findByMemberIdAndDateAndDiaryNotNullOrderByStartTimeAndEndTimeAsc(memberId, requestDate);
+        List<Schedule> schedules = scheduleRepository.findByMemberIdAndDateAndDiaryNotNull(memberId, requestDate);
 
         return schedules.stream()
                 .map(DiaryListResponseDto::from)
@@ -81,23 +81,7 @@ public class DiaryService {
         validateMember(schedule, member);
 
         Diary diary = schedule.getDiary();
-        String prevDiaryImageUrl = diary.getImageUrl();
-
         diary.edit(requestDto.toEditor());
-        deletePrevImageIfChanged(prevDiaryImageUrl, requestDto);
-    }
-
-    private void deletePrevImageIfChanged(String prevDiaryImageUrl, DiaryEditRequestDto requestDto) {
-        if (prevDiaryImageUrl == null) {
-            return;
-        }
-        if (isImageChangedOrDeleted(prevDiaryImageUrl, requestDto)) {
-            s3Repository.delete(prevDiaryImageUrl);
-        }
-    }
-
-    private boolean isImageChangedOrDeleted(String prevDiaryImageUrl, DiaryEditRequestDto requestDto) {
-        return requestDto.getImageUrl() == null || !prevDiaryImageUrl.equals(requestDto.getImageUrl());
     }
 
     @Transactional
@@ -107,16 +91,13 @@ public class DiaryService {
 
         validateMember(schedule, member);
 
-        String diaryImageUrl = schedule.getDiary().getImageUrl();
-
+        deleteDiaryImages(schedule.getDiary());
         schedule.deleteDiary();
-        deleteImageIfExists(diaryImageUrl);
     }
 
-    private void deleteImageIfExists(String diaryImageUrl) {
-        if (diaryImageUrl != null) {
-            s3Repository.delete(diaryImageUrl);
-        }
+    private void deleteDiaryImages(Diary diary) {
+        List<String> diaryImageUrls = diary.getDiaryImageUrls();
+        s3Repository.deleteAll(diaryImageUrls);
     }
 
     private void validateMember(Schedule schedule, Member member) {

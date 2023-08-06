@@ -1,10 +1,13 @@
 package dev.gmelon.plango.service.diary.dto;
 
 import dev.gmelon.plango.domain.diary.DiaryEditor;
+import dev.gmelon.plango.util.validator.CollectionURLValidation;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.URL;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @Getter
@@ -12,19 +15,19 @@ public class DiaryEditRequestDto {
 
     private String content;
 
-    @URL
-    private String imageUrl;
+    @CollectionURLValidation
+    private List<String> imageUrls = new ArrayList<>();
 
     @Builder
-    public DiaryEditRequestDto(String content, String imageUrl) {
+    public DiaryEditRequestDto(String content, List<String> imageUrls) {
         this.content = content;
-        this.imageUrl = imageUrl;
+        this.imageUrls = imageUrls;
     }
 
     public DiaryEditor toEditor() {
         return DiaryEditor.builder()
                 .content(content)
-                .imageUrl(imageUrl)
+                .imageUrls(imageUrls)
                 .build();
     }
 

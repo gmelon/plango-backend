@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @Getter
@@ -16,7 +18,7 @@ public class DiaryResponseDto {
 
     private Long id;
     private String content;
-    private String imageUrl;
+    private List<String> imageUrls = new ArrayList<>();
     private ScheduleOfDiaryResponseDto schedule;
 
     public static DiaryResponseDto from(Schedule schedule) {
@@ -26,16 +28,16 @@ public class DiaryResponseDto {
         return DiaryResponseDto.builder()
                 .id(diary.getId())
                 .content(diary.getContent())
-                .imageUrl(diary.getImageUrl())
+                .imageUrls(diary.getDiaryImageUrls())
                 .schedule(scheduleResponse)
                 .build();
     }
 
     @Builder
-    public DiaryResponseDto(Long id, String content, String imageUrl, ScheduleOfDiaryResponseDto schedule) {
+    public DiaryResponseDto(Long id, String content, List<String> imageUrls, ScheduleOfDiaryResponseDto schedule) {
         this.id = id;
         this.content = content;
-        this.imageUrl = imageUrl;
+        this.imageUrls = imageUrls;
         this.schedule = schedule;
     }
 
