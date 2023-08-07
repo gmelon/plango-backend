@@ -26,6 +26,8 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 
 import javax.sql.DataSource;
 
+import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
+
 @RequiredArgsConstructor
 @EnableMethodSecurity
 @EnableWebSecurity
@@ -48,7 +50,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests()
-                .mvcMatchers("/", "/h2-console/**", "/error", "/favicon.ico", "/health").permitAll()
+                .requestMatchers(toH2Console()).permitAll()
+                .mvcMatchers("/", "/error", "/favicon.ico", "/health").permitAll()
                 .mvcMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/logout").permitAll()
                 .anyRequest().authenticated()
                 .and()
