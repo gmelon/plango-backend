@@ -26,8 +26,6 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 
 import javax.sql.DataSource;
 
-import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
-
 @RequiredArgsConstructor
 @EnableMethodSecurity
 @EnableWebSecurity
@@ -50,7 +48,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests()
-                .requestMatchers(toH2Console()).permitAll()
+                .antMatchers("/h2-console/**").permitAll() // TODO mvc로는 왜 안 되는지
                 .mvcMatchers("/", "/error", "/favicon.ico", "/health").permitAll()
                 .mvcMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/logout").permitAll()
                 .anyRequest().authenticated()
