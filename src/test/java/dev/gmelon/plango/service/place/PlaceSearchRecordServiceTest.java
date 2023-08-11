@@ -50,9 +50,9 @@ class PlaceSearchRecordServiceTest {
     void 현재_회원의_최근_검색어_목록_조회() {
         // given
         List<PlaceSearchRecord> placeSearchRecords = IntStream.rangeClosed(1, 50)
-                .mapToObj(value -> "검색어 " + value)
-                .map(keyword -> PlaceSearchRecord.builder()
-                        .keyword(keyword)
+                .mapToObj(value -> PlaceSearchRecord.builder()
+                        .keyword(String.valueOf(value))
+                        .lastSearchedDate(LocalDateTime.now().minusDays(value))
                         .member(member)
                         .build()
                 )
@@ -60,15 +60,22 @@ class PlaceSearchRecordServiceTest {
         placeSearchRecordRepository.saveAll(placeSearchRecords);
 
         // when
-        List<PlaceSearchRecordListResponseDto> responseDtos = placeSearchRecordService.findAll(member.getId());
+        List<PlaceSearchRecordListResponseDto> firstPageResponseDtos = placeSearchRecordService.findAll(member.getId(), 1);
+        List<PlaceSearchRecordListResponseDto> secondPageResponseDtos = placeSearchRecordService.findAll(member.getId(), 2);
 
         // then
-        List<String> expectedKeywords = placeSearchRecords.stream()
-                .map(PlaceSearchRecord::getKeyword)
+        List<String> expectedFirstPageKeywords = IntStream.rangeClosed(1, 40)
+                .mapToObj(String::valueOf)
                 .collect(Collectors.toList());
-        assertThat(responseDtos)
+        List<String> expectedSecondPageKeywords = IntStream.rangeClosed(41, 50)
+                .mapToObj(String::valueOf)
+                .collect(Collectors.toList());
+        assertThat(firstPageResponseDtos)
                 .extracting(PlaceSearchRecordListResponseDto::getKeyword)
-                .containsAll(expectedKeywords);
+                .containsExactlyInAnyOrderElementsOf(expectedFirstPageKeywords);
+        assertThat(secondPageResponseDtos)
+                .extracting(PlaceSearchRecordListResponseDto::getKeyword)
+                .containsExactlyInAnyOrderElementsOf(expectedSecondPageKeywords);
     }
 
     @Test
@@ -94,7 +101,7 @@ class PlaceSearchRecordServiceTest {
         placeSearchRecordRepository.saveAll(placeSearchRecords);
 
         // when
-        List<PlaceSearchRecordListResponseDto> responseDtos = placeSearchRecordService.findAll(member.getId());
+        List<PlaceSearchRecordListResponseDto> responseDtos = placeSearchRecordService.findAll(member.getId(), 1);
 
         // then
         List<String> expectedKeywords = List.of("검색어 3", "검색어 2", "검색어 1");
@@ -125,7 +132,7 @@ class PlaceSearchRecordServiceTest {
         placeSearchRecordService.search(member.getId(), requestDto);
 
         // then
-        List<PlaceSearchRecord> foundPlaceSearchRecords = placeSearchRecordRepository.findAllByMemberIdOrderByLastSearchedDateDesc(member.getId());
+        List<PlaceSearchRecord> foundPlaceSearchRecords = placeSearchRecordRepository.findAllByMemberId(member.getId(), 1);
         assertThat(foundPlaceSearchRecords).hasSize(3);
         assertThat(placeSearchRecordRepository.findByKeywordAndMemberId(requestKeyword, member.getId())).isPresent();
     }
@@ -154,7 +161,7 @@ class PlaceSearchRecordServiceTest {
         placeSearchRecordService.search(member.getId(), requestDto);
 
         // then
-        List<PlaceSearchRecord> foundPlaceSearchRecords = placeSearchRecordRepository.findAllByMemberIdOrderByLastSearchedDateDesc(member.getId());
+        List<PlaceSearchRecord> foundPlaceSearchRecords = placeSearchRecordRepository.findAllByMemberId(member.getId(), 1);
         assertThat(foundPlaceSearchRecords).hasSize(2);
 
         PlaceSearchRecord foundPlaceSearchRecord = assertDoesNotThrow(() -> placeSearchRecordRepository.findByKeywordAndMemberId(requestKeyword, member.getId()).get());

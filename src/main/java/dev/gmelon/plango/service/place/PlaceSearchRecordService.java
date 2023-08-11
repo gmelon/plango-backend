@@ -24,8 +24,8 @@ public class PlaceSearchRecordService {
     private final PlaceSearchRecordRepository placeSearchRecordRepository;
     private final MemberRepository memberRepository;
 
-    public List<PlaceSearchRecordListResponseDto> findAll(Long memberId) {
-        return placeSearchRecordRepository.findAllByMemberIdOrderByLastSearchedDateDesc(memberId).stream()
+    public List<PlaceSearchRecordListResponseDto> findAll(Long memberId, int page) {
+        return placeSearchRecordRepository.findAllByMemberId(memberId, page).stream()
                 .map(PlaceSearchRecordListResponseDto::from)
                 .collect(Collectors.toList());
     }

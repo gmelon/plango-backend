@@ -19,8 +19,8 @@ public class PlaceSearchRecordController {
     private final PlaceSearchRecordService placeSearchRecordService;
 
     @GetMapping
-    public List<PlaceSearchRecordListResponseDto> findAll(@LoginMember Long memberId) {
-        return placeSearchRecordService.findAll(memberId);
+    public List<PlaceSearchRecordListResponseDto> findAll(@LoginMember Long memberId, @RequestParam(defaultValue = "1") int page) {
+        return placeSearchRecordService.findAll(memberId, page);
     }
 
     @PostMapping

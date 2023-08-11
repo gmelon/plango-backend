@@ -2,6 +2,8 @@ package dev.gmelon.plango;
 
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
+import dev.gmelon.plango.domain.place.PlaceSearchRecord;
+import dev.gmelon.plango.domain.place.PlaceSearchRecordRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.auth.AuthService;
@@ -12,8 +14,11 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Profile("local")
 @RequiredArgsConstructor
@@ -23,6 +28,7 @@ public class TestDataInit {
     private final AuthService authService;
     private final MemberRepository memberRepository;
     private final ScheduleRepository scheduleRepository;
+    private final PlaceSearchRecordRepository placeSearchRecordRepository;
 
     @PostConstruct
     public void dataInit() {
@@ -33,7 +39,7 @@ public class TestDataInit {
                 .profileImageUrl("https://avatars.githubusercontent.com/u/33623106?v=4")
                 .build();
         authService.signup(request);
-        Member memberA = memberRepository.findByEmail(request.getEmail()).get();
+        Member member = memberRepository.findByEmail(request.getEmail()).get();
 
         List<Schedule> schedules = List.of(Schedule.builder()
                         .title("일정 제목 1")
@@ -45,7 +51,7 @@ public class TestDataInit {
                         .longitude(127.3454477)
                         .roadAddress("대전광역시 유성구 온천2동 대학로 99")
                         .placeName("충남대학교 공과대학 5호관")
-                        .member(memberA)
+                        .member(member)
                         .build(),
                 Schedule.builder()
                         .title("일정 제목 2")
@@ -57,9 +63,19 @@ public class TestDataInit {
                         .longitude(127.3420364)
                         .roadAddress("대전광역시 유성구 온천2동 대학로 99")
                         .placeName("충남대학교 인문대학")
-                        .member(memberA)
+                        .member(member)
                         .build());
         scheduleRepository.saveAll(schedules);
+
+        List<PlaceSearchRecord> placeSearchRecords = IntStream.rangeClosed(1, 100)
+                .mapToObj(value -> PlaceSearchRecord.builder()
+                        .keyword("검색어 " + value)
+                        .lastSearchedDate(LocalDateTime.now().minusDays(value))
+                        .member(member)
+                        .build()
+                )
+                .collect(Collectors.toList());
+        placeSearchRecordRepository.saveAll(placeSearchRecords);
     }
 
 }

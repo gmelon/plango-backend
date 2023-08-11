@@ -55,9 +55,90 @@ class PlaceSearchRecordControllerTest {
         final Member member = memberRepository.findAll().get(0);
 
         List<PlaceSearchRecord> placeSearchRecords = IntStream.rangeClosed(1, 50)
-                .mapToObj(value -> "검색어 " + value)
-                .map(keyword -> PlaceSearchRecord.builder()
-                        .keyword(keyword)
+                .mapToObj(value -> PlaceSearchRecord.builder()
+                        .keyword(String.valueOf(value))
+                        .lastSearchedDate(LocalDateTime.now().minusDays(value))
+                        .member(member)
+                        .build()
+                )
+                .collect(Collectors.toList());
+        placeSearchRecordRepository.saveAll(placeSearchRecords);
+
+        // when
+        MockHttpServletResponse firstPageResponse = mockMvc.perform(get("/api/place/search-records")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("page", "1"))
+                .andReturn().getResponse();
+
+        MockHttpServletResponse secondPageResponse = mockMvc.perform(get("/api/place/search-records")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("page", "2"))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(firstPageResponse.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+        List<PlaceSearchRecordListResponseDto> firstPageResponseDtos = Arrays.asList(objectMapper.readValue(firstPageResponse.getContentAsString(UTF_8), PlaceSearchRecordListResponseDto[].class));
+        List<PlaceSearchRecordListResponseDto> secondPageResponseDtos = Arrays.asList(objectMapper.readValue(secondPageResponse.getContentAsString(UTF_8), PlaceSearchRecordListResponseDto[].class));
+        List<String> expectedFirstPageKeywords = IntStream.rangeClosed(1, 40)
+                .mapToObj(String::valueOf)
+                .collect(Collectors.toList());
+        List<String> expectedSecondPageKeywords = IntStream.rangeClosed(41, 50)
+                .mapToObj(String::valueOf)
+                .collect(Collectors.toList());
+        assertThat(firstPageResponseDtos)
+                .extracting(PlaceSearchRecordListResponseDto::getKeyword)
+                .containsExactlyInAnyOrderElementsOf(expectedFirstPageKeywords);
+        assertThat(secondPageResponseDtos)
+                .extracting(PlaceSearchRecordListResponseDto::getKeyword)
+                .containsExactlyInAnyOrderElementsOf(expectedSecondPageKeywords);
+    }
+
+    @PlangoMockUser
+    @Test
+    void 페이지_파라미터가_0이면_첫번째_페이지_조회() throws Exception {
+        // given
+        final Member member = memberRepository.findAll().get(0);
+
+        List<PlaceSearchRecord> placeSearchRecords = IntStream.rangeClosed(1, 50)
+                .mapToObj(value -> PlaceSearchRecord.builder()
+                        .keyword(String.valueOf(value))
+                        .lastSearchedDate(LocalDateTime.now().minusDays(value))
+                        .member(member)
+                        .build()
+                )
+                .collect(Collectors.toList());
+        placeSearchRecordRepository.saveAll(placeSearchRecords);
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(get("/api/place/search-records")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("page", "0"))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+        List<PlaceSearchRecordListResponseDto> responseDtos = Arrays.asList(objectMapper.readValue(response.getContentAsString(UTF_8), PlaceSearchRecordListResponseDto[].class));
+        List<String> expectedFirstPageKeywords = IntStream.rangeClosed(1, 40)
+                .mapToObj(String::valueOf)
+                .collect(Collectors.toList());
+        assertThat(responseDtos)
+                .extracting(PlaceSearchRecordListResponseDto::getKeyword)
+                .containsExactlyInAnyOrderElementsOf(expectedFirstPageKeywords);
+
+    }
+
+    @PlangoMockUser
+    @Test
+    void 페이지_파라미터가_없으면_첫번째_페이지_조회() throws Exception {
+        // given
+        final Member member = memberRepository.findAll().get(0);
+
+        List<PlaceSearchRecord> placeSearchRecords = IntStream.rangeClosed(1, 50)
+                .mapToObj(value -> PlaceSearchRecord.builder()
+                        .keyword(String.valueOf(value))
+                        .lastSearchedDate(LocalDateTime.now().minusDays(value))
                         .member(member)
                         .build()
                 )
@@ -73,12 +154,12 @@ class PlaceSearchRecordControllerTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
 
         List<PlaceSearchRecordListResponseDto> responseDtos = Arrays.asList(objectMapper.readValue(response.getContentAsString(UTF_8), PlaceSearchRecordListResponseDto[].class));
-        List<String> expectedKeywords = placeSearchRecords.stream()
-                .map(PlaceSearchRecord::getKeyword)
+        List<String> expectedFirstPageKeywords = IntStream.rangeClosed(1, 40)
+                .mapToObj(String::valueOf)
                 .collect(Collectors.toList());
         assertThat(responseDtos)
                 .extracting(PlaceSearchRecordListResponseDto::getKeyword)
-                .containsAll(expectedKeywords);
+                .containsExactlyInAnyOrderElementsOf(expectedFirstPageKeywords);
     }
 
     @PlangoMockUser
@@ -151,7 +232,7 @@ class PlaceSearchRecordControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
 
-        List<PlaceSearchRecord> foundPlaceSearchRecords = placeSearchRecordRepository.findAllByMemberIdOrderByLastSearchedDateDesc(member.getId());
+        List<PlaceSearchRecord> foundPlaceSearchRecords = placeSearchRecordRepository.findAllByMemberId(member.getId(), 1);
         assertThat(foundPlaceSearchRecords).hasSize(3);
         assertThat(placeSearchRecordRepository.findByKeywordAndMemberId(requestKeyword, member.getId())).isPresent();
     }
@@ -188,7 +269,7 @@ class PlaceSearchRecordControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
 
-        List<PlaceSearchRecord> foundPlaceSearchRecords = placeSearchRecordRepository.findAllByMemberIdOrderByLastSearchedDateDesc(member.getId());
+        List<PlaceSearchRecord> foundPlaceSearchRecords = placeSearchRecordRepository.findAllByMemberId(member.getId(), 1);
         assertThat(foundPlaceSearchRecords).hasSize(2);
 
         PlaceSearchRecord foundPlaceSearchRecord = assertDoesNotThrow(() -> placeSearchRecordRepository.findByKeywordAndMemberId(requestKeyword, member.getId()).get());
