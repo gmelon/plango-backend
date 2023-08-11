@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
-    List<Schedule> findAllByMemberId(Long memberid);
+    List<Schedule> findAllByMemberId(Long memberId);
 
     void deleteAllByMemberId(Long memberId);
 

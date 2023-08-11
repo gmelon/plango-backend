@@ -28,7 +28,6 @@ public class ScheduleController {
     private final ScheduleEditRequestValidator scheduleEditRequestValidator;
 
     @InitBinder("scheduleCreateRequestDto")
-
     public void scheduleCreateRequestDtoInitBinder(WebDataBinder webDataBinder) {
         webDataBinder.addValidators(scheduleCreateRequestValidator);
     }
