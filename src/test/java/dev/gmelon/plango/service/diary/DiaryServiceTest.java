@@ -9,6 +9,7 @@ import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.diary.DiaryAccessDeniedException;
+import dev.gmelon.plango.exception.diary.DuplicateDiaryException;
 import dev.gmelon.plango.exception.diary.NoSuchDiaryException;
 import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
 import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
@@ -97,6 +98,25 @@ class DiaryServiceTest {
         Diary createdDiary = assertDoesNotThrow(() -> diaryRepository.findById(createdDiaryId).get());
         assertThat(createdDiary.getContent()).isEqualTo(request.getContent());
         assertThat(createdDiary.getDiaryImageUrls()).isEqualTo(request.getImageUrls());
+    }
+
+    @Test
+    void 이미_기록이_존재하는_일정에_기록_생성() {
+        // given
+        Diary diary = Diary.builder()
+                .member(memberA)
+                .schedule(scheduleOfMemberA)
+                .content("기존 기록")
+                .build();
+        diaryRepository.save(diary);
+
+        DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
+                .content("새로운 기록")
+                .build();
+
+        // when
+        assertThatThrownBy(() -> diaryService.create(memberA.getId(), scheduleOfMemberA.getId(), request))
+                .isInstanceOf(DuplicateDiaryException.class);
     }
 
     @Test

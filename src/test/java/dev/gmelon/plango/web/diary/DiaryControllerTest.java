@@ -130,6 +130,31 @@ class DiaryControllerTest {
 
     @PlangoMockUser
     @Test
+    void 이미_기록이_존재하는_일정에_기록_생성() throws Exception {
+        // given
+        Diary diary = Diary.builder()
+                .member(memberA)
+                .schedule(scheduleOfMemberA)
+                .content("기존 기록")
+                .build();
+        diaryRepository.save(diary);
+
+        DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
+                .content("새로운 기록")
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @PlangoMockUser
+    @Test
     void 타인의_일정에_기록_생성() throws Exception {
         // given
         Member anotherMember = createAnotherMember();
