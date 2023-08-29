@@ -16,10 +16,6 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     void deleteAllByMemberId(Long memberId);
 
-    long countByMemberId(Long memberId);
-
-    long countByMemberIdAndDoneIsTrue(Long memberId);
-
     @Query("SELECT s FROM Schedule s " +
             "WHERE s.member.id = :memberId " +
             "AND s.date = :date " +

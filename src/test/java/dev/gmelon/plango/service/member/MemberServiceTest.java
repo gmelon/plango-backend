@@ -6,7 +6,6 @@ import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.exception.member.PasswordMismatchException;
 import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
-import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,19 +52,6 @@ class MemberServiceTest {
         assertThat(response.getNickname()).isEqualTo(memberA.getNickname());
         assertThat(response.getNickname()).isEqualTo(memberA.getNickname());
         assertThat(response.getProfileImageUrl()).isEqualTo(memberA.getProfileImageUrl());
-    }
-
-    @Test
-    void 나의_통계정보_조회() {
-        // when
-        MemberStatisticsResponseDto response = memberService.getMyStatistics(memberA.getId());
-
-        // then
-        assertThat(response.getScheduleCount()).isGreaterThanOrEqualTo(0);
-        assertThat(response.getDoneScheduleCount())
-                .isGreaterThanOrEqualTo(0)
-                .isLessThanOrEqualTo(response.getScheduleCount());
-        assertThat(response.getDiaryCount()).isGreaterThanOrEqualTo(0);
     }
 
     @Test

@@ -7,7 +7,6 @@ import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
-import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,26 +59,6 @@ class MemberControllerTest {
         assertThat(responseDto.getEmail()).isEqualTo(member.getEmail());
         assertThat(responseDto.getNickname()).isEqualTo(member.getNickname());
         assertThat(responseDto.getProfileImageUrl()).isEqualTo(member.getProfileImageUrl());
-    }
-
-    @PlangoMockUser
-    @Test
-    void 나의_통계정보_조회() throws Exception {
-        // when
-        MockHttpServletResponse response = mockMvc.perform(get("/api/members/statistics")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        // then
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-
-        MemberStatisticsResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), MemberStatisticsResponseDto.class);
-
-        assertThat(responseDto.getScheduleCount()).isGreaterThanOrEqualTo(0);
-        assertThat(responseDto.getDoneScheduleCount())
-                .isGreaterThanOrEqualTo(0)
-                .isLessThanOrEqualTo(responseDto.getScheduleCount());
-        assertThat(responseDto.getDiaryCount()).isGreaterThanOrEqualTo(0);
     }
 
     @PlangoMockUser

@@ -3,13 +3,12 @@ package dev.gmelon.plango.service.member;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
-import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.member.DuplicateNicknameException;
+import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.member.PasswordMismatchException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
-import dev.gmelon.plango.service.member.dto.MemberStatisticsResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,19 +28,6 @@ public class MemberService {
     public MemberProfileResponseDto getMyProfile(Long memberId) {
         Member member = findMemberById(memberId);
         return MemberProfileResponseDto.from(member);
-    }
-
-    public MemberStatisticsResponseDto getMyStatistics(Long memberId) {
-        int scheduleCount = (int) scheduleRepository.countByMemberId(memberId);
-        int doneScheduleCount = (int) scheduleRepository.countByMemberIdAndDoneIsTrue(memberId);
-        // TODO 통계 API 삭제
-        int diaryCount = 3;
-
-        return MemberStatisticsResponseDto.builder()
-                .scheduleCount(scheduleCount)
-                .doneScheduleCount(doneScheduleCount)
-                .diaryCount(diaryCount)
-                .build();
     }
 
     @Transactional
