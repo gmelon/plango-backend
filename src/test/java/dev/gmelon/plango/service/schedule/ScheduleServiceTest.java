@@ -128,7 +128,6 @@ class ScheduleServiceTest {
         assertThat(responseDto.getPlaceName()).isEqualTo(schedule.getPlaceName());
         assertThat(responseDto.getIsDone()).isFalse();
         assertThat(responseDto.getHasDiary()).isFalse();
-        assertThat(responseDto.getDiary()).isNull();
     }
 
     @Test
@@ -144,10 +143,16 @@ class ScheduleServiceTest {
                 .longitude(127.3454477)
                 .roadAddress("대전광역시 유성구 온천2동 대학로 99")
                 .placeName("충남대학교 공과대학 5호관")
-                .diary(Diary.builder().content("기록 본문").build())
                 .member(memberA)
                 .build();
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
+
+        Diary diary = Diary.builder()
+                .member(memberA)
+                .schedule(schedule)
+                .content("기록 본문")
+                .build();
+        diaryRepository.save(diary);
 
         // when
         ScheduleResponseDto responseDto = scheduleService.findById(memberA.getId(), createdScheduleId);
@@ -165,7 +170,6 @@ class ScheduleServiceTest {
         assertThat(responseDto.getPlaceName()).isEqualTo(schedule.getPlaceName());
         assertThat(responseDto.getIsDone()).isFalse();
         assertThat(responseDto.getHasDiary()).isTrue();
-        assertThat(responseDto.getDiary().getId()).isNotNull();
     }
 
     @Test
@@ -266,7 +270,7 @@ class ScheduleServiceTest {
         Schedule foundSchedule = assertDoesNotThrow(() -> scheduleRepository.findById(createdScheduleId).get());
         assertThat(foundSchedule)
                 .usingRecursiveComparison()
-                .ignoringFields("member")
+                .ignoringFields("member", "diaries")
                 .isEqualTo(schedule);
     }
 
@@ -358,7 +362,7 @@ class ScheduleServiceTest {
     void 날짜별_기록이_없는_일정_목록_조회() {
         // given
         // memberA 일정 추가
-        List<Schedule> memberARequests = List.of(
+        List<Schedule> memberAScheduleRequests = List.of(
                 Schedule.builder()
                         .title("일정 1")
                         .date(LocalDate.of(2023, 6, 25))
@@ -379,7 +383,6 @@ class ScheduleServiceTest {
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 1))
                         .member(memberA)
-                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 4")
@@ -387,7 +390,6 @@ class ScheduleServiceTest {
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
                         .member(memberA)
-                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 5")
@@ -395,17 +397,30 @@ class ScheduleServiceTest {
                         .member(memberA)
                         .build()
         );
-        scheduleRepository.saveAll(memberARequests);
+        scheduleRepository.saveAll(memberAScheduleRequests);
+
+        List<Diary> memberADiaryRequests = List.of(
+                Diary.builder()
+                        .member(memberA)
+                        .schedule(memberAScheduleRequests.get(2))
+                        .content("")
+                        .build(),
+                Diary.builder()
+                        .member(memberA)
+                        .schedule(memberAScheduleRequests.get(3))
+                        .content("")
+                        .build()
+        );
+        diaryRepository.saveAll(memberADiaryRequests);
 
         // memberB 일정 추가
-        List<Schedule> memberBRequests = List.of(
+        List<Schedule> memberBScheduleRequests = List.of(
                 Schedule.builder()
                         .title("일정 6")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
                         .member(memberB)
-                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 7")
@@ -415,7 +430,16 @@ class ScheduleServiceTest {
                         .member(memberB)
                         .build()
         );
-        scheduleRepository.saveAll(memberBRequests);
+        scheduleRepository.saveAll(memberBScheduleRequests);
+
+        List<Diary> memberBDiaryRequests = List.of(
+                Diary.builder()
+                        .member(memberB)
+                        .schedule(memberBScheduleRequests.get(0))
+                        .content("")
+                        .build()
+        );
+        diaryRepository.saveAll(memberBDiaryRequests);
 
         LocalDate targetDate = LocalDate.of(2023, 6, 26);
 
@@ -436,14 +460,13 @@ class ScheduleServiceTest {
     void 날짜별_전체_일정_목록_조회() {
         // given
         // memberA 일정 추가
-        List<Schedule> memberARequests = List.of(
+        List<Schedule> memberAScheduleRequests = List.of(
                 Schedule.builder()
                         .title("일정 1")
                         .date(LocalDate.of(2023, 6, 25))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
                         .member(memberA)
-                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 2")
@@ -456,7 +479,6 @@ class ScheduleServiceTest {
                         .title("일정 3")
                         .date(LocalDate.of(2023, 6, 26))
                         .member(memberA)
-                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 4")
@@ -471,17 +493,30 @@ class ScheduleServiceTest {
                         .member(memberA)
                         .build()
         );
-        scheduleRepository.saveAll(memberARequests);
+        scheduleRepository.saveAll(memberAScheduleRequests);
+
+        List<Diary> memberADiaryRequests = List.of(
+                Diary.builder()
+                        .member(memberA)
+                        .schedule(memberAScheduleRequests.get(0))
+                        .content("")
+                        .build(),
+                Diary.builder()
+                        .member(memberA)
+                        .schedule(memberAScheduleRequests.get(2))
+                        .content("")
+                        .build()
+        );
+        diaryRepository.saveAll(memberADiaryRequests);
 
         // memberB 일정 추가
-        List<Schedule> memberBRequests = List.of(
+        List<Schedule> memberBScheduleRequests = List.of(
                 Schedule.builder()
                         .title("일정 6")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
                         .member(memberB)
-                        .diary(Diary.builder().content("").build())
                         .build(),
                 Schedule.builder()
                         .title("일정 7")
@@ -491,7 +526,16 @@ class ScheduleServiceTest {
                         .member(memberB)
                         .build()
         );
-        scheduleRepository.saveAll(memberBRequests);
+        scheduleRepository.saveAll(memberBScheduleRequests);
+
+        List<Diary> memberBDiaryRequests = List.of(
+                Diary.builder()
+                        .member(memberB)
+                        .schedule(memberBScheduleRequests.get(0))
+                        .content("")
+                        .build()
+        );
+        diaryRepository.saveAll(memberBDiaryRequests);
 
         LocalDate targetDate = LocalDate.of(2023, 6, 26);
 

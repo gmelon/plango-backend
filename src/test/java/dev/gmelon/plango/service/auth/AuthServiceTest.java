@@ -117,18 +117,21 @@ class AuthServiceTest {
                 .build();
         memberRepository.save(member);
 
-        Diary diary = Diary.builder()
-                .content("기록 본문")
-                .build();
         Schedule schedule = Schedule.builder()
                 .title("일정 제목")
                 .date(LocalDate.now())
                 .startTime(LocalTime.now())
                 .endTime(LocalTime.now())
-                .diary(diary)
                 .member(member)
                 .build();
         scheduleRepository.save(schedule);
+
+        Diary diary = Diary.builder()
+                .member(member)
+                .schedule(schedule)
+                .content("기록 본문")
+                .build();
+        diaryRepository.save(diary);
 
         // when
         authService.signout(member.getId());

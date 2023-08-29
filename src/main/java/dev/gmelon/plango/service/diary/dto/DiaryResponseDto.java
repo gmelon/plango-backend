@@ -21,9 +21,8 @@ public class DiaryResponseDto {
     private List<String> imageUrls = new ArrayList<>();
     private ScheduleOfDiaryResponseDto schedule;
 
-    public static DiaryResponseDto from(Schedule schedule) {
+    public static DiaryResponseDto from(Diary diary, Schedule schedule) {
         ScheduleOfDiaryResponseDto scheduleResponse = ScheduleOfDiaryResponseDto.from(schedule);
-        Diary diary = schedule.getDiary();
 
         return DiaryResponseDto.builder()
                 .id(diary.getId())

@@ -1,12 +1,12 @@
 package dev.gmelon.plango.service.auth;
 
+import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
-import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.member.DuplicateEmailException;
-import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.member.DuplicateNicknameException;
+import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -27,6 +27,7 @@ public class AuthService {
     private final ScheduleRepository scheduleRepository;
     private final S3Repository s3Repository;
     private final PasswordEncoder passwordEncoder;
+    private final DiaryRepository diaryRepository;
 
     @Transactional
     public void signup(SignupRequestDto requestDto) {
@@ -68,13 +69,11 @@ public class AuthService {
     }
 
     private void deleteAllDiaryImages(Long memberId) {
-        List<Schedule> schedules = scheduleRepository.findAllByMemberId(memberId);
+        List<String> diaryImageUrls = diaryRepository.findAllByMemberId(memberId).stream()
+                .flatMap(diary -> diary.getDiaryImageUrls().stream())
+                .collect(toList());
 
-        List<String> savedDiaryImageUrls = schedules.stream()
-                .filter(schedule -> Objects.nonNull(schedule.getDiary()))
-                .flatMap(schedule -> schedule.getDiary().getDiaryImageUrls().stream())
-                .collect(Collectors.toList());
-        s3Repository.deleteAll(savedDiaryImageUrls);
+        s3Repository.deleteAll(diaryImageUrls);
     }
 
     private void deleteProfileImage(Long memberId) {

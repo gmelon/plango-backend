@@ -1,5 +1,6 @@
 package dev.gmelon.plango.service.schedule;
 
+import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
@@ -17,7 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -26,6 +28,7 @@ public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
     private final MemberRepository memberRepository;
+    private final DiaryRepository diaryRepository;
     private final S3Repository s3Repository;
 
     @Transactional
@@ -44,22 +47,28 @@ public class ScheduleService {
 
         validateMember(schedule, member);
 
-        return ScheduleResponseDto.from(schedule);
+        return ScheduleResponseDto.from(schedule, isDiaryPresent(memberId, scheduleId));
     }
 
     public List<ScheduleListResponseDto> findAllByDate(Long memberId, LocalDate requestDate, boolean noDiaryOnly) {
-        List<Schedule> schedules = findSchedulesByMemberAndDate(memberId, requestDate, noDiaryOnly);
+        List<Schedule> schedules = scheduleRepository.findAllByMemberIdAndDate(memberId, requestDate);
+        if (noDiaryOnly) {
+            schedules = filterDoNotHaveDiaryOnly(memberId, schedules);
+        }
 
         return schedules.stream()
                 .map(ScheduleListResponseDto::from)
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
-    private List<Schedule> findSchedulesByMemberAndDate(Long memberId, LocalDate requestDate, boolean noDiaryOnly) {
-        if (noDiaryOnly) {
-            return scheduleRepository.findByMemberIdAndDateAndDiaryNull(memberId, requestDate);
-        }
-        return scheduleRepository.findByMemberIdAndDate(memberId, requestDate);
+    private List<Schedule> filterDoNotHaveDiaryOnly(Long memberId, List<Schedule> schedules) {
+        return schedules.stream()
+                .filter(schedule -> !isDiaryPresent(memberId, schedule.getId()))
+                .collect(toList());
+    }
+
+    private boolean isDiaryPresent(Long memberId, Long scheduleId) {
+        return diaryRepository.findByMemberIdAndScheduleId(memberId, scheduleId).isPresent();
     }
 
     @Transactional
@@ -90,22 +99,26 @@ public class ScheduleService {
 
         validateMember(schedule, member);
 
-        deleteDiaryImagesIfExists(schedule);
+        deleteAllDiaryImages(schedule);
         scheduleRepository.delete(schedule);
     }
 
-    private void deleteDiaryImagesIfExists(Schedule schedule) {
-        if (schedule.getDiary() != null) {
-            List<String> diaryImageUrls = schedule.getDiary().getDiaryImageUrls();
-            s3Repository.deleteAll(diaryImageUrls);
-        }
+    private void deleteAllDiaryImages(Schedule schedule) {
+        List<String> diaryImageUrls = findDiaryImageUrlsByScheduleId(schedule.getId());
+        s3Repository.deleteAll(diaryImageUrls);
+    }
+
+    private List<String> findDiaryImageUrlsByScheduleId(Long scheduleId) {
+        return diaryRepository.findAllByScheduleId(scheduleId).stream()
+                .flatMap(diary -> diary.getDiaryImageUrls().stream())
+                .collect(toList());
     }
 
     public List<ScheduleCountResponseDto> getCountByDays(Long memberId, YearMonth requestMonth) {
         LocalDate startDate = requestMonth.atDay(1);
         LocalDate endDate = requestMonth.atEndOfMonth();
 
-        return scheduleRepository.findByMemberIdAndCountOfDays(memberId, startDate, endDate);
+        return scheduleRepository.findCountOfDaysByMemberId(memberId, startDate, endDate);
     }
 
     private void validateMember(Schedule schedule, Member member) {

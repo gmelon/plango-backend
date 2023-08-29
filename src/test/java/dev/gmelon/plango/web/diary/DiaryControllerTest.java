@@ -30,6 +30,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -51,14 +52,15 @@ class DiaryControllerTest {
     @Autowired
     private MemberRepository memberRepository;
 
+    private Member memberA;
     private Schedule scheduleOfMemberA;
 
     @BeforeEach
     void setUp() {
-        Member member = memberRepository.findAll().get(0);
+        memberA = memberRepository.findAll().get(0);
 
         scheduleOfMemberA = Schedule.builder()
-                .member(member)
+                .member(memberA)
                 .title("일정 제목")
                 .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 25))
@@ -162,13 +164,12 @@ class DiaryControllerTest {
     void 기록_단건_조회() throws Exception {
         // given
         Diary givenDiary = Diary.builder()
+                .member(memberA)
+                .schedule(scheduleOfMemberA)
                 .content("기록 본문")
                 .imageUrls(List.of("https://plango-backend/imageA.jpg", "https://plango-backend/imageB.jpg"))
                 .build();
         diaryRepository.save(givenDiary);
-
-        scheduleOfMemberA.addDiary(givenDiary);
-        scheduleRepository.save(scheduleOfMemberA);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(get("/api/diaries/" + givenDiary.getId()))
@@ -197,16 +198,18 @@ class DiaryControllerTest {
         // given
         Member anotherMember = createAnotherMember();
 
-        Diary givenDiary = Diary.builder()
-                .content("기록 본문")
-                .imageUrls(List.of("https://plango-backend/imageA.jpg"))
-                .build();
         Schedule givenSchedule = Schedule.builder()
                 .member(anotherMember)
                 .title("일정 제목")
-                .diary(givenDiary)
                 .build();
         scheduleRepository.save(givenSchedule);
+
+        Diary givenDiary = Diary.builder()
+                .member(anotherMember)
+                .schedule(givenSchedule)
+                .content("기록 본문")
+                .build();
+        diaryRepository.save(givenDiary);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(get("/api/diaries/" + givenDiary.getId()))
@@ -235,13 +238,12 @@ class DiaryControllerTest {
     void 일정_id로_기록_단건_조회() throws Exception {
         // given
         Diary givenDiary = Diary.builder()
+                .member(memberA)
+                .schedule(scheduleOfMemberA)
                 .content("기록 본문")
                 .imageUrls(List.of("https://plango-backend/imageA.jpg", "https://plango-backend/imageB.jpg"))
                 .build();
         diaryRepository.save(givenDiary);
-
-        scheduleOfMemberA.addDiary(givenDiary);
-        scheduleRepository.save(scheduleOfMemberA);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(get("/api/schedules/" + scheduleOfMemberA.getId() + "/diary"))
@@ -270,16 +272,18 @@ class DiaryControllerTest {
         // given
         Member anotherMember = createAnotherMember();
 
-        Diary givenDiary = Diary.builder()
-                .content("기록 본문")
-                .imageUrls(List.of("https://plango-backend/imageA.jpg"))
-                .build();
         Schedule givenSchedule = Schedule.builder()
                 .member(anotherMember)
                 .title("일정 제목")
-                .diary(givenDiary)
                 .build();
         scheduleRepository.save(givenSchedule);
+
+        Diary givenDiary = Diary.builder()
+                .member(anotherMember)
+                .schedule(givenSchedule)
+                .content("기록 본문")
+                .build();
+        diaryRepository.save(givenDiary);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(get("/api/schedules/" + givenSchedule.getId() + "/diary"))
@@ -308,13 +312,12 @@ class DiaryControllerTest {
     void 기록_수정() throws Exception {
         // given
         Diary givenDiary = Diary.builder()
+                .member(memberA)
+                .schedule(scheduleOfMemberA)
                 .content("기록 본문")
                 .imageUrls(List.of("https://plango-backend/imageA.jpg", "https://plango-backend/imageB.jpg"))
                 .build();
         diaryRepository.save(givenDiary);
-
-        scheduleOfMemberA.addDiary(givenDiary);
-        scheduleRepository.save(scheduleOfMemberA);
 
         DiaryEditRequestDto request = DiaryEditRequestDto.builder()
                 .content("기록 본문 2")
@@ -341,16 +344,18 @@ class DiaryControllerTest {
         // given
         Member anotherMember = createAnotherMember();
 
-        Diary givenDiary = Diary.builder()
-                .content("기록 본문")
-                .imageUrls(List.of("https://plango-backend/imageA.jpg"))
-                .build();
         Schedule givenSchedule = Schedule.builder()
                 .member(anotherMember)
                 .title("일정 제목")
-                .diary(givenDiary)
                 .build();
         scheduleRepository.save(givenSchedule);
+
+        Diary givenDiary = Diary.builder()
+                .member(anotherMember)
+                .schedule(givenSchedule)
+                .content("기록 본문")
+                .build();
+        diaryRepository.save(givenDiary);
 
         DiaryEditRequestDto request = DiaryEditRequestDto.builder()
                 .content("기록 본문 2")
@@ -372,13 +377,12 @@ class DiaryControllerTest {
     void 기록_삭제() throws Exception {
         // given
         Diary givenDiary = Diary.builder()
+                .member(memberA)
+                .schedule(scheduleOfMemberA)
                 .content("기록 본문")
                 .imageUrls(List.of("https://plango-backend/imageA.jpg", "https://plango-backend/imageB.jpg"))
                 .build();
         diaryRepository.save(givenDiary);
-
-        scheduleOfMemberA.addDiary(givenDiary);
-        scheduleRepository.save(scheduleOfMemberA);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(delete("/api/diaries/" + givenDiary.getId())
@@ -396,16 +400,18 @@ class DiaryControllerTest {
         // given
         Member anotherMember = createAnotherMember();
 
-        Diary givenDiary = Diary.builder()
-                .content("기록 본문")
-                .imageUrls(List.of("https://plango-backend/imageA.jpg"))
-                .build();
         Schedule givenSchedule = Schedule.builder()
                 .member(anotherMember)
                 .title("일정 제목")
-                .diary(givenDiary)
                 .build();
         scheduleRepository.save(givenSchedule);
+
+        Diary givenDiary = Diary.builder()
+                .member(anotherMember)
+                .schedule(givenSchedule)
+                .content("기록 본문")
+                .build();
+        diaryRepository.save(givenDiary);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(delete("/api/diaries/" + givenDiary.getId())
@@ -424,72 +430,82 @@ class DiaryControllerTest {
         Member member = memberRepository.findAll().get(0);
         Member anotherMember = createAnotherMember();
 
-        List<Schedule> schedules = List.of(
+        List<Schedule> memberASchedules = List.of(
                 Schedule.builder()
                         .member(member)
-                        .title("일정 1")
+                        .title("일정 0")
                         .date(LocalDate.of(2023, 6, 25))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
-                        .diary(Diary.builder().content("기록 1").build())
+                        .build(),
+                Schedule.builder()
+                        .member(member)
+                        .title("일정 1")
+                        .date(LocalDate.of(2023, 6, 26))
+                        .startTime(LocalTime.of(0, 0, 0))
+                        .endTime(LocalTime.of(0, 0, 0))
                         .build(),
                 Schedule.builder()
                         .member(member)
                         .title("일정 2")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
-                        .endTime(LocalTime.of(0, 0, 0))
-                        .diary(Diary.builder().content("기록 2").build())
+                        .endTime(LocalTime.of(0, 0, 1))
                         .build(),
                 Schedule.builder()
                         .member(member)
                         .title("일정 3")
                         .date(LocalDate.of(2023, 6, 26))
-                        .startTime(LocalTime.of(0, 0, 0))
-                        .endTime(LocalTime.of(0, 0, 1))
-                        .diary(Diary.builder().content("기록 3").build())
+                        .startTime(LocalTime.of(10, 0, 0))
+                        .endTime(LocalTime.of(12, 0, 0))
                         .build(),
                 Schedule.builder()
                         .member(member)
                         .title("일정 4")
                         .date(LocalDate.of(2023, 6, 26))
-                        .startTime(LocalTime.of(10, 0, 0))
-                        .endTime(LocalTime.of(12, 0, 0))
-                        .diary(Diary.builder().content("기록 4").build())
-                        .build(),
-                Schedule.builder()
-                        .member(member)
-                        .title("일정 5")
-                        .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
-                        .diary(Diary.builder().content("기록 5").build())
-                        .build(),
-                Schedule.builder()
+                        .build()
+        );
+        scheduleRepository.saveAll(memberASchedules);
+
+        List<Diary> memberADiaries = memberASchedules.stream()
+                .map(schedule -> Diary.builder()
+                        .schedule(schedule)
                         .member(member)
-                        .title("일정 6")
-                        .date(LocalDate.of(2023, 6, 26))
-                        .startTime(LocalTime.of(23, 59, 59))
-                        .endTime(LocalTime.of(0, 0, 0))
-                        .build(),
+                        .content(schedule.getTitle() + " 기록")
+                        .build())
+                .collect(toList());
+        diaryRepository.saveAll(memberADiaries);
+
+
+
+        List<Schedule> anotherMemberSchedules = List.of(
                 Schedule.builder()
                         .member(anotherMember)
-                        .title("일정 7")
+                        .title("일정 5")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
-                        .diary(Diary.builder().content("기록 7").build())
                         .build(),
                 Schedule.builder()
                         .member(anotherMember)
-                        .title("일정 8")
+                        .title("일정 6")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(15, 0, 0))
                         .endTime(LocalTime.of(22, 0, 0))
-                        .diary(Diary.builder().content("기록 8").build())
                         .build()
         );
-        scheduleRepository.saveAll(schedules);
+        scheduleRepository.saveAll(anotherMemberSchedules);
+
+        List<Diary> anotherMemberDiaries = anotherMemberSchedules.stream()
+                .map(schedule -> Diary.builder()
+                        .schedule(schedule)
+                        .member(anotherMember)
+                        .content(schedule.getTitle() + " 기록")
+                        .build())
+                .collect(toList());
+        diaryRepository.saveAll(anotherMemberDiaries);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(get("/api/diaries")
@@ -499,7 +515,7 @@ class DiaryControllerTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        List<String> expectedContents = List.of("기록 2", "기록 3", "기록 4", "기록 5");
+        List<String> expectedContents = List.of("일정 1 기록", "일정 2 기록", "일정 3 기록", "일정 4 기록");
 
         DiaryListResponseDto[] responseDtos = objectMapper.readValue(response.getContentAsString(UTF_8), DiaryListResponseDto[].class);
 

@@ -1,6 +1,8 @@
 package dev.gmelon.plango.service.diary.dto;
 
 import dev.gmelon.plango.domain.diary.Diary;
+import dev.gmelon.plango.domain.member.Member;
+import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.util.validator.CollectionURLValidation;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,10 +26,12 @@ public class DiaryCreateRequestDto {
         this.imageUrls = imageUrls;
     }
 
-    public Diary toEntity() {
+    public Diary toEntity(Member member, Schedule schedule) {
         return Diary.builder()
                 .content(content)
                 .imageUrls(imageUrls)
+                .member(member)
+                .schedule(schedule)
                 .build();
     }
 

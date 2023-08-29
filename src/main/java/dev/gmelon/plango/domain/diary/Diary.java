@@ -1,6 +1,8 @@
 package dev.gmelon.plango.domain.diary;
 
 import dev.gmelon.plango.domain.BaseTimeEntity;
+import dev.gmelon.plango.domain.member.Member;
+import dev.gmelon.plango.domain.schedule.Schedule;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +15,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static javax.persistence.CascadeType.ALL;
+import static javax.persistence.FetchType.LAZY;
 import static javax.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -28,13 +31,27 @@ public class Diary extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "schedule_id")
+    private Schedule schedule;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
+
     @OneToMany(mappedBy = "diary", cascade = ALL, orphanRemoval = true)
     private List<DiaryImage> diaryImages = new ArrayList<>();
 
     @Builder
-    public Diary(String content, List<String> imageUrls) {
+    public Diary(String content, Schedule schedule, Member member, List<String> imageUrls) {
         this.content = content;
+        this.schedule = schedule;
+        this.member = member;
         setDiaryImages(imageUrls);
+    }
+
+    public Long memberId() {
+        return member.getId();
     }
 
     public void edit(DiaryEditor editor) {

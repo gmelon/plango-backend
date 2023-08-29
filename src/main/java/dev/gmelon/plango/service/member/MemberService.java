@@ -34,7 +34,8 @@ public class MemberService {
     public MemberStatisticsResponseDto getMyStatistics(Long memberId) {
         int scheduleCount = (int) scheduleRepository.countByMemberId(memberId);
         int doneScheduleCount = (int) scheduleRepository.countByMemberIdAndDoneIsTrue(memberId);
-        int diaryCount = (int) scheduleRepository.countByMemberIdAndDiaryNotNull(memberId);
+        // TODO 통계 API 삭제
+        int diaryCount = 3;
 
         return MemberStatisticsResponseDto.builder()
                 .scheduleCount(scheduleCount)

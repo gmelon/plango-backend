@@ -11,6 +11,8 @@ import org.hibernate.proxy.HibernateProxy;
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static javax.persistence.CascadeType.ALL;
@@ -54,12 +56,11 @@ public class Schedule extends BaseTimeEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @OneToOne(fetch = LAZY, cascade = ALL, orphanRemoval = true)
-    @JoinColumn(name = "diary_id")
-    private Diary diary;
+    @OneToMany(mappedBy = "schedule", cascade = ALL, orphanRemoval = true)
+    private List<Diary> diaries = new ArrayList<>();
 
     @Builder
-    public Schedule(String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime, Double latitude, Double longitude, String roadAddress, String placeName, boolean done, Member member, Diary diary) {
+    public Schedule(String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime, Double latitude, Double longitude, String roadAddress, String placeName, boolean done, Member member) {
         this.title = title;
         this.content = content;
         this.date = date;
@@ -71,7 +72,6 @@ public class Schedule extends BaseTimeEntity {
         this.placeName = placeName;
         this.done = done;
         this.member = member;
-        this.diary = diary;
     }
 
     public void edit(ScheduleEditor editor) {
@@ -86,12 +86,8 @@ public class Schedule extends BaseTimeEntity {
         this.placeName = editor.getPlaceName();
     }
 
-    public void addDiary(Diary diary) {
-        this.diary = diary;
-    }
-
-    public void deleteDiary() {
-        this.diary = null;
+    public Long memberId() {
+        return member.getId();
     }
 
     public void changeDone(boolean done) {

@@ -255,18 +255,21 @@ class AuthControllerTest {
         // given
         Member member = memberRepository.findAll().get(0);
 
-        Diary diary = Diary.builder()
-                .content("기록 본문")
-                .build();
         Schedule schedule = Schedule.builder()
                 .member(member)
-                .diary(diary)
                 .title("일정 제목")
                 .date(LocalDate.now())
                 .startTime(LocalTime.now())
                 .endTime(LocalTime.now())
                 .build();
         scheduleRepository.save(schedule);
+
+        Diary diary = Diary.builder()
+                .member(member)
+                .schedule(schedule)
+                .content("기록 본문")
+                .build();
+        diaryRepository.save(diary);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(delete("/api/auth/signout"))
@@ -289,20 +292,23 @@ class AuthControllerTest {
                 .password("passwordA")
                 .role(MemberRole.ROLE_USER)
                 .build();
-        memberRepository.save(member);
+        Member savedMember = memberRepository.save(member);
 
-        Diary diary = Diary.builder()
-                .content("기록 본문")
-                .build();
         Schedule schedule = Schedule.builder()
                 .member(member)
-                .diary(diary)
                 .title("일정 제목")
                 .date(LocalDate.now())
                 .startTime(LocalTime.now())
                 .endTime(LocalTime.now())
                 .build();
         scheduleRepository.save(schedule);
+
+        Diary diary = Diary.builder()
+                .member(savedMember)
+                .schedule(schedule)
+                .content("기록 본문")
+                .build();
+        diaryRepository.save(diary);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(delete("/api/auth/signout/" + member.getId()))
