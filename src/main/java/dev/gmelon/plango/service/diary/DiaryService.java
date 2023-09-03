@@ -51,8 +51,7 @@ public class DiaryService {
     }
 
     private void validateScheduleAccessPermission(Member member, Schedule schedule) {
-        // TODO schedule에 member 일대다 구성 후 조건 변경 필요
-        if (!schedule.getMember().equals(member)) {
+        if (!schedule.isAccepted(member.getId())) {
             throw new ScheduleAccessDeniedException();
         }
     }
@@ -131,7 +130,7 @@ public class DiaryService {
     }
 
     private Schedule findScheduleById(Long scheduleId) {
-        return scheduleRepository.findById(scheduleId)
+        return scheduleRepository.findByIdWithScheduleMembers(scheduleId)
                 .orElseThrow(NoSuchScheduleException::new);
     }
 

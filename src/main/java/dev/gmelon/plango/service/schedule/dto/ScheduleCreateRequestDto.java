@@ -1,6 +1,5 @@
 package dev.gmelon.plango.service.schedule.dto;
 
-import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,6 +9,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @Getter
@@ -37,8 +38,10 @@ public class ScheduleCreateRequestDto {
 
     private String placeName;
 
+    private List<Long> participantIds = new ArrayList<>();
+
     @Builder
-    public ScheduleCreateRequestDto(String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime, Double latitude, Double longitude, String roadAddress, String placeName) {
+    public ScheduleCreateRequestDto(String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime, Double latitude, Double longitude, String roadAddress, String placeName, List<Long> participantIds) {
         this.title = title;
         this.content = content;
         this.date = date;
@@ -48,9 +51,10 @@ public class ScheduleCreateRequestDto {
         this.longitude = longitude;
         this.roadAddress = roadAddress;
         this.placeName = placeName;
+        this.participantIds = participantIds;
     }
 
-    public Schedule toEntity(Member member) {
+    public Schedule toEntity() {
         return Schedule.builder()
                 .title(title)
                 .content(content)
@@ -61,7 +65,6 @@ public class ScheduleCreateRequestDto {
                 .longitude(longitude)
                 .roadAddress(roadAddress)
                 .placeName(placeName)
-                .member(member)
                 .build();
     }
 }

@@ -88,4 +88,5 @@ public class ScheduleController {
                        @PathVariable Long scheduleId) {
         scheduleService.delete(memberId, scheduleId);
     }
+
 }

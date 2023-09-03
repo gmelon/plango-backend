@@ -7,6 +7,7 @@ import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.domain.schedule.query.ScheduleQueryRepository;
 import dev.gmelon.plango.exception.member.DuplicateEmailException;
 import dev.gmelon.plango.exception.member.DuplicateNicknameException;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
@@ -36,6 +37,8 @@ class AuthServiceTest {
     private MemberRepository memberRepository;
     @Autowired
     private ScheduleRepository scheduleRepository;
+    @Autowired
+    private ScheduleQueryRepository scheduleQueryRepository;
     @Autowired
     private DiaryRepository diaryRepository;
 
@@ -122,8 +125,8 @@ class AuthServiceTest {
                 .date(LocalDate.now())
                 .startTime(LocalTime.now())
                 .endTime(LocalTime.now())
-                .member(member)
                 .build();
+        schedule.setSingleOwnerScheduleMember(member);
         scheduleRepository.save(schedule);
 
         Diary diary = Diary.builder()
@@ -137,9 +140,11 @@ class AuthServiceTest {
         authService.signout(member.getId());
 
         // then
-        assertThat(scheduleRepository.findAllByMemberId(member.getId())).hasSize(0);
+        assertThat(scheduleQueryRepository.countByMemberId(member.getId())).isEqualTo(0);
         assertThat(diaryRepository.findByContent(diary.getContent())).isEmpty();
         assertThat(memberRepository.findById(member.getId())).isEmpty();
+
+        // TODO 탈퇴한 회원이 다른 회원의 일정에 참여하고 있던 경우, 다른 회원이 탈퇴한 회원의 일정에 참여하는 경우 등 제대로 삭제되는지 검증
     }
 
 }

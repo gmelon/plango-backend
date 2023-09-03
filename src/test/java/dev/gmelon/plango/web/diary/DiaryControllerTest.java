@@ -60,7 +60,6 @@ class DiaryControllerTest {
         memberA = memberRepository.findAll().get(0);
 
         scheduleOfMemberA = Schedule.builder()
-                .member(memberA)
                 .title("일정 제목")
                 .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 25))
@@ -68,6 +67,7 @@ class DiaryControllerTest {
                 .endTime(LocalTime.of(11, 0, 0))
                 .placeName("일정 장소")
                 .build();
+        scheduleOfMemberA.setSingleOwnerScheduleMember(memberA);
         scheduleRepository.save(scheduleOfMemberA);
     }
 
@@ -160,13 +160,13 @@ class DiaryControllerTest {
         Member anotherMember = createAnotherMember();
 
         Schedule givenSchedule = Schedule.builder()
-                .member(anotherMember)
                 .title("일정 제목")
                 .content("일정 본문")
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
                 .build();
+        givenSchedule.setSingleOwnerScheduleMember(anotherMember);
         Schedule savedSchedule = scheduleRepository.save(givenSchedule);
 
         DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
@@ -224,9 +224,9 @@ class DiaryControllerTest {
         Member anotherMember = createAnotherMember();
 
         Schedule givenSchedule = Schedule.builder()
-                .member(anotherMember)
                 .title("일정 제목")
                 .build();
+        givenSchedule.setSingleOwnerScheduleMember(anotherMember);
         scheduleRepository.save(givenSchedule);
 
         Diary givenDiary = Diary.builder()
@@ -298,9 +298,9 @@ class DiaryControllerTest {
         Member anotherMember = createAnotherMember();
 
         Schedule givenSchedule = Schedule.builder()
-                .member(anotherMember)
                 .title("일정 제목")
                 .build();
+        givenSchedule.setSingleOwnerScheduleMember(anotherMember);
         scheduleRepository.save(givenSchedule);
 
         Diary givenDiary = Diary.builder()
@@ -370,9 +370,9 @@ class DiaryControllerTest {
         Member anotherMember = createAnotherMember();
 
         Schedule givenSchedule = Schedule.builder()
-                .member(anotherMember)
                 .title("일정 제목")
                 .build();
+        givenSchedule.setSingleOwnerScheduleMember(anotherMember);
         scheduleRepository.save(givenSchedule);
 
         Diary givenDiary = Diary.builder()
@@ -426,9 +426,9 @@ class DiaryControllerTest {
         Member anotherMember = createAnotherMember();
 
         Schedule givenSchedule = Schedule.builder()
-                .member(anotherMember)
                 .title("일정 제목")
                 .build();
+        givenSchedule.setSingleOwnerScheduleMember(anotherMember);
         scheduleRepository.save(givenSchedule);
 
         Diary givenDiary = Diary.builder()
@@ -455,46 +455,44 @@ class DiaryControllerTest {
         Member member = memberRepository.findAll().get(0);
         Member anotherMember = createAnotherMember();
 
-        List<Schedule> memberASchedules = List.of(
+        List<Schedule> memberSchedules = List.of(
                 Schedule.builder()
-                        .member(member)
                         .title("일정 0")
                         .date(LocalDate.of(2023, 6, 25))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
                         .build(),
                 Schedule.builder()
-                        .member(member)
                         .title("일정 1")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 0))
                         .build(),
                 Schedule.builder()
-                        .member(member)
                         .title("일정 2")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 1))
                         .build(),
                 Schedule.builder()
-                        .member(member)
                         .title("일정 3")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
                         .build(),
                 Schedule.builder()
-                        .member(member)
                         .title("일정 4")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
                         .build()
         );
-        scheduleRepository.saveAll(memberASchedules);
+        for (Schedule memberSchedule : memberSchedules) {
+            memberSchedule.setSingleOwnerScheduleMember(member);
+        }
+        scheduleRepository.saveAll(memberSchedules);
 
-        List<Diary> memberADiaries = memberASchedules.stream()
+        List<Diary> memberADiaries = memberSchedules.stream()
                 .map(schedule -> Diary.builder()
                         .schedule(schedule)
                         .member(member)
@@ -507,20 +505,21 @@ class DiaryControllerTest {
 
         List<Schedule> anotherMemberSchedules = List.of(
                 Schedule.builder()
-                        .member(anotherMember)
                         .title("일정 5")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
                         .build(),
                 Schedule.builder()
-                        .member(anotherMember)
                         .title("일정 6")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(15, 0, 0))
                         .endTime(LocalTime.of(22, 0, 0))
                         .build()
         );
+        for (Schedule anotherMemberSchedule : anotherMemberSchedules) {
+            anotherMemberSchedule.setSingleOwnerScheduleMember(anotherMember);
+        }
         scheduleRepository.saveAll(anotherMemberSchedules);
 
         List<Diary> anotherMemberDiaries = anotherMemberSchedules.stream()

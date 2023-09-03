@@ -6,9 +6,12 @@ import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
+import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.exception.schedule.NoOwnerOfScheduleException;
 import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
 import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
+import dev.gmelon.plango.exception.schedule.ScheduleNotAcceptedException;
 import dev.gmelon.plango.service.schedule.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +45,8 @@ class ScheduleServiceTest {
     private DiaryRepository diaryRepository;
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private ScheduleMemberService scheduleMemberService;
 
     @BeforeEach
     void setUp() {
@@ -63,7 +68,7 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 일정_생성() {
+    void 참가자가_1명인_일정_생성() {
         // given
         ScheduleCreateRequestDto request = ScheduleCreateRequestDto.builder()
                 .title("일정 제목")
@@ -71,6 +76,7 @@ class ScheduleServiceTest {
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
+                .participantIds(List.of())
                 .latitude(36.3674097)
                 .longitude(127.3454477)
                 .roadAddress("대전광역시 유성구 온천2동 대학로 99")
@@ -81,8 +87,45 @@ class ScheduleServiceTest {
         Long createdScheduleId = scheduleService.create(memberA.getId(), request);
 
         // then
-        Schedule createdSchedule = assertDoesNotThrow(() -> scheduleRepository.findById(createdScheduleId).get());
-        assertThat(createdSchedule.getMember()).isEqualTo(memberA);
+        Schedule createdSchedule = assertDoesNotThrow(() -> scheduleRepository.findByIdWithScheduleMembers(createdScheduleId).get());
+        assertThat(createdSchedule.getScheduleMembers().get(0).getMember()).isEqualTo(memberA);
+        assertThat(createdSchedule.getTitle()).isEqualTo(request.getTitle());
+        assertThat(createdSchedule.getContent()).isEqualTo(request.getContent());
+        assertThat(createdSchedule.getDate()).isEqualTo(request.getDate());
+        assertThat(createdSchedule.getStartTime()).isEqualTo(request.getStartTime());
+        assertThat(createdSchedule.getEndTime()).isEqualTo(request.getEndTime());
+        assertThat(createdSchedule.getLatitude()).isEqualTo(request.getLatitude());
+        assertThat(createdSchedule.getLongitude()).isEqualTo(request.getLongitude());
+        assertThat(createdSchedule.getRoadAddress()).isEqualTo(request.getRoadAddress());
+        assertThat(createdSchedule.getPlaceName()).isEqualTo(request.getPlaceName());
+        assertThat(createdSchedule.isDone()).isFalse();
+    }
+
+    @Test
+    void 참가자가_여러명인_일정_생성() {
+        // given
+        ScheduleCreateRequestDto request = ScheduleCreateRequestDto.builder()
+                .title("일정 제목")
+                .content("일정 본문")
+                .date(LocalDate.of(2023, 6, 26))
+                .startTime(LocalTime.of(10, 0, 0))
+                .endTime(LocalTime.of(11, 0, 0))
+                .participantIds(List.of(memberB.getId()))
+                .latitude(36.3674097)
+                .longitude(127.3454477)
+                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                .placeName("충남대학교 공과대학 5호관")
+                .build();
+
+        // when
+        Long createdScheduleId = scheduleService.create(memberA.getId(), request);
+
+        // then
+        Schedule createdSchedule = assertDoesNotThrow(() -> scheduleRepository.findByIdWithScheduleMembers(createdScheduleId).get());
+
+        assertThat(createdSchedule.getScheduleMembers()).extracting(ScheduleMember::memberId)
+                .containsExactlyInAnyOrder(memberA.getId(), memberB.getId());
+
         assertThat(createdSchedule.getTitle()).isEqualTo(request.getTitle());
         assertThat(createdSchedule.getContent()).isEqualTo(request.getContent());
         assertThat(createdSchedule.getDate()).isEqualTo(request.getDate());
@@ -108,8 +151,8 @@ class ScheduleServiceTest {
                 .longitude(127.3454477)
                 .roadAddress("대전광역시 유성구 온천2동 대학로 99")
                 .placeName("충남대학교 공과대학 5호관")
-                .member(memberA)
                 .build();
+        schedule.setSingleOwnerScheduleMember(memberA);
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
 
         // when
@@ -143,8 +186,8 @@ class ScheduleServiceTest {
                 .longitude(127.3454477)
                 .roadAddress("대전광역시 유성구 온천2동 대학로 99")
                 .placeName("충남대학교 공과대학 5호관")
-                .member(memberA)
                 .build();
+        schedule.setSingleOwnerScheduleMember(memberA);
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
 
         Diary diary = Diary.builder()
@@ -188,8 +231,8 @@ class ScheduleServiceTest {
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
-                .member(memberA)
                 .build();
+        schedule.setSingleOwnerScheduleMember(memberA);
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
 
         // when, then
@@ -210,8 +253,8 @@ class ScheduleServiceTest {
                 .longitude(127.3454477)
                 .roadAddress("대전광역시 유성구 온천2동 대학로 99")
                 .placeName("충남대학교 공과대학 5호관")
-                .member(memberA)
                 .build();
+        schedule.setSingleOwnerScheduleMember(memberA);
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
 
         ScheduleEditRequestDto editRequet = ScheduleEditRequestDto.builder()
@@ -243,7 +286,100 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 타인의_일정_수정() {
+    void 참가하는_타인의_일정_수정_수락전() {
+        // given
+        Schedule givenSchedule = Schedule.builder()
+                .title("일정 제목")
+                .content("일정 본문")
+                .date(LocalDate.of(2023, 6, 26))
+                .startTime(LocalTime.of(10, 0, 0))
+                .endTime(LocalTime.of(11, 0, 0))
+                .latitude(36.3674097)
+                .longitude(127.3454477)
+                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                .placeName("충남대학교 공과대학 5호관")
+                .build();
+        givenSchedule.setScheduleMembers(List.of(
+                ScheduleMember.createOwner(memberA, givenSchedule),
+                ScheduleMember.createParticipant(memberB, givenSchedule)
+        ));
+        Long createdScheduleId = scheduleRepository.save(givenSchedule).getId();
+
+        ScheduleEditRequestDto editRequet = ScheduleEditRequestDto.builder()
+                .title("수정된 제목")
+                .content("수정된 본문")
+                .date(LocalDate.of(2024, 7, 27))
+                .startTime(LocalTime.of(11, 0, 0))
+                .endTime(LocalTime.of(12, 0, 0))
+                .latitude(36.3682999)
+                .longitude(127.3420364)
+                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                .placeName("충남대학교 인문대학")
+                .build();
+
+        // when, then
+        assertThatThrownBy(() -> scheduleService.edit(memberB.getId(), createdScheduleId, editRequet))
+                .isInstanceOf(ScheduleNotAcceptedException.class);
+
+        Schedule foundSchedule = assertDoesNotThrow(() -> scheduleRepository.findById(createdScheduleId).get());
+        assertThat(foundSchedule)
+                .usingRecursiveComparison()
+                .ignoringFields("diaries", "scheduleMembers")
+                .isEqualTo(givenSchedule);
+    }
+
+    @Test
+    void 참가하는_타인의_일정_수정_수락후() {
+        // given
+        Schedule givenSchedule = Schedule.builder()
+                .title("일정 제목")
+                .content("일정 본문")
+                .date(LocalDate.of(2023, 6, 26))
+                .startTime(LocalTime.of(10, 0, 0))
+                .endTime(LocalTime.of(11, 0, 0))
+                .latitude(36.3674097)
+                .longitude(127.3454477)
+                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                .placeName("충남대학교 공과대학 5호관")
+                .build();
+        givenSchedule.setScheduleMembers(List.of(
+                ScheduleMember.createOwner(memberA, givenSchedule),
+                ScheduleMember.createParticipant(memberB, givenSchedule)
+        ));
+        Long createdScheduleId = scheduleRepository.save(givenSchedule).getId();
+
+        scheduleMemberService.acceptInvitation(memberB.getId(), givenSchedule.getId());
+
+        ScheduleEditRequestDto editRequet = ScheduleEditRequestDto.builder()
+                .title("수정된 제목")
+                .content("수정된 본문")
+                .date(LocalDate.of(2024, 7, 27))
+                .startTime(LocalTime.of(11, 0, 0))
+                .endTime(LocalTime.of(12, 0, 0))
+                .latitude(36.3682999)
+                .longitude(127.3420364)
+                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                .placeName("충남대학교 인문대학")
+                .build();
+
+        // when
+        scheduleService.edit(memberB.getId(), createdScheduleId, editRequet);
+
+        // then
+        Schedule foundSchedule = assertDoesNotThrow(() -> scheduleRepository.findById(createdScheduleId).get());
+        assertThat(foundSchedule.getTitle()).isEqualTo(editRequet.getTitle());
+        assertThat(foundSchedule.getContent()).isEqualTo(editRequet.getContent());
+        assertThat(foundSchedule.getDate()).isEqualTo(editRequet.getDate());
+        assertThat(foundSchedule.getStartTime()).isEqualTo(editRequet.getStartTime());
+        assertThat(foundSchedule.getEndTime()).isEqualTo(editRequet.getEndTime());
+        assertThat(foundSchedule.getLatitude()).isEqualTo(editRequet.getLatitude());
+        assertThat(foundSchedule.getLongitude()).isEqualTo(editRequet.getLongitude());
+        assertThat(foundSchedule.getRoadAddress()).isEqualTo(editRequet.getRoadAddress());
+        assertThat(foundSchedule.getPlaceName()).isEqualTo(editRequet.getPlaceName());
+    }
+
+    @Test
+    void 참가하지않는_타인의_일정_수정() {
         // given
         Schedule schedule = Schedule.builder()
                 .title("일정 제목")
@@ -251,8 +387,8 @@ class ScheduleServiceTest {
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
-                .member(memberA)
                 .build();
+        schedule.setSingleOwnerScheduleMember(memberA);
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
 
         ScheduleEditRequestDto editRequet = ScheduleEditRequestDto.builder()
@@ -270,7 +406,7 @@ class ScheduleServiceTest {
         Schedule foundSchedule = assertDoesNotThrow(() -> scheduleRepository.findById(createdScheduleId).get());
         assertThat(foundSchedule)
                 .usingRecursiveComparison()
-                .ignoringFields("member", "diaries")
+                .ignoringFields("member", "diaries", "scheduleMembers")
                 .isEqualTo(schedule);
     }
 
@@ -285,8 +421,8 @@ class ScheduleServiceTest {
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
                 .done(given)
-                .member(memberA)
                 .build();
+        schedule.setSingleOwnerScheduleMember(memberA);
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
 
         ScheduleEditDoneRequestDto request = new ScheduleEditDoneRequestDto(expected);
@@ -309,8 +445,8 @@ class ScheduleServiceTest {
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
                 .done(false)
-                .member(memberA)
                 .build();
+        schedule.setSingleOwnerScheduleMember(memberA);
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
 
         ScheduleEditDoneRequestDto request = new ScheduleEditDoneRequestDto(true);
@@ -329,8 +465,8 @@ class ScheduleServiceTest {
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
-                .member(memberA)
                 .build();
+        schedule.setSingleOwnerScheduleMember(memberA);
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
 
         // when
@@ -341,7 +477,7 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void 타인의_일정_삭제() {
+    void 참가하지않는_타인의_일정_삭제() {
         // given
         Schedule schedule = Schedule.builder()
                 .title("일정 제목")
@@ -349,13 +485,36 @@ class ScheduleServiceTest {
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
-                .member(memberA)
                 .build();
+        schedule.setSingleOwnerScheduleMember(memberA);
         Long createdScheduleId = scheduleRepository.save(schedule).getId();
 
         // when, then
         assertThatThrownBy(() -> scheduleService.delete(memberB.getId(), createdScheduleId))
                 .isInstanceOf(ScheduleAccessDeniedException.class);
+    }
+
+    @Test
+    void 참가하는_타인의_일정_삭제() {
+        // given
+        Schedule schedule = Schedule.builder()
+                .title("일정 제목")
+                .content("일정 본문")
+                .date(LocalDate.of(2023, 6, 26))
+                .startTime(LocalTime.of(10, 0, 0))
+                .endTime(LocalTime.of(11, 0, 0))
+                .build();
+        schedule.setScheduleMembers(List.of(
+                ScheduleMember.createOwner(memberA, schedule),
+                ScheduleMember.createParticipant(memberB, schedule)
+        ));
+        Long createdScheduleId = scheduleRepository.save(schedule).getId();
+
+        scheduleMemberService.acceptInvitation(memberB.getId(), schedule.getId());
+
+        // when, then
+        assertThatThrownBy(() -> scheduleService.delete(memberB.getId(), createdScheduleId))
+                .isInstanceOf(NoOwnerOfScheduleException.class);
     }
 
     @Test
@@ -368,35 +527,33 @@ class ScheduleServiceTest {
                         .date(LocalDate.of(2023, 6, 25))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 2")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 0))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 3")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 1))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 4")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 5")
                         .date(LocalDate.of(2023, 6, 26))
-                        .member(memberA)
                         .build()
         );
+        for (Schedule memberAScheduleRequest : memberAScheduleRequests) {
+            memberAScheduleRequest.setSingleOwnerScheduleMember(memberA);
+        }
         scheduleRepository.saveAll(memberAScheduleRequests);
 
         List<Diary> memberADiaryRequests = List.of(
@@ -420,16 +577,17 @@ class ScheduleServiceTest {
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
-                        .member(memberB)
                         .build(),
                 Schedule.builder()
                         .title("일정 7")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(15, 0, 0))
                         .endTime(LocalTime.of(22, 0, 1))
-                        .member(memberB)
                         .build()
         );
+        for (Schedule memberBScheduleRequest : memberBScheduleRequests) {
+            memberBScheduleRequest.setSingleOwnerScheduleMember(memberB);
+        }
         scheduleRepository.saveAll(memberBScheduleRequests);
 
         List<Diary> memberBDiaryRequests = List.of(
@@ -466,33 +624,31 @@ class ScheduleServiceTest {
                         .date(LocalDate.of(2023, 6, 25))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 2")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 0))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 3")
                         .date(LocalDate.of(2023, 6, 26))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 4")
                         .date(LocalDate.of(2023, 6, 26))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 5")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
-                        .member(memberA)
                         .build()
         );
+        for (Schedule memberAScheduleRequest : memberAScheduleRequests) {
+            memberAScheduleRequest.setSingleOwnerScheduleMember(memberA);
+        }
         scheduleRepository.saveAll(memberAScheduleRequests);
 
         List<Diary> memberADiaryRequests = List.of(
@@ -516,16 +672,17 @@ class ScheduleServiceTest {
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
-                        .member(memberB)
                         .build(),
                 Schedule.builder()
                         .title("일정 7")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(15, 0, 0))
                         .endTime(LocalTime.of(22, 0, 1))
-                        .member(memberB)
                         .build()
         );
+        for (Schedule memberBScheduleRequest : memberBScheduleRequests) {
+            memberBScheduleRequest.setSingleOwnerScheduleMember(memberB);
+        }
         scheduleRepository.saveAll(memberBScheduleRequests);
 
         List<Diary> memberBDiaryRequests = List.of(
@@ -561,39 +718,33 @@ class ScheduleServiceTest {
                         .date(LocalDate.of(2023, 5, 31))
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 제목")
                         .date(LocalDate.of(2023, 6, 1))
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 제목")
                         .date(LocalDate.of(2023, 6, 1))
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
-                        .member(memberA)
                         .done(true)
                         .build(),
                 Schedule.builder()
                         .title("일정 제목")
                         .date(LocalDate.of(2023, 6, 15))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 제목")
                         .date(LocalDate.of(2023, 6, 17))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 제목")
                         .date(LocalDate.of(2023, 6, 30))
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
-                        .member(memberA)
                         .done(true)
                         .build(),
                 Schedule.builder()
@@ -601,9 +752,11 @@ class ScheduleServiceTest {
                         .date(LocalDate.of(2023, 7, 1))
                         .startTime(LocalTime.of(11, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
-                        .member(memberA)
                         .build()
         );
+        for (Schedule request : requests) {
+            request.setSingleOwnerScheduleMember(memberA);
+        }
         scheduleRepository.saveAll(requests);
 
         // when

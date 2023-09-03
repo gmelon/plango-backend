@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static javax.persistence.CascadeType.ALL;
-import static javax.persistence.FetchType.LAZY;
 import static javax.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -52,15 +51,21 @@ public class Schedule extends BaseTimeEntity {
     @Column(columnDefinition = "BOOLEAN DEFAULT 0", nullable = false)
     private boolean done;
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "member_id")
-    private Member member;
-
     @OneToMany(mappedBy = "schedule", cascade = ALL, orphanRemoval = true)
     private List<Diary> diaries = new ArrayList<>();
 
+    @OneToMany(mappedBy = "schedule", cascade = ALL, orphanRemoval = true)
+    private List<ScheduleMember> scheduleMembers = new ArrayList<>();
+
+    @Column(nullable = false)
+    private int scheduleMemberCount;
+
     @Builder
-    public Schedule(String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime, Double latitude, Double longitude, String roadAddress, String placeName, boolean done, Member member) {
+    public Schedule(
+            String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime,
+            Double latitude, Double longitude, String roadAddress, String placeName, boolean done,
+            List<Diary> diaries
+    ) {
         this.title = title;
         this.content = content;
         this.date = date;
@@ -71,7 +76,7 @@ public class Schedule extends BaseTimeEntity {
         this.roadAddress = roadAddress;
         this.placeName = placeName;
         this.done = done;
-        this.member = member;
+        this.diaries = diaries;
     }
 
     public void edit(ScheduleEditor editor) {
@@ -86,12 +91,42 @@ public class Schedule extends BaseTimeEntity {
         this.placeName = editor.getPlaceName();
     }
 
-    public Long memberId() {
-        return member.getId();
-    }
-
     public void changeDone(boolean done) {
         this.done = done;
+    }
+
+    public void setScheduleMembers(List<ScheduleMember> scheduleMembers) {
+        this.scheduleMembers = scheduleMembers;
+        this.scheduleMemberCount = scheduleMembers.size();
+    }
+
+    public void setSingleOwnerScheduleMember(Member member) {
+        this.scheduleMembers = List.of(ScheduleMember.createOwner(member, this));
+        this.scheduleMemberCount = 1;
+    }
+
+    public boolean isMember(Long memberId) {
+        return scheduleMembers.stream()
+                .anyMatch(scheduleMember -> scheduleMember.isMemberEquals(memberId));
+    }
+
+    public boolean isAccepted(Long memberId) {
+        return scheduleMembers.stream()
+                .anyMatch(scheduleMember -> scheduleMember.isAccepted() && scheduleMember.isMemberEquals(memberId));
+    }
+
+    public boolean isOwner(Long memberId) {
+        return scheduleMembers.stream()
+                .anyMatch(scheduleMember -> scheduleMember.isOwner() && scheduleMember.isMemberEquals(memberId));
+
+    }
+
+    public void increaseScheduleMemberCount() {
+        this.scheduleMemberCount++;
+    }
+
+    public void decreaseScheduleMemberCount() {
+        this.scheduleMemberCount--;
     }
 
     @Override

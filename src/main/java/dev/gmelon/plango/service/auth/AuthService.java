@@ -3,6 +3,7 @@ package dev.gmelon.plango.service.auth;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
+import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.member.DuplicateEmailException;
 import dev.gmelon.plango.exception.member.DuplicateNicknameException;
@@ -25,6 +26,7 @@ public class AuthService {
 
     private final MemberRepository memberRepository;
     private final ScheduleRepository scheduleRepository;
+    private final ScheduleMemberRepository scheduleMemberRepository;
     private final S3Repository s3Repository;
     private final PasswordEncoder passwordEncoder;
     private final DiaryRepository diaryRepository;
@@ -61,15 +63,24 @@ public class AuthService {
 
     @Transactional
     public void signout(Long memberId) {
-        deleteAllDiaryImages(memberId);
         deleteProfileImage(memberId);
 
-        scheduleRepository.deleteAllByMemberId(memberId);
+        List<Long> scheduleIds = scheduleRepository.findAllIdsByOwnerMemberId(memberId);
+        deleteDiaries(scheduleIds);
+        scheduleMemberRepository.deleteAllByScheduleIds(scheduleIds);
+        scheduleRepository.deleteAllByScheduleIds(scheduleIds);
+
+        scheduleMemberRepository.deleteAllByMemberId(memberId);
         memberRepository.deleteById(memberId);
     }
 
-    private void deleteAllDiaryImages(Long memberId) {
-        List<String> diaryImageUrls = diaryRepository.findAllByMemberId(memberId).stream()
+    private void deleteDiaries(List<Long> scheduleIds) {
+        deleteAllDiaryImages(scheduleIds);
+        diaryRepository.deleteAllByScheduleIds(scheduleIds);
+    }
+
+    private void deleteAllDiaryImages(List<Long> scheduleIds) {
+        List<String> diaryImageUrls = diaryRepository.findAllByScheduleIds(scheduleIds).stream()
                 .flatMap(diary -> diary.getDiaryImageUrls().stream())
                 .collect(toList());
 

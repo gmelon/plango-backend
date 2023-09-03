@@ -5,10 +5,13 @@ import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleEditor;
+import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.domain.schedule.query.ScheduleQueryRepository;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleCountQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleListQueryDto;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
-import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
-import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
+import dev.gmelon.plango.exception.schedule.*;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.schedule.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -27,18 +30,45 @@ import static java.util.stream.Collectors.toList;
 public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
+    private final ScheduleQueryRepository scheduleQueryRepository;
+
     private final MemberRepository memberRepository;
     private final DiaryRepository diaryRepository;
     private final S3Repository s3Repository;
 
     @Transactional
     public Long create(Long memberId, ScheduleCreateRequestDto requestDto) {
-        Member member = findMemberById(memberId);
+        Schedule requestSchedule = requestDto.toEntity();
 
-        Schedule requestSchedule = requestDto.toEntity(member);
+        Member owner = findMemberById(memberId);
+        List<ScheduleMember> scheduleMembers = createScheduleMembers(requestDto.getParticipantIds(), requestSchedule, owner);
+        requestSchedule.setScheduleMembers(scheduleMembers);
+
+        // TODO participants에게 알림 발송
 
         Schedule savedSchedule = scheduleRepository.save(requestSchedule);
         return savedSchedule.getId();
+    }
+
+    private List<ScheduleMember> createScheduleMembers(List<Long> participantIds, Schedule requestSchedule, Member owner) {
+        validateParticipantsAreNotOwner(participantIds, owner.getId());
+
+        List<ScheduleMember> scheduleMembers = participantIds.stream()
+                .distinct()
+                .map(participantId ->
+                        ScheduleMember.createParticipant(findMemberById(participantId), requestSchedule))
+                .collect(toList());
+        scheduleMembers.add(ScheduleMember.createOwner(owner, requestSchedule));
+        return scheduleMembers;
+    }
+
+    private void validateParticipantsAreNotOwner(List<Long> participantIds, Long ownerId) {
+        participantIds.stream()
+                .filter(participantId -> participantId.equals(ownerId))
+                .findAny()
+                .ifPresent((participantId) -> {
+                    throw new ScheduleOwnerParticipantDuplicateException();
+                });
     }
 
     public ScheduleResponseDto findById(Long memberId, Long scheduleId) {
@@ -47,11 +77,11 @@ public class ScheduleService {
 
         validateMember(schedule, member);
 
-        return ScheduleResponseDto.from(schedule, isDiaryPresent(memberId, scheduleId));
+        return ScheduleResponseDto.from(schedule, member, isDiaryPresent(memberId, scheduleId));
     }
 
     public List<ScheduleListResponseDto> findAllByDate(Long memberId, LocalDate requestDate, boolean noDiaryOnly) {
-        List<Schedule> schedules = scheduleRepository.findAllByMemberIdAndDate(memberId, requestDate);
+        List<ScheduleListQueryDto> schedules = scheduleQueryRepository.findAllByMemberIdAndDate(memberId, requestDate);
         if (noDiaryOnly) {
             schedules = filterDoNotHaveDiaryOnly(memberId, schedules);
         }
@@ -61,7 +91,7 @@ public class ScheduleService {
                 .collect(toList());
     }
 
-    private List<Schedule> filterDoNotHaveDiaryOnly(Long memberId, List<Schedule> schedules) {
+    private List<ScheduleListQueryDto> filterDoNotHaveDiaryOnly(Long memberId, List<ScheduleListQueryDto> schedules) {
         return schedules.stream()
                 .filter(schedule -> !isDiaryPresent(memberId, schedule.getId()))
                 .collect(toList());
@@ -77,6 +107,9 @@ public class ScheduleService {
         Schedule schedule = findScheduleById(scheduleId);
 
         validateMember(schedule, member);
+        validateAccepted(schedule, member);
+
+        // TODO participants에게 알림 발송
 
         ScheduleEditor scheduleEditor = requestDto.toEditor();
         schedule.edit(scheduleEditor);
@@ -88,6 +121,7 @@ public class ScheduleService {
         Schedule schedule = findScheduleById(scheduleId);
 
         validateMember(schedule, member);
+        validateAccepted(schedule, member);
 
         schedule.changeDone(requestDto.getIsDone());
     }
@@ -98,6 +132,9 @@ public class ScheduleService {
         Schedule schedule = findScheduleById(scheduleId);
 
         validateMember(schedule, member);
+        validateOwner(schedule, member);
+
+        // TODO participants에게 알림 발송
 
         deleteAllDiaryImages(schedule);
         scheduleRepository.delete(schedule);
@@ -118,17 +155,32 @@ public class ScheduleService {
         LocalDate startDate = requestMonth.atDay(1);
         LocalDate endDate = requestMonth.atEndOfMonth();
 
-        return scheduleRepository.findCountOfDaysByMemberId(memberId, startDate, endDate);
+        List<ScheduleCountQueryDto> countQueryDtos = scheduleQueryRepository.countOfDaysByMemberId(memberId, startDate, endDate);
+        return countQueryDtos.stream()
+                .map(ScheduleCountResponseDto::from)
+                .collect(toList());
     }
 
     private void validateMember(Schedule schedule, Member member) {
-        if (!schedule.getMember().equals(member)) {
+        if (!schedule.isMember(member.getId())) {
             throw new ScheduleAccessDeniedException();
         }
     }
 
+    private void validateAccepted(Schedule schedule, Member member) {
+        if (!schedule.isAccepted(member.getId())) {
+            throw new ScheduleNotAcceptedException();
+        }
+    }
+
+    private void validateOwner(Schedule schedule, Member member) {
+        if (!schedule.isOwner(member.getId())) {
+            throw new NoOwnerOfScheduleException();
+        }
+    }
+
     private Schedule findScheduleById(Long scheduleId) {
-        return scheduleRepository.findById(scheduleId)
+        return scheduleRepository.findByIdWithScheduleMembers(scheduleId)
                 .orElseThrow(NoSuchScheduleException::new);
     }
 

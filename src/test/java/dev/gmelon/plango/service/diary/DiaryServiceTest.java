@@ -76,8 +76,8 @@ class DiaryServiceTest {
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
                 .placeName("일정 장소")
-                .member(memberA)
                 .build();
+        scheduleOfMemberA.setSingleOwnerScheduleMember(memberA);
         scheduleRepository.save(scheduleOfMemberA);
     }
 
@@ -327,37 +327,35 @@ class DiaryServiceTest {
                         .date(LocalDate.of(2023, 6, 25))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 1")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 0))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 2")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(0, 0, 0))
                         .endTime(LocalTime.of(0, 0, 1))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 3")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(12, 0, 0))
-                        .member(memberA)
                         .build(),
                 Schedule.builder()
                         .title("일정 4")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(23, 59, 59))
                         .endTime(LocalTime.of(0, 0, 0))
-                        .member(memberA)
                         .build()
         );
+        for (Schedule memberASchedule : memberASchedules) {
+            memberASchedule.setSingleOwnerScheduleMember(memberA);
+        }
         scheduleRepository.saveAll(memberASchedules);
 
         List<Diary> memberADiaries = memberASchedules.stream()
@@ -375,16 +373,17 @@ class DiaryServiceTest {
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(10, 0, 0))
                         .endTime(LocalTime.of(11, 0, 0))
-                        .member(memberB)
                         .build(),
                 Schedule.builder()
                         .title("일정 6")
                         .date(LocalDate.of(2023, 6, 26))
                         .startTime(LocalTime.of(15, 0, 0))
                         .endTime(LocalTime.of(22, 0, 0))
-                        .member(memberB)
                         .build()
         );
+        for (Schedule memberBSchedule : memberBSchedules) {
+            memberBSchedule.setSingleOwnerScheduleMember(memberA);
+        }
         scheduleRepository.saveAll(memberBSchedules);
 
         List<Diary> anotherMemberDiaries = memberBSchedules.stream()

@@ -1,6 +1,7 @@
 package dev.gmelon.plango.domain.diary;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -25,8 +26,8 @@ public interface DiaryRepository extends JpaRepository<Diary, Long> {
     List<Diary> findAllByScheduleId(@Param("scheduleId") Long scheduleId);
 
     @Query("select distinct d from Diary d left outer join fetch d.diaryImages " +
-            "where d.member.id = :memberId")
-    List<Diary> findAllByMemberId(@Param("memberId") Long memberId);
+            "where d.schedule.id in :scheduleIds")
+    List<Diary> findAllByScheduleIds(@Param("scheduleIds") List<Long> scheduleIds);
 
     @Query("select distinct d from Diary d left outer join fetch d.diaryImages join fetch d.schedule " +
             "where d.schedule.id = :scheduleId " +
@@ -43,4 +44,9 @@ public interface DiaryRepository extends JpaRepository<Diary, Long> {
     List<Diary> findAllByMemberIdAndDate(@Param("memberId") Long memberId, @Param("date") LocalDate date);
 
     Optional<Diary> findByContent(String content);
+
+    @Modifying
+    @Query("delete from Diary d " +
+            "where d.schedule.id in :scheduleIds")
+    void deleteAllByScheduleIds(@Param("scheduleIds") List<Long> scheduleIds);
 }

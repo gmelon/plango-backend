@@ -1,7 +1,7 @@
 package dev.gmelon.plango.service.schedule.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import dev.gmelon.plango.domain.schedule.Schedule;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleListQueryDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +28,8 @@ public class ScheduleListResponseDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss", timezone = "Asia/Seoul")
     private LocalTime endTime;
 
+    private int memberCount;
+
     private Double latitude;
 
     private Double longitude;
@@ -38,34 +40,40 @@ public class ScheduleListResponseDto {
 
     private Boolean isDone;
 
-    public static ScheduleListResponseDto from(Schedule schedule) {
+    public static ScheduleListResponseDto from(ScheduleListQueryDto queryDto) {
         return ScheduleListResponseDto.builder()
-                .id(schedule.getId())
-                .title(schedule.getTitle())
-                .content(schedule.getContent())
-                .date(schedule.getDate())
-                .startTime(schedule.getStartTime())
-                .endTime(schedule.getEndTime())
-                .latitude(schedule.getLatitude())
-                .longitude(schedule.getLongitude())
-                .roadAddress(schedule.getRoadAddress())
-                .placeName(schedule.getPlaceName())
-                .isDone(schedule.isDone())
+                .id(queryDto.getId())
+                .title(queryDto.getTitle())
+                .content(queryDto.getContent())
+                .date(queryDto.getDate())
+                .startTime(queryDto.getStartTime())
+                .endTime(queryDto.getEndTime())
+                .memberCount(queryDto.getMemberCount())
+                .latitude(queryDto.getLatitude())
+                .longitude(queryDto.getLongitude())
+                .roadAddress(queryDto.getRoadAddress())
+                .placeName(queryDto.getPlaceName())
+                .isDone(queryDto.getDone())
                 .build();
     }
 
     @Builder
-    public ScheduleListResponseDto(Long id, String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime, Double latitude, Double longitude, String roadAddress, String placeName, Boolean isDone) {
+    public ScheduleListResponseDto(
+            Long id, String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime,
+            int memberCount, Double latitude, Double longitude, String roadAddress, String placeName, Boolean isDone
+    ) {
         this.id = id;
         this.title = title;
         this.content = content;
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.memberCount = memberCount;
         this.latitude = latitude;
         this.longitude = longitude;
         this.roadAddress = roadAddress;
         this.placeName = placeName;
         this.isDone = isDone;
     }
+
 }

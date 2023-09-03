@@ -10,6 +10,7 @@ import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.domain.schedule.query.ScheduleQueryRepository;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import dev.gmelon.plango.exception.dto.InputInvalidErrorResponseDto;
 import dev.gmelon.plango.service.auth.AuthService;
@@ -52,6 +53,8 @@ class AuthControllerTest {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private ScheduleRepository scheduleRepository;
+    @Autowired
+    private ScheduleQueryRepository scheduleQueryRepository;
     @Autowired
     private DiaryRepository diaryRepository;
 
@@ -256,12 +259,12 @@ class AuthControllerTest {
         Member member = memberRepository.findAll().get(0);
 
         Schedule schedule = Schedule.builder()
-                .member(member)
                 .title("일정 제목")
                 .date(LocalDate.now())
                 .startTime(LocalTime.now())
                 .endTime(LocalTime.now())
                 .build();
+        schedule.setSingleOwnerScheduleMember(member);
         scheduleRepository.save(schedule);
 
         Diary diary = Diary.builder()
@@ -277,7 +280,7 @@ class AuthControllerTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        assertThat(scheduleRepository.findAllByMemberId(member.getId())).hasSize(0);
+        assertThat(scheduleQueryRepository.countByMemberId(member.getId())).isEqualTo(0);
         assertThat(diaryRepository.findByContent(diary.getContent())).isEmpty();
         assertThat(memberRepository.findById(member.getId())).isEmpty();
     }
@@ -295,12 +298,12 @@ class AuthControllerTest {
         Member savedMember = memberRepository.save(member);
 
         Schedule schedule = Schedule.builder()
-                .member(member)
                 .title("일정 제목")
                 .date(LocalDate.now())
                 .startTime(LocalTime.now())
                 .endTime(LocalTime.now())
                 .build();
+        schedule.setSingleOwnerScheduleMember(member);
         scheduleRepository.save(schedule);
 
         Diary diary = Diary.builder()
@@ -316,7 +319,7 @@ class AuthControllerTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        assertThat(scheduleRepository.findAllByMemberId(member.getId())).hasSize(0);
+        assertThat(scheduleQueryRepository.countByMemberId(member.getId())).isEqualTo(0);
         assertThat(diaryRepository.findByContent(diary.getContent())).isEmpty();
         assertThat(memberRepository.findById(member.getId())).isEmpty();
     }

@@ -1,37 +1,31 @@
 package dev.gmelon.plango.domain.schedule;
 
-import dev.gmelon.plango.service.schedule.dto.ScheduleCountResponseDto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
-    List<Schedule> findAllByMemberId(Long memberId);
+    @Query("select distinct s from Schedule s " +
+            "join fetch s.scheduleMembers sm " +
+            "join fetch sm.member " +
+            "where s.id = :id")
+    Optional<Schedule> findByIdWithScheduleMembers(@Param("id") Long scheduleId);
 
-    void deleteAllByMemberId(Long memberId);
+    @Query("select s.id from Schedule s join s.scheduleMembers sm " +
+            "where sm.member.id = :memberId " +
+            "and sm.owner = true")
+    List<Long> findAllIdsByOwnerMemberId(@Param("memberId") Long memberId);
 
-    @Query("SELECT s FROM Schedule s " +
-            "WHERE s.member.id = :memberId " +
-            "AND s.date = :date " +
-            "ORDER BY CASE WHEN s.startTime IS NULL THEN 0 ELSE 1 END, " +
-            "CASE WHEN s.startTime IS NULL THEN s.modifiedDate ELSE s.startTime END ASC, " +
-            "s.endTime ASC")
-    List<Schedule> findAllByMemberIdAndDate(@Param("memberId") Long memberId, @Param("date") LocalDate date);
-
-    @Query("SELECT new dev.gmelon.plango.service.schedule.dto.ScheduleCountResponseDto(s.date, sum(case when s.done = true then 1 else 0 end), count(s)) " +
-            "FROM Schedule s " +
-            "WHERE s.member.id = :memberId " +
-            "AND s.date >= :startDate " +
-            "AND s.date <= :endDate " +
-            "GROUP BY s.date " +
-            "HAVING count(s) > 0 " +
-            "ORDER BY s.date")
-    List<ScheduleCountResponseDto> findCountOfDaysByMemberId(@Param("memberId") Long memberId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    @Modifying
+    @Query("delete from Schedule s " +
+            "where s.id in :scheduleIds")
+    void deleteAllByScheduleIds(@Param("scheduleIds") List<Long> scheduleIds);
 
 }
