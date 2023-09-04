@@ -36,6 +36,7 @@ class MemberServiceTest {
                 .email("a@a.com")
                 .password(passwordEncoder.encode("passwordA"))
                 .nickname("nameA")
+                .bio("소개 A")
                 .profileImageUrl("https://plango-backend/imageA.jpg")
                 .role(MemberRole.ROLE_USER)
                 .build();
@@ -51,7 +52,32 @@ class MemberServiceTest {
         assertThat(response.getId()).isEqualTo(memberA.getId());
         assertThat(response.getNickname()).isEqualTo(memberA.getNickname());
         assertThat(response.getNickname()).isEqualTo(memberA.getNickname());
+        assertThat(response.getBio()).isEqualTo(memberA.getBio());
         assertThat(response.getProfileImageUrl()).isEqualTo(memberA.getProfileImageUrl());
+    }
+
+    @Test
+    void 다른_회원의_프로필_조회() {
+        // given
+        Member memberB = Member.builder()
+                .email("b@b.com")
+                .password(passwordEncoder.encode("passwordB"))
+                .nickname("nameB")
+                .bio("소개 B")
+                .profileImageUrl("https://plango-backend/imageB.jpg")
+                .role(MemberRole.ROLE_USER)
+                .build();
+        memberRepository.save(memberB);
+
+        // when
+        MemberProfileResponseDto response = memberService.getProfile(memberA.getId(), memberB.getId());
+
+        // then
+        assertThat(response.getId()).isEqualTo(memberB.getId());
+        assertThat(response.getNickname()).isEqualTo(memberB.getNickname());
+        assertThat(response.getNickname()).isEqualTo(memberB.getNickname());
+        assertThat(response.getBio()).isEqualTo(memberB.getBio());
+        assertThat(response.getProfileImageUrl()).isEqualTo(memberB.getProfileImageUrl());
     }
 
     @Test
@@ -91,6 +117,7 @@ class MemberServiceTest {
         // given
         MemberEditProfileRequestDto request = MemberEditProfileRequestDto.builder()
                 .nickname("nameB")
+                .bio("소개 B")
                 .profileImageUrl("https://plango-backend/imageB.jpg")
                 .build();
 
@@ -100,6 +127,7 @@ class MemberServiceTest {
         //then
         Member foundMemberA = memberRepository.findById(memberA.getId()).get();
         assertThat(foundMemberA.getNickname()).isEqualTo(request.getNickname());
+        assertThat(foundMemberA.getBio()).isEqualTo(request.getBio());
         assertThat(foundMemberA.getProfileImageUrl()).isEqualTo(request.getProfileImageUrl());
     }
 }

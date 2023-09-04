@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
+import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
@@ -63,6 +64,37 @@ class MemberControllerTest {
 
     @PlangoMockUser
     @Test
+    void 다른_회원의_프로필_조회() throws Exception {
+        // given
+        Member memberB = Member.builder()
+                .email("b@b.com")
+                .password(passwordEncoder.encode("passwordB"))
+                .nickname("nameB")
+                .bio("소개 B")
+                .profileImageUrl("https://plango-backend/imageB.jpg")
+                .role(MemberRole.ROLE_USER)
+                .build();
+        memberRepository.save(memberB);
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(get("/api/members/" + memberB.getId() + "/profile")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+        MemberProfileResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), MemberProfileResponseDto.class);
+
+        assertThat(responseDto.getId()).isEqualTo(memberB.getId());
+        assertThat(responseDto.getEmail()).isEqualTo(memberB.getEmail());
+        assertThat(responseDto.getNickname()).isEqualTo(memberB.getNickname());
+        assertThat(responseDto.getBio()).isEqualTo(memberB.getBio());
+        assertThat(responseDto.getProfileImageUrl()).isEqualTo(memberB.getProfileImageUrl());
+    }
+
+    @PlangoMockUser
+    @Test
     void 비밀번호_변경() throws Exception {
         // given
         PasswordChangeRequestDto request = PasswordChangeRequestDto.builder()
@@ -111,6 +143,7 @@ class MemberControllerTest {
         // given
         MemberEditProfileRequestDto request = MemberEditProfileRequestDto.builder()
                 .nickname("nameB")
+                .bio("소개 B")
                 .profileImageUrl("https://plango-backend/imageB.jpg")
                 .build();
 
@@ -125,6 +158,7 @@ class MemberControllerTest {
         Member member = memberRepository.findAll().get(0);
 
         assertThat(member.getNickname()).isEqualTo(request.getNickname());
+        assertThat(member.getBio()).isEqualTo(request.getBio());
         assertThat(member.getProfileImageUrl()).isEqualTo(request.getProfileImageUrl());
     }
 }
