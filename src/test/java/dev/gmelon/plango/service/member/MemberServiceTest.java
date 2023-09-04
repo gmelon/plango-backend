@@ -4,15 +4,15 @@ import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.exception.member.PasswordMismatchException;
-import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
-import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
-import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
+import dev.gmelon.plango.service.member.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -78,6 +78,30 @@ class MemberServiceTest {
         assertThat(response.getNickname()).isEqualTo(memberB.getNickname());
         assertThat(response.getBio()).isEqualTo(memberB.getBio());
         assertThat(response.getProfileImageUrl()).isEqualTo(memberB.getProfileImageUrl());
+    }
+
+    @Test
+    void 닉네임으로_프로필_검색() {
+        // given
+        Member memberB = Member.builder()
+                .email("b@b.com")
+                .password(passwordEncoder.encode("passwordB"))
+                .nickname("멤버 B 닉네임")
+                .profileImageUrl("https://plango-backend/imageB.jpg")
+                .role(MemberRole.ROLE_USER)
+                .build();
+        memberRepository.save(memberB);
+
+        MemberSearchRequestDto request = MemberSearchRequestDto.builder()
+                .nickname("버B닉")
+                .build();
+
+        // when
+        List<MemberSearchResponseDto> responses = memberService.search(request);
+
+        // then
+        assertThat(responses).hasSize(1);
+        assertThat(responses.get(0).getId()).isEqualTo(memberB.getId());
     }
 
     @Test

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -78,6 +79,15 @@ public class InputInvalidErrorResponseDto {
         return InputInvalidErrorResponseDto.builder()
                 .field(field)
                 .message(constraintViolation.getMessage())
+                .build();
+    }
+
+    public static InputInvalidErrorResponseDto from(BindException exception) {
+        FieldError firstFieldError = exception.getFieldErrors().get(0);
+
+        return InputInvalidErrorResponseDto.builder()
+                .field(firstFieldError.getField())
+                .message(firstFieldError.getDefaultMessage())
                 .build();
     }
 

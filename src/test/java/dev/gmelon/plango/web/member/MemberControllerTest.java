@@ -8,6 +8,7 @@ import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
+import dev.gmelon.plango.service.member.dto.MemberSearchResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,6 +92,43 @@ class MemberControllerTest {
         assertThat(responseDto.getNickname()).isEqualTo(memberB.getNickname());
         assertThat(responseDto.getBio()).isEqualTo(memberB.getBio());
         assertThat(responseDto.getProfileImageUrl()).isEqualTo(memberB.getProfileImageUrl());
+    }
+
+    @PlangoMockUser
+    @Test
+    void 닉네임으로_프로필_검색() throws Exception {
+        // given
+        Member memberB = Member.builder()
+                .email("b@b.com")
+                .password(passwordEncoder.encode("passwordB"))
+                .nickname("멤버 B 닉네임")
+                .profileImageUrl("https://plango-backend/imageB.jpg")
+                .role(MemberRole.ROLE_USER)
+                .build();
+        memberRepository.save(memberB);
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(get("/api/members")
+                        .param("nickname", "버B닉"))
+                .andReturn().getResponse();
+
+        // then
+        MemberSearchResponseDto[] responseDtos = objectMapper.readValue(response.getContentAsString(UTF_8), MemberSearchResponseDto[].class);
+        assertThat(responseDtos).hasSize(1);
+        assertThat(responseDtos[0].getId()).isEqualTo(memberB.getId());
+    }
+
+    @PlangoMockUser
+    @Test
+    void 닉네임으로_프로필_검색시_검색어가_없으면_예외발생() throws Exception {
+        // when
+        MockHttpServletResponse response = mockMvc.perform(get("/api/members")
+                        .param("nickname", " ")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
     }
 
     @PlangoMockUser

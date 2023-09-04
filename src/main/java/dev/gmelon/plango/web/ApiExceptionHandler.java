@@ -11,6 +11,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.BindException;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -93,7 +94,14 @@ public class ApiExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<InputInvalidErrorResponseDto> argumentNotValidException(MethodArgumentNotValidException exception) {
+    public ResponseEntity<InputInvalidErrorResponseDto> argumentNotValidExceptionHandler(MethodArgumentNotValidException exception) {
+        return ResponseEntity
+                .badRequest()
+                .body(InputInvalidErrorResponseDto.from(exception));
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<InputInvalidErrorResponseDto> bindExceptionHandler(BindException exception) {
         return ResponseEntity
                 .badRequest()
                 .body(InputInvalidErrorResponseDto.from(exception));

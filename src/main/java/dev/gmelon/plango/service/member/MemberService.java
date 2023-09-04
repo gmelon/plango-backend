@@ -6,18 +6,23 @@ import dev.gmelon.plango.exception.member.DuplicateNicknameException;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.member.PasswordMismatchException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
-import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
-import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
-import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
+import dev.gmelon.plango.service.member.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
+
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
 public class MemberService {
+
+    private static final String WHITE_SPACE = " ";
+    private static final String EMPTY_STRING = "";
 
     private final MemberRepository memberRepository;
     private final S3Repository s3Repository;
@@ -37,6 +42,19 @@ public class MemberService {
     private MemberProfileResponseDto mapToProfileResponse(Long memberId) {
         Member member = findMemberById(memberId);
         return MemberProfileResponseDto.from(member);
+    }
+
+    public List<MemberSearchResponseDto> search(MemberSearchRequestDto requestDto) {
+        String trimmedNickname = trimWhiteSpaces(requestDto.getNickname());
+
+        List<Member> members = memberRepository.searchByNickname(trimmedNickname);
+        return members.stream()
+                .map(MemberSearchResponseDto::from)
+                .collect(toList());
+    }
+
+    private String trimWhiteSpaces(String nickname) {
+        return nickname.replaceAll(WHITE_SPACE, EMPTY_STRING);
     }
 
     @Transactional
@@ -70,11 +88,10 @@ public class MemberService {
             return;
         }
 
-        boolean isNicknameAlreadyExists = memberRepository.findByNickname(requestDto.getNickname())
-                .isPresent();
-        if (isNicknameAlreadyExists) {
-            throw new DuplicateNicknameException();
-        }
+        memberRepository.findByNickname(requestDto.getNickname())
+                .ifPresent((member) -> {
+                    throw new DuplicateNicknameException();
+                });
     }
 
     private void deletePrevImageIfChanged(String prevProfileImageUrl, MemberEditProfileRequestDto requestDto) {
@@ -91,7 +108,6 @@ public class MemberService {
     }
 
     private Member findMemberById(Long memberId) {
-        return memberRepository.findById(memberId)
-                .orElseThrow(NoSuchMemberException::new);
+        return memberRepository.findById(memberId).orElseThrow(NoSuchMemberException::new);
     }
 }
