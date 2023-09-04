@@ -22,6 +22,13 @@ public class MemberController {
         return memberService.getMyProfile(memberId);
     }
 
+    @GetMapping("/{targetMemberId}/profile")
+    public MemberProfileResponseDto getProfile(
+            @LoginMember Long currentMemberId,
+            @PathVariable Long targetMemberId) {
+        return memberService.getProfile(currentMemberId, targetMemberId);
+    }
+
     @PatchMapping("/profile")
     public void editProfile(@LoginMember Long memberId,
                             @RequestBody @Valid MemberEditProfileRequestDto requestDto) {

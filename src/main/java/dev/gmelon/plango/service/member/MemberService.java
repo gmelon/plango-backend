@@ -2,7 +2,6 @@ package dev.gmelon.plango.service.member;
 
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
-import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.member.DuplicateNicknameException;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.member.PasswordMismatchException;
@@ -21,11 +20,21 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
 
     private final MemberRepository memberRepository;
-    private final ScheduleRepository scheduleRepository;
     private final S3Repository s3Repository;
     private final PasswordEncoder passwordEncoder;
 
     public MemberProfileResponseDto getMyProfile(Long memberId) {
+        return mapToProfileResponse(memberId);
+    }
+
+    public MemberProfileResponseDto getProfile(Long currentMemberId, Long targetMemberId) {
+
+        // TODO 회원 차단 기능 구현 후 필터링 로직 추가
+
+        return mapToProfileResponse(targetMemberId);
+    }
+
+    private MemberProfileResponseDto mapToProfileResponse(Long memberId) {
         Member member = findMemberById(memberId);
         return MemberProfileResponseDto.from(member);
     }
