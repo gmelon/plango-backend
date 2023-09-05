@@ -16,6 +16,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByNickname(String nickname);
 
     @Query("select m from Member m " +
-            "where function('replace', m.nickname, ' ', '') like %:nickname%")
-    List<Member> searchByNickname(@Param("nickname") String trimmedNickname);
+            "where function('replace', m.nickname, ' ', '') like %:nickname% " +
+            "and m.id != :currentMemberId")
+    List<Member> searchByNicknameWithoutCurrentMember(@Param("currentMemberId") Long currentMemberId, @Param("nickname") String trimmedNickname);
 }

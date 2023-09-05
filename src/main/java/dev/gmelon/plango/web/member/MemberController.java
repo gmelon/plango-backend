@@ -16,17 +16,6 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    @GetMapping
-    public List<MemberSearchResponseDto> search(@ModelAttribute @Valid MemberSearchRequestDto requestDto) {
-        return memberService.search(requestDto);
-    }
-
-    @PatchMapping("/profile")
-    public void editProfile(@LoginMember Long memberId,
-                            @RequestBody @Valid MemberEditProfileRequestDto requestDto) {
-        memberService.editProfile(memberId, requestDto);
-    }
-
     @GetMapping("/profile")
     public MemberProfileResponseDto getMyProfile(@LoginMember Long memberId) {
         return memberService.getMyProfile(memberId);
@@ -37,6 +26,19 @@ public class MemberController {
             @LoginMember Long currentMemberId,
             @PathVariable Long targetMemberId) {
         return memberService.getProfile(currentMemberId, targetMemberId);
+    }
+
+    @GetMapping
+    public List<MemberSearchResponseDto> searchWithoutCurrentMember(
+            @LoginMember Long currentMemberId,
+            @ModelAttribute @Valid MemberSearchRequestDto requestDto) {
+        return memberService.searchWithoutCurrentMember(currentMemberId, requestDto);
+    }
+
+    @PatchMapping("/profile")
+    public void editProfile(@LoginMember Long memberId,
+                            @RequestBody @Valid MemberEditProfileRequestDto requestDto) {
+        memberService.editProfile(memberId, requestDto);
     }
 
     @PatchMapping("/password")

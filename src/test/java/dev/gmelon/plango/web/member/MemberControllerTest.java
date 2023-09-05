@@ -120,6 +120,19 @@ class MemberControllerTest {
 
     @PlangoMockUser
     @Test
+    void 닉네임으로_프로필_검색시_자신은_검색되지_않음() throws Exception {
+        // when
+        MockHttpServletResponse response = mockMvc.perform(get("/api/members")
+                        .param("nickname", "nameA"))
+                .andReturn().getResponse();
+
+        // then
+        MemberSearchResponseDto[] responseDtos = objectMapper.readValue(response.getContentAsString(UTF_8), MemberSearchResponseDto[].class);
+        assertThat(responseDtos).hasSize(0);
+    }
+
+    @PlangoMockUser
+    @Test
     void 닉네임으로_프로필_검색시_검색어가_없으면_예외발생() throws Exception {
         // when
         MockHttpServletResponse response = mockMvc.perform(get("/api/members")

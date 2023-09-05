@@ -44,10 +44,10 @@ public class MemberService {
         return MemberProfileResponseDto.from(member);
     }
 
-    public List<MemberSearchResponseDto> search(MemberSearchRequestDto requestDto) {
+    public List<MemberSearchResponseDto> searchWithoutCurrentMember(Long currentMemberId, MemberSearchRequestDto requestDto) {
         String trimmedNickname = trimWhiteSpaces(requestDto.getNickname());
 
-        List<Member> members = memberRepository.searchByNickname(trimmedNickname);
+        List<Member> members = memberRepository.searchByNicknameWithoutCurrentMember(currentMemberId, trimmedNickname);
         return members.stream()
                 .map(MemberSearchResponseDto::from)
                 .collect(toList());

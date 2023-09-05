@@ -97,11 +97,24 @@ class MemberServiceTest {
                 .build();
 
         // when
-        List<MemberSearchResponseDto> responses = memberService.search(request);
+        List<MemberSearchResponseDto> responses = memberService.searchWithoutCurrentMember(memberA.getId(), request);
 
         // then
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).getId()).isEqualTo(memberB.getId());
+    }
+
+    @Test
+    void 닉네임으로_프로필_검색시_자신은_검색되지_않음() {
+        MemberSearchRequestDto request = MemberSearchRequestDto.builder()
+                .nickname("nameA")
+                .build();
+
+        // when
+        List<MemberSearchResponseDto> responses = memberService.searchWithoutCurrentMember(memberA.getId(), request);
+
+        // then
+        assertThat(responses).hasSize(0);
     }
 
     @Test
