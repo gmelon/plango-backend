@@ -625,8 +625,8 @@ class ScheduleControllerTest {
                 .endTime(LocalTime.of(11, 0, 0))
                 .build();
         givenSchedule.setScheduleMembers(List.of(
-            ScheduleMember.createOwner(anotherMember, givenSchedule),
-            ScheduleMember.createParticipant(member, givenSchedule)
+                ScheduleMember.createOwner(anotherMember, givenSchedule),
+                ScheduleMember.createParticipant(member, givenSchedule)
         ));
         Schedule savedSchedule = scheduleRepository.save(givenSchedule);
 
@@ -677,10 +677,16 @@ class ScheduleControllerTest {
                         .date(LocalDate.of(2023, 6, 26))
                         .build()
         );
-        for (Schedule memberScheduleRequest : memberScheduleRequests) {
-            memberScheduleRequest.setSingleOwnerScheduleMember(member);
-        }
         scheduleRepository.saveAll(memberScheduleRequests);
+        for (Schedule memberScheduleRequest : memberScheduleRequests) {
+            ScheduleMember scheduleMember = ScheduleMember.builder()
+                    .schedule(memberScheduleRequest)
+                    .member(member)
+                    .owner(true)
+                    .accepted(true)
+                    .build();
+            scheduleMemberRepository.save(scheduleMember);
+        }
 
         List<Diary> memberDiaryRequests = List.of(
                 Diary.builder()
@@ -711,10 +717,16 @@ class ScheduleControllerTest {
                         .endTime(LocalTime.of(22, 0, 1))
                         .build()
         );
-        for (Schedule anotherMemberScheduleRequest : anotherMemberScheduleRequests) {
-            anotherMemberScheduleRequest.setSingleOwnerScheduleMember(anotherMember);
-        }
         scheduleRepository.saveAll(anotherMemberScheduleRequests);
+        for (Schedule anotherMemberScheduleRequest : anotherMemberScheduleRequests) {
+            ScheduleMember scheduleMember = ScheduleMember.builder()
+                    .schedule(anotherMemberScheduleRequest)
+                    .member(anotherMember)
+                    .owner(true)
+                    .accepted(true)
+                    .build();
+            scheduleMemberRepository.save(scheduleMember);
+        }
 
         List<Diary> anotherMemberDiaryRequests = List.of(
                 Diary.builder()

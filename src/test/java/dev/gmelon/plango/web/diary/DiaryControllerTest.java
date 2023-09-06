@@ -8,6 +8,8 @@ import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
+import dev.gmelon.plango.domain.schedule.ScheduleMember;
+import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
@@ -51,6 +53,8 @@ class DiaryControllerTest {
     private ScheduleRepository scheduleRepository;
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private ScheduleMemberRepository scheduleMemberRepository;
 
     private Member memberA;
     private Schedule scheduleOfMemberA;
@@ -145,6 +149,39 @@ class DiaryControllerTest {
 
         // when
         MockHttpServletResponse response = mockMvc.perform(post("/api/schedules/" + scheduleOfMemberA.getId() + "/diary")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @PlangoMockUser
+    @Test
+    void 수락하지_않은_일정에_기록_생성() throws Exception {
+        // given
+        Member anotherMember = createAnotherMember();
+
+        Schedule givenSchedule = Schedule.builder()
+                .title("일정 제목")
+                .content("일정 본문")
+                .date(LocalDate.of(2023, 6, 26))
+                .startTime(LocalTime.of(10, 0, 0))
+                .endTime(LocalTime.of(11, 0, 0))
+                .build();
+        givenSchedule.setScheduleMembers(List.of(
+                ScheduleMember.createOwner(anotherMember, givenSchedule),
+                ScheduleMember.createParticipant(memberA, givenSchedule)
+        ));
+        Schedule savedSchedule = scheduleRepository.save(givenSchedule);
+
+        DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
+                .content("새로운 기록")
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/schedules/" + savedSchedule.getId() + "/diary")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andReturn().getResponse();

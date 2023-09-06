@@ -1,17 +1,19 @@
 package dev.gmelon.plango.service.diary;
 
 import dev.gmelon.plango.domain.diary.Diary;
-import dev.gmelon.plango.domain.diary.DiaryImageRepository;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
+import dev.gmelon.plango.domain.schedule.ScheduleMember;
+import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.diary.DiaryAccessDeniedException;
 import dev.gmelon.plango.exception.diary.DuplicateDiaryException;
 import dev.gmelon.plango.exception.diary.NoSuchDiaryException;
 import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
+import dev.gmelon.plango.exception.schedule.ScheduleNotAcceptedException;
 import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryListResponseDto;
@@ -49,7 +51,7 @@ class DiaryServiceTest {
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
-    private DiaryImageRepository diaryImageRepository;
+    private ScheduleMemberRepository scheduleMemberRepository;
 
     @BeforeEach
     void setUp() {
@@ -117,6 +119,21 @@ class DiaryServiceTest {
         // when
         assertThatThrownBy(() -> diaryService.create(memberA.getId(), scheduleOfMemberA.getId(), request))
                 .isInstanceOf(DuplicateDiaryException.class);
+    }
+
+    @Test
+    void 수락하지_않은_일정에_기록_생성() {
+        // given
+        ScheduleMember scheduleMember = ScheduleMember.createParticipant(memberB, scheduleOfMemberA);
+        scheduleMemberRepository.save(scheduleMember);
+
+        DiaryCreateRequestDto request = DiaryCreateRequestDto.builder()
+                .content("새로운 기록")
+                .build();
+
+        // when
+        assertThatThrownBy(() -> diaryService.create(memberB.getId(), scheduleOfMemberA.getId(), request))
+                .isInstanceOf(ScheduleNotAcceptedException.class);
     }
 
     @Test

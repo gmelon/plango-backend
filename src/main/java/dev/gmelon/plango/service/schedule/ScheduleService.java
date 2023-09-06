@@ -94,6 +94,7 @@ public class ScheduleService {
     private List<ScheduleListQueryDto> filterDoNotHaveDiaryOnly(Long memberId, List<ScheduleListQueryDto> schedules) {
         return schedules.stream()
                 .filter(schedule -> !isDiaryPresent(memberId, schedule.getId()))
+                .filter(ScheduleListQueryDto::getIsAccepted)
                 .collect(toList());
     }
 

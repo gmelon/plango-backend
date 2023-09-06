@@ -12,6 +12,7 @@ import dev.gmelon.plango.exception.diary.NoSuchDiaryException;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
 import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
+import dev.gmelon.plango.exception.schedule.ScheduleNotAcceptedException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
@@ -41,8 +42,9 @@ public class DiaryService {
         Member member = findMemberById(memberId);
         Schedule schedule = findScheduleById(scheduleId);
 
-        validateScheduleAccessPermission(member, schedule);
-        validateDiaryExistence(memberId, schedule.getId());
+        validateScheduleAccessPermission(memberId, schedule);
+        validateScheduleIsAccepted(memberId, schedule);
+        validateDiaryNotExist(memberId, schedule.getId());
 
         Diary diary = requestDto.toEntity(member, schedule);
         diaryRepository.save(diary);
@@ -50,13 +52,19 @@ public class DiaryService {
         return diary.getId();
     }
 
-    private void validateScheduleAccessPermission(Member member, Schedule schedule) {
-        if (!schedule.isAccepted(member.getId())) {
+    private void validateScheduleAccessPermission(Long memberid, Schedule schedule) {
+        if (!schedule.isMember(memberid)) {
             throw new ScheduleAccessDeniedException();
         }
     }
 
-    private void validateDiaryExistence(Long memberId, Long scheduleId) {
+    private void validateScheduleIsAccepted(Long memberId, Schedule schedule) {
+        if (!schedule.isAccepted(memberId)) {
+            throw new ScheduleNotAcceptedException();
+        }
+    }
+
+    private void validateDiaryNotExist(Long memberId, Long scheduleId) {
         boolean isPresent = diaryRepository.findByMemberIdAndScheduleId(memberId, scheduleId).isPresent();
         if (isPresent) {
             throw new DuplicateDiaryException();

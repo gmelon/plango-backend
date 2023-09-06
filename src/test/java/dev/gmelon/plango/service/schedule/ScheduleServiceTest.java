@@ -7,6 +7,7 @@ import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleMember;
+import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.schedule.NoOwnerOfScheduleException;
 import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
@@ -47,6 +48,8 @@ class ScheduleServiceTest {
     private MemberRepository memberRepository;
     @Autowired
     private ScheduleMemberService scheduleMemberService;
+    @Autowired
+    private ScheduleMemberRepository scheduleMemberRepository;
 
     @BeforeEach
     void setUp() {
@@ -551,10 +554,16 @@ class ScheduleServiceTest {
                         .date(LocalDate.of(2023, 6, 26))
                         .build()
         );
-        for (Schedule memberAScheduleRequest : memberAScheduleRequests) {
-            memberAScheduleRequest.setSingleOwnerScheduleMember(memberA);
-        }
         scheduleRepository.saveAll(memberAScheduleRequests);
+        for (Schedule memberAScheduleRequest : memberAScheduleRequests) {
+            ScheduleMember scheduleMember = ScheduleMember.builder()
+                    .schedule(memberAScheduleRequest)
+                    .member(memberA)
+                    .owner(true)
+                    .accepted(true)
+                    .build();
+            scheduleMemberRepository.save(scheduleMember);
+        }
 
         List<Diary> memberADiaryRequests = List.of(
                 Diary.builder()
@@ -585,10 +594,16 @@ class ScheduleServiceTest {
                         .endTime(LocalTime.of(22, 0, 1))
                         .build()
         );
-        for (Schedule memberBScheduleRequest : memberBScheduleRequests) {
-            memberBScheduleRequest.setSingleOwnerScheduleMember(memberB);
-        }
         scheduleRepository.saveAll(memberBScheduleRequests);
+        for (Schedule memberBScheduleRequest : memberBScheduleRequests) {
+            ScheduleMember scheduleMember = ScheduleMember.builder()
+                    .schedule(memberBScheduleRequest)
+                    .member(memberB)
+                    .owner(true)
+                    .accepted(true)
+                    .build();
+            scheduleMemberRepository.save(scheduleMember);
+        }
 
         List<Diary> memberBDiaryRequests = List.of(
                 Diary.builder()

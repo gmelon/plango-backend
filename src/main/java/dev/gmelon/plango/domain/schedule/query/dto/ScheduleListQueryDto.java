@@ -28,6 +28,8 @@ public class ScheduleListQueryDto {
 
     private Boolean isOwner;
 
+    private Boolean isAccepted;
+
     private Double latitude;
 
     private Double longitude;
