@@ -108,6 +108,8 @@ public class ScheduleResponseDto {
 
         private Long id;
         private String nickname;
+        private String profileImageUrl;
+        private Boolean isOwner;
         private Boolean isAccepted;
 
         public static ScheduleMemberResponseDto from(ScheduleMember scheduleMember) {
@@ -116,14 +118,18 @@ public class ScheduleResponseDto {
             return ScheduleMemberResponseDto.builder()
                     .id(member.getId())
                     .nickname(member.getNickname())
+                    .profileImageUrl(member.getProfileImageUrl())
+                    .isOwner(scheduleMember.isOwner())
                     .isAccepted(scheduleMember.isAccepted())
                     .build();
         }
 
         @Builder
-        public ScheduleMemberResponseDto(Long id, String nickname, Boolean isAccepted) {
+        public ScheduleMemberResponseDto(Long id, String nickname, String profileImageUrl, Boolean isOwner, Boolean isAccepted) {
             this.id = id;
             this.nickname = nickname;
+            this.profileImageUrl = profileImageUrl;
+            this.isOwner = isOwner;
             this.isAccepted = isAccepted;
         }
     }

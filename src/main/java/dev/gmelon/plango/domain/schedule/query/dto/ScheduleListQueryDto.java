@@ -26,6 +26,8 @@ public class ScheduleListQueryDto {
 
     private int memberCount;
 
+    private Boolean isOwner;
+
     private Double latitude;
 
     private Double longitude;

@@ -104,7 +104,8 @@ public class ScheduleMemberService {
         ScheduleMember scheduleMember = findScheduleMemberByMemberIdAndScheduleId(memberId, scheduleId);
         // TODO scheduleMemberRepository.delete(scheduleMember) 로는 왜 삭제 안 되는지
         scheduleMemberRepository.deleteByMemberIdAndScheduleId(memberId, scheduleId);
-
+        schedule.decreaseScheduleMemberCount();
+        
         // TODO 일정 owner에게 알림 발송
     }
 
