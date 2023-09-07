@@ -1,3 +1,4 @@
+delete from notification;
 delete from place_search_record;
 delete from diary_image;
 delete from diary;

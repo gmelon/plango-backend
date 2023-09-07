@@ -12,6 +12,7 @@ create table schedule (id bigint not null auto_increment, created_time timestamp
                         primary key (id));
 create table schedule_member (id bigint not null auto_increment, accepted BOOLEAN DEFAULT 0 not null, owner BOOLEAN DEFAULT 0 not null, member_id bigint, schedule_id bigint, primary key (id), foreign key (member_id) references member(id), foreign key (schedule_id) references schedule(id));
 create table place_search_record (id bigint not null auto_increment, keyword varchar(255) not null, last_searched_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP not null, member_id bigint, primary key (id), foreign key (member_id) references member(id));
+create table notification (id bigint not null auto_increment, created_time timestamp, modified_date timestamp, argument varchar(255), content varchar(255), notification_type varchar(255), title varchar(255), member_id bigint, primary key (id), foreign key (member_id) references member(id));
 
 # security
 create table persistent_logins (username varchar(64) not null, series varchar(64) primary key, token varchar(64) not null, last_used timestamp not null);
