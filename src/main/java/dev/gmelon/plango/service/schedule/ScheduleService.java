@@ -13,6 +13,7 @@ import dev.gmelon.plango.domain.schedule.query.dto.ScheduleListQueryDto;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.schedule.*;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
+import dev.gmelon.plango.service.notification.NotificationService;
 import dev.gmelon.plango.service.schedule.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
@@ -31,35 +33,39 @@ public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
     private final ScheduleQueryRepository scheduleQueryRepository;
-
     private final MemberRepository memberRepository;
     private final DiaryRepository diaryRepository;
     private final S3Repository s3Repository;
+    private final NotificationService notificationService;
 
     @Transactional
     public Long create(Long memberId, ScheduleCreateRequestDto requestDto) {
         Schedule requestSchedule = requestDto.toEntity();
 
+        // TODO 리팩토링 하기
         Member owner = findMemberById(memberId);
-        List<ScheduleMember> scheduleMembers = createScheduleMembers(requestDto.getParticipantIds(), requestSchedule, owner);
-        requestSchedule.setScheduleMembers(scheduleMembers);
-
-        // TODO participants에게 알림 발송
+        List<ScheduleMember> participantScheduleMembers = mapToScheduleMembers(requestDto.getParticipantIds(), requestSchedule, owner);
+        List<ScheduleMember> allScheduleMembers = addOwnerScheduleMember(participantScheduleMembers, owner, requestSchedule);
+        requestSchedule.setScheduleMembers(allScheduleMembers);
 
         Schedule savedSchedule = scheduleRepository.save(requestSchedule);
+        sendScheduleInvitedNotification(participantScheduleMembers, savedSchedule);
         return savedSchedule.getId();
     }
 
-    private List<ScheduleMember> createScheduleMembers(List<Long> participantIds, Schedule requestSchedule, Member owner) {
+    private List<ScheduleMember> mapToScheduleMembers(List<Long> participantIds, Schedule requestSchedule, Member owner) {
         validateParticipantsAreNotOwner(participantIds, owner.getId());
-
-        List<ScheduleMember> scheduleMembers = participantIds.stream()
+        return participantIds.stream()
                 .distinct()
                 .map(participantId ->
                         ScheduleMember.createParticipant(findMemberById(participantId), requestSchedule))
                 .collect(toList());
-        scheduleMembers.add(ScheduleMember.createOwner(owner, requestSchedule));
-        return scheduleMembers;
+    }
+
+    private List<ScheduleMember> addOwnerScheduleMember(List<ScheduleMember> participantScheduleMembers, Member owner, Schedule requestSchedule) {
+        ArrayList<ScheduleMember> allScheduleMembers = new ArrayList<>(participantScheduleMembers);
+        allScheduleMembers.add(ScheduleMember.createOwner(owner, requestSchedule));
+        return allScheduleMembers;
     }
 
     private void validateParticipantsAreNotOwner(List<Long> participantIds, Long ownerId) {
@@ -69,6 +75,12 @@ public class ScheduleService {
                 .ifPresent((participantId) -> {
                     throw new ScheduleOwnerParticipantDuplicateException();
                 });
+    }
+
+    private void sendScheduleInvitedNotification(List<ScheduleMember> scheduleMembers, Schedule savedSchedule) {
+        for (ScheduleMember scheduleMember : scheduleMembers) {
+            notificationService.sendScheduleInvited(scheduleMember.memberId(), savedSchedule.getId());
+        }
     }
 
     public ScheduleResponseDto findById(Long memberId, Long scheduleId) {
@@ -110,10 +122,10 @@ public class ScheduleService {
         validateMember(schedule, member);
         validateAccepted(schedule, member);
 
-        // TODO participants에게 알림 발송
-
         ScheduleEditor scheduleEditor = requestDto.toEditor();
         schedule.edit(scheduleEditor);
+
+        notificationService.sendScheduleEdited(scheduleId);
     }
 
     @Transactional
@@ -135,7 +147,7 @@ public class ScheduleService {
         validateMember(schedule, member);
         validateOwner(schedule, member);
 
-        // TODO participants에게 알림 발송
+        notificationService.sendScheduleDeleted(scheduleId);
 
         deleteAllDiaryImages(schedule);
         scheduleRepository.delete(schedule);

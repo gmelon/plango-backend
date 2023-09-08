@@ -3,6 +3,7 @@ package dev.gmelon.plango.domain.schedule;
 import dev.gmelon.plango.domain.BaseTimeEntity;
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.member.Member;
+import dev.gmelon.plango.exception.schedule.ScheduleOwnerNotExistsException;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -119,6 +120,14 @@ public class Schedule extends BaseTimeEntity {
         return scheduleMembers.stream()
                 .anyMatch(scheduleMember -> scheduleMember.isOwner() && scheduleMember.isMemberEquals(memberId));
 
+    }
+
+    public Long ownerId() {
+        return scheduleMembers.stream()
+                .filter(ScheduleMember::isOwner)
+                .map(ScheduleMember::memberId)
+                .findAny()
+                .orElseThrow(ScheduleOwnerNotExistsException::new);
     }
 
     public void increaseScheduleMemberCount() {

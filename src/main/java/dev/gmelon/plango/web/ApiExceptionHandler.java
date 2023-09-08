@@ -1,6 +1,7 @@
 package dev.gmelon.plango.web;
 
 import dev.gmelon.plango.exception.InputInvalidException;
+import dev.gmelon.plango.exception.InternalServerException;
 import dev.gmelon.plango.exception.PlangoException;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import dev.gmelon.plango.exception.dto.InputInvalidErrorResponseDto;
@@ -33,11 +34,11 @@ import static org.springframework.http.HttpStatus.*;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
-    @ExceptionHandler(PlangoException.class)
-    public ResponseEntity<ErrorResponseDto> plangoExceptionHandler(PlangoException exception) {
+    @ExceptionHandler(InternalServerException.class)
+    public ResponseEntity<ErrorResponseDto> internalServerExceptionHandler(InternalServerException exception) {
         return ResponseEntity
                 .status(exception.getStatus())
-                .body(ErrorResponseDto.from(exception));
+                .body(ErrorResponseDto.internalSeverError());
     }
 
     @ExceptionHandler(InputInvalidException.class)
@@ -45,6 +46,13 @@ public class ApiExceptionHandler {
         return ResponseEntity
                 .status(exception.getStatus())
                 .body(InputInvalidErrorResponseDto.from(exception));
+    }
+
+    @ExceptionHandler(PlangoException.class)
+    public ResponseEntity<ErrorResponseDto> plangoExceptionHandler(PlangoException exception) {
+        return ResponseEntity
+                .status(exception.getStatus())
+                .body(ErrorResponseDto.from(exception));
     }
 
     @ExceptionHandler(AuthenticationException.class)

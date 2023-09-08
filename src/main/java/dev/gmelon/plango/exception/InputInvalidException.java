@@ -4,7 +4,7 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class InputInvalidException extends PlangoException {
+public abstract class InputInvalidException extends PlangoException {
 
     private final String field;
 

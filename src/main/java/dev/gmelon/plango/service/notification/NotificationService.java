@@ -78,14 +78,15 @@ public class NotificationService {
     }
 
     @Transactional
-    public void sendScheduleRejectedByParticipant(Long receiverMemberId, Long scheduleId, String participantNickname) {
+    public void sendScheduleAccepted(Long receiverMemberId, Long scheduleId, Long participantId) {
         Member receiverMember = findMemberById(receiverMemberId);
         Schedule schedule = findScheduleById(scheduleId);
+        Member participant = findMemberById(participantId);
 
         Notification notification = Notification.builder()
-                .title(SCHEDULE_REJECTED_BY_PARTICIPANT.formatTitle(schedule.getTitle()))
-                .content(SCHEDULE_REJECTED_BY_PARTICIPANT.formatContent(participantNickname))
-                .notificationType(SCHEDULE_REJECTED_BY_PARTICIPANT)
+                .title(SCHEDULE_ACCEPTED.formatTitle(schedule.getTitle()))
+                .content(SCHEDULE_ACCEPTED.formatContent(participant.getNickname()))
+                .notificationType(SCHEDULE_ACCEPTED)
                 .argument(schedule.getId().toString())
                 .member(receiverMember)
                 .build();
@@ -93,13 +94,14 @@ public class NotificationService {
     }
 
     @Transactional
-    public void sendScheduleExitedByParticipant(Long receiverMemberId, Long scheduleId, String participantNickname) {
+    public void sendScheduleExitedByParticipant(Long receiverMemberId, Long scheduleId, Long participantId) {
         Member receiverMember = findMemberById(receiverMemberId);
         Schedule schedule = findScheduleById(scheduleId);
+        Member participant = findMemberById(participantId);
 
         Notification notification = Notification.builder()
                 .title(SCHEDULE_EXITED_BY_PARTICIPANT.formatTitle(schedule.getTitle()))
-                .content(SCHEDULE_EXITED_BY_PARTICIPANT.formatContent(participantNickname))
+                .content(SCHEDULE_EXITED_BY_PARTICIPANT.formatContent(participant.getNickname()))
                 .notificationType(SCHEDULE_EXITED_BY_PARTICIPANT)
                 .argument(schedule.getId().toString())
                 .member(receiverMember)
@@ -137,6 +139,25 @@ public class NotificationService {
                         .notificationType(SCHEDULE_EDITED)
                         .member(scheduleMember.getMember())
                         .argument(schedule.getId().toString())
+                        .build())
+                .collect(toList());
+    }
+
+    @Transactional
+    public void sendScheduleDeleted(Long scheduleId) {
+        Schedule schedule = findScheduleById(scheduleId);
+
+        List<Notification> notifications = mapToScheduleDeletedNotifications(schedule);
+        notificationRepository.saveAll(notifications);
+    }
+
+    private List<Notification> mapToScheduleDeletedNotifications(Schedule schedule) {
+        return schedule.getScheduleMembers().stream()
+                .map(scheduleMember -> Notification.builder()
+                        .title(SCHEDULE_DELETED.formatTitle(schedule.getTitle()))
+                        .content(SCHEDULE_DELETED.formatContent())
+                        .notificationType(SCHEDULE_DELETED)
+                        .member(scheduleMember.getMember())
                         .build())
                 .collect(toList());
     }

@@ -12,9 +12,6 @@ spring:
     hibernate:
       ddl-auto: create
     database: h2
-    properties:
-      hibernate:
-        show_sql: true
 server:
   servlet:
     session:
@@ -22,4 +19,7 @@ server:
 decorator:
   datasource:
     p6spy:
-      enable-logging: false
+      enable-logging: true
+#logging:
+#  level:
+#    root: trace

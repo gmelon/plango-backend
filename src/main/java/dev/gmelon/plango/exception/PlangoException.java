@@ -4,7 +4,7 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class PlangoException extends RuntimeException {
+public abstract class PlangoException extends RuntimeException {
 
     private final HttpStatus status;
 

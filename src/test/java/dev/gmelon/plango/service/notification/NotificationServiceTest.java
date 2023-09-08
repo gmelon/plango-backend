@@ -168,16 +168,16 @@ class NotificationServiceTest {
     }
 
     @Test
-    void 일정_생성자에게_일정_참가자의_일정_초대_거절_알림_발송() {
+    void 일정_참가자가_수락시_생성자에게_알림_발송() {
         // when
-        notificationService.sendScheduleRejectedByParticipant(memberA.getId(), scheduleA.getId(), memberB.getNickname());
+        notificationService.sendScheduleAccepted(memberA.getId(), scheduleA.getId(), memberB.getId());
 
         // then
         Notification expectedNotification = Notification.builder()
-                .title(String.format(SCHEDULE_REJECTED_BY_PARTICIPANT.getTitleMessageFormat(), scheduleA.getTitle()))
-                .content(String.format(SCHEDULE_REJECTED_BY_PARTICIPANT.getContentMessageFormat(), memberB.getNickname()))
+                .title(String.format(SCHEDULE_ACCEPTED.getTitleMessageFormat(), scheduleA.getTitle()))
+                .content(String.format(SCHEDULE_ACCEPTED.getContentMessageFormat(), memberB.getNickname()))
                 .argument(scheduleA.getId().toString())
-                .notificationType(SCHEDULE_REJECTED_BY_PARTICIPANT)
+                .notificationType(SCHEDULE_ACCEPTED)
                 .build();
 
         Notification foundNotification = notificationRepository.findAll().get(0);
@@ -187,7 +187,7 @@ class NotificationServiceTest {
     @Test
     void 일정_생성자에게_일정_참가자의_일정_탈퇴_알림_발송() {
         // when
-        notificationService.sendScheduleExitedByParticipant(memberA.getId(), scheduleA.getId(), memberB.getNickname());
+        notificationService.sendScheduleExitedByParticipant(memberA.getId(), scheduleA.getId(), memberB.getId());
 
         // then
         Notification expectedNotification = Notification.builder()
@@ -228,6 +228,25 @@ class NotificationServiceTest {
                 .content(String.format(SCHEDULE_EDITED.getContentMessageFormat()))
                 .argument(scheduleA.getId().toString())
                 .notificationType(SCHEDULE_EDITED)
+                .build();
+        List<Long> expectedMemberIds = List.of(memberA.getId(), memberB.getId());
+
+        List<Notification> foundNotifications = notificationRepository.findAll();
+        for (int i = 0, foundNotificationsSize = foundNotifications.size(); i < foundNotificationsSize; i++) {
+            assertNotificationIsEqualsTo(foundNotifications.get(i), expectedNotification, expectedMemberIds.get(i));
+        }
+    }
+
+    @Test
+    void 일정_참가자들에게_일정_삭제_알림_발송() {
+        // when
+        notificationService.sendScheduleDeleted(scheduleA.getId());
+
+        // then
+        Notification expectedNotification = Notification.builder()
+                .title(String.format(SCHEDULE_DELETED.getTitleMessageFormat(), scheduleA.getTitle()))
+                .content(String.format(SCHEDULE_DELETED.getContentMessageFormat()))
+                .notificationType(SCHEDULE_DELETED)
                 .build();
         List<Long> expectedMemberIds = List.of(memberA.getId(), memberB.getId());
 
