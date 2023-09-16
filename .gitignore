@@ -44,3 +44,5 @@ bin/
 # secure infomation
 application-local-s3.yml
 application-local-auth.yml
+src/main/resources/firebase/
+firebase-adminsdk.json

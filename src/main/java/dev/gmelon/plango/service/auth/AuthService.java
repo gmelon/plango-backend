@@ -70,6 +70,8 @@ public class AuthService {
         scheduleMemberRepository.deleteAllByScheduleIds(scheduleIds);
         scheduleRepository.deleteAllByScheduleIds(scheduleIds);
 
+        // TODO placeSearchRecord, Notification 삭제
+
         scheduleMemberRepository.deleteAllByMemberId(memberId);
         memberRepository.deleteById(memberId);
     }

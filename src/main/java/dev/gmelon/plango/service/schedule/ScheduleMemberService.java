@@ -26,7 +26,7 @@ public class ScheduleMemberService {
 
     @Transactional
     public void invite(Long scheduleOwnerMemberId, Long scheduleId, ScheduleMemberAddRequestDto requestDto) {
-        Schedule schedule = findScheduleById(scheduleId);
+        Schedule schedule = findScheduleByIdWithLock(scheduleId);
         validateOwner(schedule, scheduleOwnerMemberId);
 
         Long newMemberId = requestDto.getMemberId();
@@ -57,7 +57,7 @@ public class ScheduleMemberService {
 
     @Transactional
     public void remove(Long scheduleOwnerMemberId, Long scheduleId, Long targetMemberId) {
-        Schedule schedule = findScheduleById(scheduleId);
+        Schedule schedule = findScheduleByIdWithLock(scheduleId);
         validateOwner(schedule, scheduleOwnerMemberId);
 
         validateMemberExists(schedule, targetMemberId);
@@ -97,7 +97,7 @@ public class ScheduleMemberService {
 
     @Transactional
     public void rejectOrExitSchedule(Long memberId, Long scheduleId) {
-        Schedule schedule = findScheduleById(scheduleId);
+        Schedule schedule = findScheduleByIdWithLock(scheduleId);
         validateMemberNotOwner(memberId, schedule);
 
         ScheduleMember scheduleMember = findScheduleMemberByMemberIdAndScheduleId(memberId, scheduleId);
@@ -108,8 +108,8 @@ public class ScheduleMemberService {
         schedule.decreaseScheduleMemberCount();
     }
 
-    private Schedule findScheduleById(Long scheduleId) {
-        return scheduleRepository.findByIdWithScheduleMembers(scheduleId)
+    private Schedule findScheduleByIdWithLock(Long scheduleId) {
+        return scheduleRepository.findByIdWithScheduleMembersWithLock(scheduleId)
                 .orElseThrow(NoSuchScheduleException::new);
     }
 
