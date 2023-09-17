@@ -74,7 +74,6 @@ class ScheduleMemberControllerTest {
                 scheduleMemberRepository.findByMemberIdAndScheduleId(anotherMember.getId(), givenSchedule.getId()).get());
         assertThat(addedScheduleMember.isAccepted()).isFalse();
         assertThat(addedScheduleMember.isOwner()).isFalse();
-        assertThat(scheduleRepository.findById(givenSchedule.getId()).get().getScheduleMemberCount()).isEqualTo(2);
     }
 
     @PlangoMockUser
@@ -161,7 +160,6 @@ class ScheduleMemberControllerTest {
 
         assertThat(scheduleMemberRepository.findByMemberIdAndScheduleId(anotherMember.getId(), givenSchedule.getId()))
                 .isEmpty();
-        assertThat(scheduleRepository.findById(givenSchedule.getId()).get().getScheduleMemberCount()).isEqualTo(1);
     }
 
     @PlangoMockUser

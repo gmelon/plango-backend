@@ -58,9 +58,6 @@ public class Schedule extends BaseTimeEntity {
     @OneToMany(mappedBy = "schedule", cascade = ALL, orphanRemoval = true)
     private List<ScheduleMember> scheduleMembers = new ArrayList<>();
 
-    @Column(nullable = false)
-    private int scheduleMemberCount;
-
     @Builder
     public Schedule(
             String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime,
@@ -98,12 +95,10 @@ public class Schedule extends BaseTimeEntity {
 
     public void setScheduleMembers(List<ScheduleMember> scheduleMembers) {
         this.scheduleMembers = scheduleMembers;
-        this.scheduleMemberCount = scheduleMembers.size();
     }
 
     public void setSingleOwnerScheduleMember(Member member) {
         this.scheduleMembers = List.of(ScheduleMember.createOwner(member, this));
-        this.scheduleMemberCount = 1;
     }
 
     public boolean isMember(Long memberId) {
@@ -128,14 +123,6 @@ public class Schedule extends BaseTimeEntity {
                 .map(ScheduleMember::memberId)
                 .findAny()
                 .orElseThrow(ScheduleOwnerNotExistsException::new);
-    }
-
-    public void increaseScheduleMemberCount() {
-        this.scheduleMemberCount++;
-    }
-
-    public void decreaseScheduleMemberCount() {
-        this.scheduleMemberCount--;
     }
 
     @Override

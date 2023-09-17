@@ -24,7 +24,7 @@ public class ScheduleListQueryDto {
 
     private LocalTime endTime;
 
-    private int memberCount;
+    private long memberCount;
 
     private Boolean isOwner;
 

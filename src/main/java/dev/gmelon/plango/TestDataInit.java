@@ -124,8 +124,6 @@ public class TestDataInit {
         Schedule scheduleD = scheduleRepository.findByIdWithScheduleMembers(createdScheduleDId).get();
         scheduleD.getScheduleMembers().add(ScheduleMember.builder().member(memberB).accepted(true).schedule(scheduleD).build());
         scheduleD.getScheduleMembers().add(ScheduleMember.builder().member(memberC).accepted(false).schedule(scheduleD).build());
-        scheduleD.increaseScheduleMemberCount();
-        scheduleD.increaseScheduleMemberCount();
         scheduleRepository.save(scheduleD);
 
         List<PlaceSearchRecord> placeSearchRecords = IntStream.rangeClosed(1, 60)

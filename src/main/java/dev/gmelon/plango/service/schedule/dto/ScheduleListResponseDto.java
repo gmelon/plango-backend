@@ -50,7 +50,7 @@ public class ScheduleListResponseDto {
                 .date(queryDto.getDate())
                 .startTime(queryDto.getStartTime())
                 .endTime(queryDto.getEndTime())
-                .memberCount(queryDto.getMemberCount())
+                .memberCount((int) queryDto.getMemberCount())
                 .isOwner(queryDto.getIsOwner())
                 .latitude(queryDto.getLatitude())
                 .longitude(queryDto.getLongitude())

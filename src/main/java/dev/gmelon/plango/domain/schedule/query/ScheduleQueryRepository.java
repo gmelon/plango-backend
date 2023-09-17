@@ -25,8 +25,8 @@ public interface ScheduleQueryRepository extends JpaRepository<Schedule, Long> {
     List<ScheduleCountQueryDto> countOfDaysByMemberId(@Param("memberId") Long memberId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     @Query("select new dev.gmelon.plango.domain.schedule.query.dto.ScheduleListQueryDto(" +
-                "s.id, s.title, s.content, s.date, s.startTime, s.endTime, s.scheduleMemberCount, sm.owner, sm.accepted, " +
-                "s.latitude, s.longitude, s.roadAddress, s.placeName, s.done) " +
+                "s.id, s.title, s.content, s.date, s.startTime, s.endTime, (select count(*) from ScheduleMember sm where sm.schedule.id = s.id), " +
+                "sm.owner, sm.accepted, s.latitude, s.longitude, s.roadAddress, s.placeName, s.done) " +
             "from Schedule s join s.scheduleMembers sm " +
             "where sm.member.id = :memberId " +
             "and s.date = :date " +

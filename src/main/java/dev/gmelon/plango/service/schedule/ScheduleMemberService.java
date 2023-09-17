@@ -33,7 +33,6 @@ public class ScheduleMemberService {
         validateMemberNotExists(schedule, newMemberId);
 
         saveNewScheduleMember(newMemberId, schedule);
-        schedule.increaseScheduleMemberCount();
 
         notificationService.sendScheduleInvited(newMemberId, scheduleId);
     }
@@ -64,7 +63,6 @@ public class ScheduleMemberService {
         validateTargetMemberNotOwner(scheduleOwnerMemberId, targetMemberId);
 
         scheduleMemberRepository.deleteByMemberIdAndScheduleId(targetMemberId, schedule.getId());
-        schedule.decreaseScheduleMemberCount();
 
         notificationService.sendScheduleExitedByOwner(targetMemberId, scheduleId);
     }
@@ -105,7 +103,6 @@ public class ScheduleMemberService {
 
         // TODO scheduleMemberRepository.delete(scheduleMember) 로는 왜 삭제 안 되는지
         scheduleMemberRepository.deleteByMemberIdAndScheduleId(memberId, scheduleId);
-        schedule.decreaseScheduleMemberCount();
     }
 
     private Schedule findScheduleByIdWithLock(Long scheduleId) {

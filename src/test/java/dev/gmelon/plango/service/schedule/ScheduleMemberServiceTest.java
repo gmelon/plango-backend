@@ -78,7 +78,6 @@ class ScheduleMemberServiceTest {
                 scheduleMemberRepository.findByMemberIdAndScheduleId(memberB.getId(), givenSchedule.getId()).get());
         assertThat(addedScheduleMember.isAccepted()).isFalse();
         assertThat(addedScheduleMember.isOwner()).isFalse();
-        assertThat(scheduleRepository.findById(givenSchedule.getId()).get().getScheduleMemberCount()).isEqualTo(2);
     }
 
     @Test
@@ -139,7 +138,6 @@ class ScheduleMemberServiceTest {
         // then
         assertThat(scheduleMemberRepository.findByMemberIdAndScheduleId(memberB.getId(), givenSchedule.getId()))
                 .isEmpty();
-        assertThat(scheduleRepository.findById(givenSchedule.getId()).get().getScheduleMemberCount()).isEqualTo(1);
     }
 
     @Test
