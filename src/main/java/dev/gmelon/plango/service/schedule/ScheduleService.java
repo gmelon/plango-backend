@@ -13,7 +13,6 @@ import dev.gmelon.plango.domain.schedule.query.dto.ScheduleListQueryDto;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.schedule.*;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
-import dev.gmelon.plango.service.notification.NotificationService;
 import dev.gmelon.plango.service.schedule.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,7 +35,7 @@ public class ScheduleService {
     private final MemberRepository memberRepository;
     private final DiaryRepository diaryRepository;
     private final S3Repository s3Repository;
-    private final NotificationService notificationService;
+    private final ScheduleNotificationService scheduleNotificationService;
 
     @Transactional
     public Long create(Long memberId, ScheduleCreateRequestDto requestDto) {
@@ -49,7 +48,8 @@ public class ScheduleService {
         requestSchedule.setScheduleMembers(allScheduleMembers);
 
         Schedule savedSchedule = scheduleRepository.save(requestSchedule);
-        sendScheduleInvitedNotification(participantScheduleMembers, savedSchedule);
+        scheduleNotificationService.sendInvitedNotifications(savedSchedule, participantScheduleMembers);
+
         return savedSchedule.getId();
     }
 
@@ -62,12 +62,6 @@ public class ScheduleService {
                 .collect(toList());
     }
 
-    private List<ScheduleMember> addOwnerScheduleMember(List<ScheduleMember> participantScheduleMembers, Member owner, Schedule requestSchedule) {
-        ArrayList<ScheduleMember> allScheduleMembers = new ArrayList<>(participantScheduleMembers);
-        allScheduleMembers.add(ScheduleMember.createOwner(owner, requestSchedule));
-        return allScheduleMembers;
-    }
-
     private void validateParticipantsAreNotOwner(List<Long> participantIds, Long ownerId) {
         participantIds.stream()
                 .filter(participantId -> participantId.equals(ownerId))
@@ -77,10 +71,10 @@ public class ScheduleService {
                 });
     }
 
-    private void sendScheduleInvitedNotification(List<ScheduleMember> scheduleMembers, Schedule savedSchedule) {
-        for (ScheduleMember scheduleMember : scheduleMembers) {
-            notificationService.sendScheduleInvited(scheduleMember.memberId(), savedSchedule.getId());
-        }
+    private List<ScheduleMember> addOwnerScheduleMember(List<ScheduleMember> participantScheduleMembers, Member owner, Schedule requestSchedule) {
+        ArrayList<ScheduleMember> allScheduleMembers = new ArrayList<>(participantScheduleMembers);
+        allScheduleMembers.add(ScheduleMember.createOwner(owner, requestSchedule));
+        return allScheduleMembers;
     }
 
     public ScheduleResponseDto findById(Long memberId, Long scheduleId) {
@@ -115,17 +109,17 @@ public class ScheduleService {
     }
 
     @Transactional
-    public void edit(Long memberId, Long scheduleId, ScheduleEditRequestDto requestDto) {
-        Member member = findMemberById(memberId);
+    public void edit(Long editorMemberId, Long scheduleId, ScheduleEditRequestDto requestDto) {
+        Member editorMember = findMemberById(editorMemberId);
         Schedule schedule = findScheduleById(scheduleId);
 
-        validateMember(schedule, member);
-        validateAccepted(schedule, member);
+        validateMember(schedule, editorMember);
+        validateAccepted(schedule, editorMember);
 
         ScheduleEditor scheduleEditor = requestDto.toEditor();
         schedule.edit(scheduleEditor);
 
-        notificationService.sendScheduleEdited(scheduleId);
+        scheduleNotificationService.sendEditedNotifications(schedule, editorMember);
     }
 
     @Transactional
@@ -147,7 +141,7 @@ public class ScheduleService {
         validateMember(schedule, member);
         validateOwner(schedule, member);
 
-        notificationService.sendScheduleDeleted(scheduleId);
+        scheduleNotificationService.sendDeletedNotification(schedule, memberId);
 
         deleteAllDiaryImages(schedule);
         scheduleRepository.delete(schedule);

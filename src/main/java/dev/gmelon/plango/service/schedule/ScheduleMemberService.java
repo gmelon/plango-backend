@@ -8,7 +8,6 @@ import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.schedule.*;
-import dev.gmelon.plango.service.notification.NotificationService;
 import dev.gmelon.plango.service.schedule.dto.ScheduleMemberAddRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,25 +21,25 @@ public class ScheduleMemberService {
     private final ScheduleRepository scheduleRepository;
     private final ScheduleMemberRepository scheduleMemberRepository;
     private final MemberRepository memberRepository;
-    private final NotificationService notificationService;
+    private final ScheduleNotificationService scheduleNotificationService;
 
     @Transactional
     public void invite(Long scheduleOwnerMemberId, Long scheduleId, ScheduleMemberAddRequestDto requestDto) {
-        Schedule schedule = findScheduleByIdWithLock(scheduleId);
+        Schedule schedule = findScheduleById(scheduleId);
         validateOwner(schedule, scheduleOwnerMemberId);
 
         Long newMemberId = requestDto.getMemberId();
         validateMemberNotExists(schedule, newMemberId);
 
-        saveNewScheduleMember(newMemberId, schedule);
+        ScheduleMember scheduleMember = createNewScheduleMember(newMemberId, schedule);
+        scheduleMemberRepository.save(scheduleMember);
 
-        notificationService.sendScheduleInvited(newMemberId, scheduleId);
+        scheduleNotificationService.sendInvitedNotification(schedule, scheduleMember);
     }
 
-    private void saveNewScheduleMember(Long newMemberId, Schedule schedule) {
+    private ScheduleMember createNewScheduleMember(Long newMemberId, Schedule schedule) {
         Member newMember = findMemberById(newMemberId);
-        ScheduleMember newScheduleMember = ScheduleMember.createParticipant(newMember, schedule);
-        scheduleMemberRepository.save(newScheduleMember);
+        return ScheduleMember.createParticipant(newMember, schedule);
     }
 
     private void validateMemberNotExists(Schedule schedule, Long memberId) {
@@ -56,20 +55,21 @@ public class ScheduleMemberService {
 
     @Transactional
     public void remove(Long scheduleOwnerMemberId, Long scheduleId, Long targetMemberId) {
-        Schedule schedule = findScheduleByIdWithLock(scheduleId);
+        Schedule schedule = findScheduleById(scheduleId);
         validateOwner(schedule, scheduleOwnerMemberId);
 
         validateMemberExists(schedule, targetMemberId);
         validateTargetMemberNotOwner(scheduleOwnerMemberId, targetMemberId);
 
-        scheduleMemberRepository.deleteByMemberIdAndScheduleId(targetMemberId, schedule.getId());
+        ScheduleMember targetScheduleMember = findScheduleMemberByMemberIdAndScheduleId(targetMemberId, scheduleId);
+        schedule.deleteScheduleMember(targetScheduleMember);
 
-        notificationService.sendScheduleExitedByOwner(targetMemberId, scheduleId);
+        scheduleNotificationService.sendRemovedNotification(schedule, targetMemberId);
     }
 
-    private void validateTargetMemberNotOwner(Long memberId, Long targetMemberId) {
-        if (targetMemberId.equals(memberId)) {
-            throw new DeleteOwnerOfSchduleException();
+    private void validateOwner(Schedule schedule, Long memberId) {
+        if (!schedule.isOwner(memberId)) {
+            throw new NoOwnerOfScheduleException();
         }
     }
 
@@ -79,9 +79,9 @@ public class ScheduleMemberService {
         }
     }
 
-    private void validateOwner(Schedule schedule, Long memberId) {
-        if (!schedule.isOwner(memberId)) {
-            throw new NoOwnerOfScheduleException();
+    private void validateTargetMemberNotOwner(Long memberId, Long targetMemberId) {
+        if (targetMemberId.equals(memberId)) {
+            throw new DeleteOwnerOfSchduleException();
         }
     }
 
@@ -90,23 +90,22 @@ public class ScheduleMemberService {
         ScheduleMember scheduleMember = findScheduleMemberByMemberIdAndScheduleId(memberId, scheduleId);
         scheduleMember.accept();
 
-        notificationService.sendScheduleAccepted(scheduleMember.getSchedule().ownerId(), scheduleId, scheduleMember.memberId());
+        scheduleNotificationService.sendAcceptedNotification(scheduleId, memberId);
     }
 
     @Transactional
     public void rejectOrExitSchedule(Long memberId, Long scheduleId) {
-        Schedule schedule = findScheduleByIdWithLock(scheduleId);
+        Schedule schedule = findScheduleById(scheduleId);
         validateMemberNotOwner(memberId, schedule);
 
         ScheduleMember scheduleMember = findScheduleMemberByMemberIdAndScheduleId(memberId, scheduleId);
-        notificationService.sendScheduleExitedByParticipant(schedule.ownerId(), scheduleId, scheduleMember.memberId());
+        schedule.deleteScheduleMember(scheduleMember);
 
-        // TODO scheduleMemberRepository.delete(scheduleMember) 로는 왜 삭제 안 되는지
-        scheduleMemberRepository.deleteByMemberIdAndScheduleId(memberId, scheduleId);
+        scheduleNotificationService.sendRejectedOrExitedNotification(schedule, memberId);
     }
 
-    private Schedule findScheduleByIdWithLock(Long scheduleId) {
-        return scheduleRepository.findByIdWithScheduleMembersWithLock(scheduleId)
+    private Schedule findScheduleById(Long scheduleId) {
+        return scheduleRepository.findByIdWithScheduleMembers(scheduleId)
                 .orElseThrow(NoSuchScheduleException::new);
     }
 

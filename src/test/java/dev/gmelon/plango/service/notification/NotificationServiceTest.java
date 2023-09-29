@@ -5,10 +5,7 @@ import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.notification.Notification;
 import dev.gmelon.plango.domain.notification.NotificationRepository;
-import dev.gmelon.plango.domain.schedule.Schedule;
-import dev.gmelon.plango.domain.schedule.ScheduleMember;
-import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
-import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.domain.notification.type.TestNotificationType;
 import dev.gmelon.plango.exception.notification.NotificationAccessDeniedException;
 import dev.gmelon.plango.service.notification.dto.NotificationResponseDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +17,8 @@ import org.springframework.test.context.jdbc.Sql;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static dev.gmelon.plango.domain.notification.NotificationType.*;
+import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.NotificationArguments;
+import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.SCHEDULE_INVITED;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,18 +30,12 @@ class NotificationServiceTest {
     private Member memberA;
     private Member memberB;
 
-    private Schedule scheduleA;
-
     @Autowired
-    private MemberRepository memberRepository;
-    @Autowired
-    private ScheduleRepository scheduleRepository;
-    @Autowired
-    private ScheduleMemberRepository scheduleMemberRepository;
+    private NotificationService notificationService;
     @Autowired
     private NotificationRepository notificationRepository;
     @Autowired
-    private NotificationService notificationService;
+    private MemberRepository memberRepository;
 
     @BeforeEach
     void setUp() {
@@ -62,13 +54,6 @@ class NotificationServiceTest {
                 .role(MemberRole.ROLE_USER)
                 .build();
         memberRepository.save(memberB);
-
-        scheduleA = Schedule.builder()
-                .title("일정 제목")
-                .build();
-        scheduleRepository.save(scheduleA);
-        scheduleMemberRepository.save(ScheduleMember.createOwner(memberA, scheduleA));
-        scheduleMemberRepository.save(ScheduleMember.createParticipant(memberB, scheduleA));
     }
 
     @Test
@@ -151,117 +136,33 @@ class NotificationServiceTest {
     }
 
     @Test
-    void 일정_참가자에게_일정_초대_알림_발송() {
-        // when
-        notificationService.sendScheduleInvited(memberB.getId(), scheduleA.getId());
-
-        // then
-        Notification expectedNotification = Notification.builder()
-                .title(String.format(SCHEDULE_INVITED.getTitleMessageFormat(), scheduleA.getTitle()))
-                .content(String.format(SCHEDULE_INVITED.getContentMessageFormat()))
-                .argument(scheduleA.getId().toString())
-                .notificationType(SCHEDULE_INVITED)
+    void 알림_생성() {
+        // given
+        NotificationArguments notificationArguments = NotificationArguments.builderOf(TestNotificationType.SCHEDULE_INVITED)
+                .titleArgument("한강 산책")
+                .contentArgument("회원 A")
+                .contentArgument("회원 B")
+                .notificationArgument("1")
                 .build();
 
+        // when
+        notificationService.send(memberA.getId(), TestNotificationType.SCHEDULE_INVITED, notificationArguments);
+
+        // then
         Notification foundNotification = notificationRepository.findAll().get(0);
-        assertNotificationIsEqualsTo(foundNotification, expectedNotification, memberB.getId());
-    }
-
-    @Test
-    void 일정_참가자가_수락시_생성자에게_알림_발송() {
-        // when
-        notificationService.sendScheduleAccepted(memberA.getId(), scheduleA.getId(), memberB.getId());
-
-        // then
         Notification expectedNotification = Notification.builder()
-                .title(String.format(SCHEDULE_ACCEPTED.getTitleMessageFormat(), scheduleA.getTitle()))
-                .content(String.format(SCHEDULE_ACCEPTED.getContentMessageFormat(), memberB.getNickname()))
-                .argument(scheduleA.getId().toString())
-                .notificationType(SCHEDULE_ACCEPTED)
+                .title("일정 제목 - 한강 산책")
+                .content("회원 A님이 회원 B님을 일정에 초대했습니다.")
+                .notificationType(TestNotificationType.SCHEDULE_INVITED)
+                .argument("1")
+                .member(memberA)
                 .build();
-
-        Notification foundNotification = notificationRepository.findAll().get(0);
-        assertNotificationIsEqualsTo(foundNotification, expectedNotification, memberA.getId());
-    }
-
-    @Test
-    void 일정_생성자에게_일정_참가자의_일정_탈퇴_알림_발송() {
-        // when
-        notificationService.sendScheduleExitedByParticipant(memberA.getId(), scheduleA.getId(), memberB.getId());
-
-        // then
-        Notification expectedNotification = Notification.builder()
-                .title(String.format(SCHEDULE_EXITED_BY_PARTICIPANT.getTitleMessageFormat(), scheduleA.getTitle()))
-                .content(String.format(SCHEDULE_EXITED_BY_PARTICIPANT.getContentMessageFormat(), memberB.getNickname()))
-                .argument(scheduleA.getId().toString())
-                .notificationType(SCHEDULE_EXITED_BY_PARTICIPANT)
-                .build();
-
-        Notification foundNotification = notificationRepository.findAll().get(0);
-        assertNotificationIsEqualsTo(foundNotification, expectedNotification, memberA.getId());
-    }
-
-    @Test
-    void 일정_참가자에게_일정_탈퇴_알림_발송() {
-        // when
-        notificationService.sendScheduleExitedByOwner(memberB.getId(), scheduleA.getId());
-
-        // then
-        Notification expectedNotification = Notification.builder()
-                .title(String.format(SCHEDULE_EXITED_BY_OWNER.getTitleMessageFormat(), scheduleA.getTitle()))
-                .content(String.format(SCHEDULE_EXITED_BY_OWNER.getContentMessageFormat()))
-                .notificationType(SCHEDULE_EXITED_BY_OWNER)
-                .build();
-
-        Notification foundNotification = notificationRepository.findAll().get(0);
-        assertNotificationIsEqualsTo(foundNotification, expectedNotification, memberB.getId());
-    }
-
-    @Test
-    void 일정_참가자들에게_일정_수정_알림_발송() {
-        // when
-        notificationService.sendScheduleEdited(scheduleA.getId());
-
-        // then
-        Notification expectedNotification = Notification.builder()
-                .title(String.format(SCHEDULE_EDITED.getTitleMessageFormat(), scheduleA.getTitle()))
-                .content(String.format(SCHEDULE_EDITED.getContentMessageFormat()))
-                .argument(scheduleA.getId().toString())
-                .notificationType(SCHEDULE_EDITED)
-                .build();
-        List<Long> expectedMemberIds = List.of(memberA.getId(), memberB.getId());
-
-        List<Notification> foundNotifications = notificationRepository.findAll();
-        for (int i = 0, foundNotificationsSize = foundNotifications.size(); i < foundNotificationsSize; i++) {
-            assertNotificationIsEqualsTo(foundNotifications.get(i), expectedNotification, expectedMemberIds.get(i));
-        }
-    }
-
-    @Test
-    void 일정_참가자들에게_일정_삭제_알림_발송() {
-        // when
-        notificationService.sendScheduleDeleted(scheduleA.getId());
-
-        // then
-        Notification expectedNotification = Notification.builder()
-                .title(String.format(SCHEDULE_DELETED.getTitleMessageFormat(), scheduleA.getTitle()))
-                .content(String.format(SCHEDULE_DELETED.getContentMessageFormat()))
-                .notificationType(SCHEDULE_DELETED)
-                .build();
-        List<Long> expectedMemberIds = List.of(memberA.getId(), memberB.getId());
-
-        List<Notification> foundNotifications = notificationRepository.findAll();
-        for (int i = 0, foundNotificationsSize = foundNotifications.size(); i < foundNotificationsSize; i++) {
-            assertNotificationIsEqualsTo(foundNotifications.get(i), expectedNotification, expectedMemberIds.get(i));
-        }
-    }
-
-    private void assertNotificationIsEqualsTo(Notification foundNotification, Notification expectedNotification, Long expectedReceivedMemberId) {
-        assertThat(foundNotification.memberId()).isEqualTo(expectedReceivedMemberId);
 
         assertThat(foundNotification)
                 .usingRecursiveComparison()
-                .ignoringFields("id", "member", "createdTime", "modifiedDate")
+                .ignoringFields("id", "modifiedDate", "createdTime", "member")
                 .isEqualTo(expectedNotification);
+        assertThat(foundNotification.memberId()).isEqualTo(memberA.getId());
     }
+
 }

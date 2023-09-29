@@ -2,13 +2,13 @@ package dev.gmelon.plango.domain.notification;
 
 import dev.gmelon.plango.domain.BaseTimeEntity;
 import dev.gmelon.plango.domain.member.Member;
+import dev.gmelon.plango.domain.notification.type.NotificationType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.proxy.HibernateProxy;
 
 import javax.persistence.*;
-
 import java.util.Objects;
 
 import static javax.persistence.FetchType.LAZY;
@@ -28,8 +28,7 @@ public class Notification extends BaseTimeEntity {
 
     private String content;
 
-    @Enumerated(EnumType.STRING)
-    private NotificationType notificationType;
+    private String notificationType;
 
     private String argument;
 
@@ -37,17 +36,19 @@ public class Notification extends BaseTimeEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    public boolean memberIdEquals(Long memberId) {
-        return member.getId().equals(memberId);
-    }
-
     @Builder
     public Notification(String title, String content, NotificationType notificationType, String argument, Member member) {
         this.title = title;
         this.content = content;
-        this.notificationType = notificationType;
+        if (notificationType != null) {
+            this.notificationType = notificationType.toString();
+        }
         this.argument = argument;
         this.member = member;
+    }
+
+    public boolean memberIdEquals(Long memberId) {
+        return member.getId().equals(memberId);
     }
 
     public Long memberId() {

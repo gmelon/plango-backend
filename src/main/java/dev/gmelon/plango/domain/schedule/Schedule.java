@@ -93,6 +93,10 @@ public class Schedule extends BaseTimeEntity {
         this.done = done;
     }
 
+    public void deleteScheduleMember(ScheduleMember scheduleMember) {
+        scheduleMembers.remove(scheduleMember);
+    }
+
     public void setScheduleMembers(List<ScheduleMember> scheduleMembers) {
         this.scheduleMembers = scheduleMembers;
     }

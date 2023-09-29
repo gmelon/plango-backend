@@ -18,12 +18,6 @@ public interface ScheduleMemberRepository extends JpaRepository<ScheduleMember, 
 
     @Modifying
     @Query("delete from ScheduleMember sm " +
-            "where sm.member.id = :memberId " +
-            "and sm.schedule.id = :scheduleId")
-    void deleteByMemberIdAndScheduleId(@Param("memberId") Long memberId, @Param("scheduleId") Long scheduleId);
-
-    @Modifying
-    @Query("delete from ScheduleMember sm " +
             "where sm.member.id = :memberId")
     void deleteAllByMemberId(@Param("memberId") Long memberId);
 
