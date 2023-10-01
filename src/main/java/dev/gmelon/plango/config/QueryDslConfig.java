@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class QueryDslConfig {
 
     @PersistenceContext

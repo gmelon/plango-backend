@@ -1,5 +1,6 @@
 package dev.gmelon.plango.service.notification;
 
+import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.notification.Notification;
@@ -9,6 +10,7 @@ import dev.gmelon.plango.domain.notification.type.NotificationType.NotificationA
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.notification.NoSuchNotificationException;
 import dev.gmelon.plango.exception.notification.NotificationAccessDeniedException;
+import dev.gmelon.plango.infrastructure.fcm.FirebaseCloudMessageService;
 import dev.gmelon.plango.service.notification.dto.NotificationResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final MemberRepository memberRepository;
+    private final FirebaseCloudMessageService firebaseCloudMessageService;
+    private final FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
 
     public List<NotificationResponseDto> findAll(Long memberId, int page) {
         return notificationRepository.findAllByMemberId(memberId, page).stream()
@@ -57,19 +61,20 @@ public class NotificationService {
         notificationRepository.deleteAllByMemberId(memberId);
     }
 
-    // TODO FCMService 구현 후 연동
-
     @Transactional
     public void send(Long targetMemberId, NotificationType notificationType, NotificationArguments notificationArguments) {
+        Member targetMember = findMemberById(targetMemberId);
+
         Notification notification = Notification.builder()
                 .notificationType(notificationType)
                 .argument(notificationArguments.getNotificationArgument())
-                .member(findMemberById(targetMemberId))
+                .member(targetMember)
                 .title(notificationType.formatTitle(notificationArguments.getTitleArguments()))
                 .content(notificationType.formatContent(notificationArguments.getContentArguments()))
                 .build();
-
         notificationRepository.save(notification);
+
+        firebaseCloudMessageService.sendMessageTo(notification, targetMember);
     }
 
     private Member findMemberById(Long receiverMemberId) {
