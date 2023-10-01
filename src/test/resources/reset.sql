@@ -1,3 +1,4 @@
+delete from firebase_cloud_message_token;
 delete from notification;
 delete from place_search_record;
 delete from diary_image;

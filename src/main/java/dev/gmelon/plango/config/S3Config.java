@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Profile({"real", "local"})
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class S3Config {
 
     @Value("${cloud.aws.credentials.access-key}")
