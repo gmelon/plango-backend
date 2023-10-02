@@ -13,4 +13,6 @@ public interface FirebaseCloudMessageTokenRepository extends JpaRepository<Fireb
     Optional<FirebaseCloudMessageToken> findByTokenValue(String tokenValue);
 
     List<FirebaseCloudMessageToken> findAllByMember(Member member);
+
+    void deleteAllByMemberId(Long memberId);
 }

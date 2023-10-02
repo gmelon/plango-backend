@@ -10,4 +10,6 @@ public interface PlaceSearchRecordRepository extends JpaRepository<PlaceSearchRe
 
     Optional<PlaceSearchRecord> findByKeywordAndMemberId(String keyword, Long memberId);
 
+    void deleteAllByMemberId(Long memberId);
+
 }

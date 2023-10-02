@@ -49,4 +49,6 @@ public interface DiaryRepository extends JpaRepository<Diary, Long> {
     @Query("delete from Diary d " +
             "where d.schedule.id in :scheduleIds")
     void deleteAllByScheduleIds(@Param("scheduleIds") List<Long> scheduleIds);
+
+    void deleteAllByMemberId(Long memberId);
 }

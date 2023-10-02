@@ -5,10 +5,17 @@ import dev.gmelon.plango.config.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
+import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageToken;
+import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.notification.Notification;
+import dev.gmelon.plango.domain.notification.NotificationRepository;
+import dev.gmelon.plango.domain.place.PlaceSearchRecord;
+import dev.gmelon.plango.domain.place.PlaceSearchRecordRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
+import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.domain.schedule.query.ScheduleQueryRepository;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
@@ -29,6 +36,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,6 +65,12 @@ class AuthControllerTest {
     private ScheduleQueryRepository scheduleQueryRepository;
     @Autowired
     private DiaryRepository diaryRepository;
+    @Autowired
+    private NotificationRepository notificationRepository;
+    @Autowired
+    private PlaceSearchRecordRepository placeSearchRecordRepository;
+    @Autowired
+    private FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
 
     @Test
     void 정상_값으로_회원가입() throws Exception {
@@ -257,22 +271,74 @@ class AuthControllerTest {
     void 회원이_스스로_회원_탈퇴() throws Exception {
         // given
         Member member = memberRepository.findAll().get(0);
+        Member anotherMember = createAnotherMember();
 
-        Schedule schedule = Schedule.builder()
-                .title("일정 제목")
+        Schedule personalSchedule = Schedule.builder()
+                .title("개인 일정")
                 .date(LocalDate.now())
                 .startTime(LocalTime.now())
                 .endTime(LocalTime.now())
                 .build();
-        schedule.setSingleOwnerScheduleMember(member);
-        scheduleRepository.save(schedule);
+        personalSchedule.setScheduleMembers(List.of(
+                ScheduleMember.createOwner(member, personalSchedule),
+                ScheduleMember.createParticipant(anotherMember, personalSchedule)
+        ));
+        scheduleRepository.save(personalSchedule);
+        List<Diary> diaries = List.of(Diary.builder()
+                        .member(member)
+                        .schedule(personalSchedule)
+                        .content("개인 일정 - owner 기록")
+                        .build(),
+                Diary.builder()
+                        .member(anotherMember)
+                        .schedule(personalSchedule)
+                        .content("개인 일정 - 참가자 기록")
+                        .build()
+        );
+        diaryRepository.saveAll(diaries);
+
+        Schedule participatingSchedule = Schedule.builder()
+                .title("참여 일정")
+                .date(LocalDate.now())
+                .startTime(LocalTime.now())
+                .endTime(LocalTime.now())
+                .build();
+        participatingSchedule.setScheduleMembers(List.of(
+                ScheduleMember.createOwner(anotherMember, participatingSchedule),
+                ScheduleMember.createParticipant(member, participatingSchedule)
+        ));
+        scheduleRepository.save(participatingSchedule);
 
         Diary diary = Diary.builder()
                 .member(member)
-                .schedule(schedule)
-                .content("기록 본문")
+                .schedule(participatingSchedule)
+                .content("참여 일정 기록")
                 .build();
         diaryRepository.save(diary);
+
+        Notification notification = Notification.builder()
+                .title("알림 제목")
+                .member(member)
+                .build();
+        notificationRepository.save(notification);
+
+        PlaceSearchRecord placeSearchRecord = PlaceSearchRecord.builder()
+                .keyword("검색어")
+                .member(member)
+                .build();
+        placeSearchRecordRepository.save(placeSearchRecord);
+
+        List<FirebaseCloudMessageToken> memberTokens = List.of(
+                FirebaseCloudMessageToken.builder()
+                        .tokenValue("123-abc")
+                        .member(member)
+                        .build(),
+                FirebaseCloudMessageToken.builder()
+                        .tokenValue("456-def")
+                        .member(member)
+                        .build()
+        );
+        firebaseCloudMessageTokenRepository.saveAll(memberTokens);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(delete("/api/auth/signout"))
@@ -280,8 +346,14 @@ class AuthControllerTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+
         assertThat(scheduleQueryRepository.countByMemberId(member.getId())).isEqualTo(0);
+        assertThat(scheduleRepository.findByIdWithScheduleMembers(participatingSchedule.getId()).get().getScheduleMembers())
+                .hasSize(1);
         assertThat(diaryRepository.findByContent(diary.getContent())).isEmpty();
+        assertThat(notificationRepository.findAllByMemberId(member.getId(), 0)).hasSize(0);
+        assertThat(placeSearchRecordRepository.findAllByMemberId(member.getId(), 0)).hasSize(0);
+        assertThat(firebaseCloudMessageTokenRepository.findAllByMember(member)).hasSize(0);
         assertThat(memberRepository.findById(member.getId())).isEmpty();
     }
 
@@ -334,4 +406,15 @@ class AuthControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
     }
+
+    private Member createAnotherMember() {
+        Member member = Member.builder()
+                .email("b@b.com")
+                .password("passwordB")
+                .nickname("nameB")
+                .role(MemberRole.ROLE_USER)
+                .build();
+        return memberRepository.save(member);
+    }
+
 }

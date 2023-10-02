@@ -1,8 +1,11 @@
 package dev.gmelon.plango.service.auth;
 
 import dev.gmelon.plango.domain.diary.DiaryRepository;
+import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
+import dev.gmelon.plango.domain.notification.NotificationRepository;
+import dev.gmelon.plango.domain.place.PlaceSearchRecordRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.member.DuplicateEmailException;
@@ -30,6 +33,9 @@ public class AuthService {
     private final S3Repository s3Repository;
     private final PasswordEncoder passwordEncoder;
     private final DiaryRepository diaryRepository;
+    private final PlaceSearchRecordRepository placeSearchRecordRepository;
+    private final NotificationRepository notificationRepository;
+    private final FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
 
     @Transactional
     public void signup(SignupRequestDto requestDto) {
@@ -63,21 +69,23 @@ public class AuthService {
 
     @Transactional
     public void signout(Long memberId) {
-        deleteProfileImage(memberId);
+        placeSearchRecordRepository.deleteAllByMemberId(memberId);
+        notificationRepository.deleteAllByMemberId(memberId);
+        firebaseCloudMessageTokenRepository.deleteAllByMemberId(memberId);
 
+        deleteProfileImage(memberId);
         List<Long> scheduleIds = scheduleRepository.findAllIdsByOwnerMemberId(memberId);
-        deleteDiaries(scheduleIds);
+        deleteDiaries(scheduleIds, memberId);
         scheduleMemberRepository.deleteAllByScheduleIds(scheduleIds);
         scheduleRepository.deleteAllByScheduleIds(scheduleIds);
-
-        // TODO placeSearchRecord, Notification 삭제
 
         scheduleMemberRepository.deleteAllByMemberId(memberId);
         memberRepository.deleteById(memberId);
     }
 
-    private void deleteDiaries(List<Long> scheduleIds) {
+    private void deleteDiaries(List<Long> scheduleIds, Long memberId) {
         deleteAllDiaryImages(scheduleIds);
+        diaryRepository.deleteAllByMemberId(memberId);
         diaryRepository.deleteAllByScheduleIds(scheduleIds);
     }
 
