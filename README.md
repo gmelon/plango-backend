@@ -11,7 +11,7 @@
 
 ## Tech Stacks
 ### Backend
-<img width="882" alt="image" src="https://github.com/gmelon/plango-backend/assets/33623106/c166847e-6798-49cf-9ab0-1f855e8cd2be">
+<img width="1017" alt="image" src="https://github.com/gmelon/plango-backend/assets/33623106/f5a93cb2-a5d2-4be0-98a2-3435847d8904">
 
 ### Frontend
 - Flutter, Dart
