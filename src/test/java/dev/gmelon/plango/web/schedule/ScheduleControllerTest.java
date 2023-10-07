@@ -11,9 +11,13 @@ import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.domain.schedule.place.SchedulePlace;
+import dev.gmelon.plango.domain.schedule.place.SchedulePlaceRepository;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import dev.gmelon.plango.service.schedule.ScheduleMemberService;
 import dev.gmelon.plango.service.schedule.dto.*;
+import dev.gmelon.plango.service.schedule.dto.ScheduleResponseDto.SchedulePlaceResponseDto;
+import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceCreateRequestDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -57,10 +61,12 @@ class ScheduleControllerTest {
     private ScheduleMemberRepository scheduleMemberRepository;
     @Autowired
     private ScheduleMemberService scheduleMemberService;
+    @Autowired
+    private SchedulePlaceRepository schedulePlaceRepository;
 
     @PlangoMockUser
     @Test
-    void 참가자가_1명인_일정_생성() throws Exception {
+    void 참가자와_장소가_1개인_일정_생성() throws Exception {
         // given
         ScheduleCreateRequestDto request = ScheduleCreateRequestDto.builder()
                 .title("일정 제목")
@@ -69,10 +75,16 @@ class ScheduleControllerTest {
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
                 .participantIds(List.of())
-                .latitude(36.3674097)
-                .longitude(127.3454477)
-                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
-                .placeName("충남대학교 공과대학 5호관")
+                .schedulePlaces(List.of(
+                        SchedulePlaceCreateRequestDto.builder()
+                                .latitude(36.3674097)
+                                .longitude(127.3454477)
+                                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                                .placeName("충남대학교 공과대학 5호관")
+                                .memo("장소 메모")
+                                .category("수업")
+                                .build()
+                ))
                 .build();
 
         // when
@@ -86,7 +98,7 @@ class ScheduleControllerTest {
 
         Long createdScheduleId = parseScheduleIdFrom(response.getHeader(HttpHeaders.LOCATION));
 
-        Schedule createdSchedule = assertDoesNotThrow(() -> scheduleRepository.findByIdWithScheduleMembers(createdScheduleId).get());
+        Schedule createdSchedule = assertDoesNotThrow(() -> scheduleRepository.findByIdWithMembers(createdScheduleId).get());
 
         assertThat(createdSchedule.getScheduleMembers()).hasSize(1);
         assertThat(createdSchedule.getScheduleMembers()).extracting(ScheduleMember::memberId)
@@ -97,11 +109,20 @@ class ScheduleControllerTest {
         assertThat(createdSchedule.getDate()).isEqualTo(request.getDate());
         assertThat(createdSchedule.getStartTime()).isEqualTo(request.getStartTime());
         assertThat(createdSchedule.getEndTime()).isEqualTo(request.getEndTime());
-        assertThat(createdSchedule.getLatitude()).isEqualTo(request.getLatitude());
-        assertThat(createdSchedule.getLongitude()).isEqualTo(request.getLongitude());
-        assertThat(createdSchedule.getRoadAddress()).isEqualTo(request.getRoadAddress());
-        assertThat(createdSchedule.getPlaceName()).isEqualTo(request.getPlaceName());
         assertThat(createdSchedule.isDone()).isFalse();
+
+        List<SchedulePlace> schedulePlaces = schedulePlaceRepository.findAllByScheduleId(createdScheduleId);
+        assertThat(schedulePlaces).hasSize(1);
+
+        SchedulePlace createdSchedulePlace = schedulePlaces.get(0);
+        SchedulePlaceCreateRequestDto requestedSchedulePlace = request.getSchedulePlaces().get(0);
+        assertThat(createdSchedulePlace.getLatitude()).isEqualTo(requestedSchedulePlace.getLatitude());
+        assertThat(createdSchedulePlace.getLongitude()).isEqualTo(requestedSchedulePlace.getLongitude());
+        assertThat(createdSchedulePlace.getPlaceName()).isEqualTo(requestedSchedulePlace.getPlaceName());
+        assertThat(createdSchedulePlace.getRoadAddress()).isEqualTo(requestedSchedulePlace.getRoadAddress());
+        assertThat(createdSchedulePlace.getMemo()).isEqualTo(requestedSchedulePlace.getMemo());
+        assertThat(createdSchedulePlace.getCategory()).isEqualTo(requestedSchedulePlace.getCategory());
+        assertThat(createdSchedulePlace.isConfirmed()).isFalse();
     }
 
     @PlangoMockUser
@@ -116,11 +137,8 @@ class ScheduleControllerTest {
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
+                .schedulePlaces(List.of())
                 .participantIds(List.of(anotherMember.getId()))
-                .latitude(36.3674097)
-                .longitude(127.3454477)
-                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
-                .placeName("충남대학교 공과대학 5호관")
                 .build();
 
         // when
@@ -134,12 +152,125 @@ class ScheduleControllerTest {
 
         Long createdScheduleId = parseScheduleIdFrom(response.getHeader(HttpHeaders.LOCATION));
 
-        Schedule createdSchedule = assertDoesNotThrow(() -> scheduleRepository.findByIdWithScheduleMembers(createdScheduleId).get());
+        Schedule createdSchedule = assertDoesNotThrow(() -> scheduleRepository.findByIdWithMembers(createdScheduleId).get());
         Member member = memberRepository.findAll().get(0);
 
         assertThat(createdSchedule.getScheduleMembers()).hasSize(2);
         assertThat(createdSchedule.getScheduleMembers()).extracting(ScheduleMember::memberId)
                 .containsExactlyInAnyOrder(member.getId(), anotherMember.getId());
+    }
+
+    @PlangoMockUser
+    @Test
+    void 장소가_없는_일정_생성() throws Exception {
+        // given
+        ScheduleCreateRequestDto request = ScheduleCreateRequestDto.builder()
+                .title("일정 제목")
+                .content("일정 본문")
+                .date(LocalDate.of(2023, 6, 26))
+                .startTime(LocalTime.of(10, 0, 0))
+                .endTime(LocalTime.of(11, 0, 0))
+                .schedulePlaces(List.of())
+                .participantIds(List.of())
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/schedules")
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.CREATED.value());
+
+        Long createdScheduleId = parseScheduleIdFrom(response.getHeader(HttpHeaders.LOCATION));
+
+        Schedule createdSchedule = assertDoesNotThrow(() -> scheduleRepository.findByIdWithMembers(createdScheduleId).get());
+
+        assertThat(createdSchedule.getScheduleMembers()).hasSize(1);
+        assertThat(createdSchedule.getScheduleMembers()).extracting(ScheduleMember::memberId)
+                .containsExactly(memberRepository.findAll().get(0).getId());
+
+        assertThat(createdSchedule.getTitle()).isEqualTo(request.getTitle());
+        assertThat(createdSchedule.getContent()).isEqualTo(request.getContent());
+        assertThat(createdSchedule.getDate()).isEqualTo(request.getDate());
+        assertThat(createdSchedule.getStartTime()).isEqualTo(request.getStartTime());
+        assertThat(createdSchedule.getEndTime()).isEqualTo(request.getEndTime());
+        assertThat(createdSchedule.isDone()).isFalse();
+
+        assertThat(schedulePlaceRepository.findAllByScheduleId(createdScheduleId)).hasSize(0);
+    }
+
+    @PlangoMockUser
+    @Test
+    void 장소가_여러개인_일정_생성() throws Exception {
+        // given
+        ScheduleCreateRequestDto request = ScheduleCreateRequestDto.builder()
+                .title("일정 제목")
+                .content("일정 본문")
+                .date(LocalDate.of(2023, 6, 26))
+                .startTime(LocalTime.of(10, 0, 0))
+                .endTime(LocalTime.of(11, 0, 0))
+                .participantIds(List.of())
+                .schedulePlaces(List.of(
+                        SchedulePlaceCreateRequestDto.builder()
+                                .latitude(36.3674097)
+                                .longitude(127.3454477)
+                                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                                .placeName("충남대학교 공과대학 5호관")
+                                .memo("장소 메모")
+                                .category("수업")
+                                .build(),
+                        SchedulePlaceCreateRequestDto.builder()
+                                .latitude(36.3645845)
+                                .longitude(127.3412946)
+                                .roadAddress("대전광역시 유성구 한밭대로371번길 25-3")
+                                .placeName("카페 인터뷰")
+                                .memo("장소 메모")
+                                .category("카페")
+                                .build()
+                ))
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/schedules")
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.CREATED.value());
+
+        Long createdScheduleId = parseScheduleIdFrom(response.getHeader(HttpHeaders.LOCATION));
+
+        Schedule createdSchedule = assertDoesNotThrow(() -> scheduleRepository.findByIdWithMembers(createdScheduleId).get());
+
+        assertThat(createdSchedule.getScheduleMembers()).hasSize(1);
+        assertThat(createdSchedule.getScheduleMembers()).extracting(ScheduleMember::memberId)
+                .containsExactly(memberRepository.findAll().get(0).getId());
+
+        assertThat(createdSchedule.getTitle()).isEqualTo(request.getTitle());
+        assertThat(createdSchedule.getContent()).isEqualTo(request.getContent());
+        assertThat(createdSchedule.getDate()).isEqualTo(request.getDate());
+        assertThat(createdSchedule.getStartTime()).isEqualTo(request.getStartTime());
+        assertThat(createdSchedule.getEndTime()).isEqualTo(request.getEndTime());
+        assertThat(createdSchedule.isDone()).isFalse();
+
+        List<SchedulePlace> createdSchedulePlaces = schedulePlaceRepository.findAllByScheduleId(createdScheduleId);
+        assertThat(createdSchedulePlaces).hasSize(2);
+        List<SchedulePlaceCreateRequestDto> requestedSchedulePlaces = request.getSchedulePlaces();
+        for (int i = 0, schedulePlacesSize = createdSchedulePlaces.size(); i < schedulePlacesSize; i++) {
+            SchedulePlace createdSchedulePlace = createdSchedulePlaces.get(i);
+            SchedulePlaceCreateRequestDto requestedSchedulePlace = requestedSchedulePlaces.get(i);
+
+            assertThat(createdSchedulePlace.getLatitude()).isEqualTo(requestedSchedulePlace.getLatitude());
+            assertThat(createdSchedulePlace.getLongitude()).isEqualTo(requestedSchedulePlace.getLongitude());
+            assertThat(createdSchedulePlace.getPlaceName()).isEqualTo(requestedSchedulePlace.getPlaceName());
+            assertThat(createdSchedulePlace.getRoadAddress()).isEqualTo(requestedSchedulePlace.getRoadAddress());
+            assertThat(createdSchedulePlace.getMemo()).isEqualTo(requestedSchedulePlace.getMemo());
+            assertThat(createdSchedulePlace.getCategory()).isEqualTo(requestedSchedulePlace.getCategory());
+            assertThat(createdSchedulePlace.isConfirmed()).isFalse();
+        }
     }
 
     @PlangoMockUser
@@ -196,12 +327,20 @@ class ScheduleControllerTest {
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
-                .latitude(36.3674097)
-                .longitude(127.3454477)
-                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
-                .placeName("충남대학교 공과대학 5호관")
                 .build();
         givenSchedule.setSingleOwnerScheduleMember(member);
+        // TODO addSchedulePlaces() 로 변경
+        givenSchedule.setSchedulePlaces(List.of(
+                SchedulePlace.builder()
+                        .latitude(36.3674097)
+                        .longitude(127.3454477)
+                        .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                        .placeName("충남대학교 공과대학 5호관")
+                        .memo("장소 메모")
+                        .category("수업")
+                        .schedule(givenSchedule)
+                        .build()
+        ));
         Schedule savedSchedule = scheduleRepository.save(givenSchedule);
 
         // when
@@ -212,18 +351,25 @@ class ScheduleControllerTest {
         // then
         ScheduleResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), ScheduleResponseDto.class);
 
-        assertThat(responseDto.getId()).isEqualTo(savedSchedule.getId());
+        assertThat(responseDto.getScheduleId()).isEqualTo(savedSchedule.getId());
         assertThat(responseDto.getTitle()).isEqualTo(givenSchedule.getTitle());
         assertThat(responseDto.getContent()).isEqualTo(givenSchedule.getContent());
         assertThat(responseDto.getDate()).isEqualTo(givenSchedule.getDate());
         assertThat(responseDto.getStartTime()).isEqualTo(givenSchedule.getStartTime());
         assertThat(responseDto.getEndTime()).isEqualTo(givenSchedule.getEndTime());
-        assertThat(responseDto.getLatitude()).isEqualTo(givenSchedule.getLatitude());
-        assertThat(responseDto.getLongitude()).isEqualTo(givenSchedule.getLongitude());
-        assertThat(responseDto.getRoadAddress()).isEqualTo(givenSchedule.getRoadAddress());
-        assertThat(responseDto.getPlaceName()).isEqualTo(givenSchedule.getPlaceName());
+        assertThat(responseDto.getSchedulePlaces()).hasSize(1);
         assertThat(responseDto.getIsDone()).isFalse();
         assertThat(responseDto.getHasDiary()).isFalse();
+
+        SchedulePlaceResponseDto responseSchedulePlace = responseDto.getSchedulePlaces().get(0);
+        SchedulePlace givenSchedulePlace = givenSchedule.getSchedulePlaces().get(0);
+        assertThat(responseSchedulePlace.getLatitude()).isEqualTo(givenSchedulePlace.getLatitude());
+        assertThat(responseSchedulePlace.getLongitude()).isEqualTo(givenSchedulePlace.getLongitude());
+        assertThat(responseSchedulePlace.getPlaceName()).isEqualTo(givenSchedulePlace.getPlaceName());
+        assertThat(responseSchedulePlace.getRoadAddress()).isEqualTo(givenSchedulePlace.getRoadAddress());
+        assertThat(responseSchedulePlace.getMemo()).isEqualTo(givenSchedulePlace.getMemo());
+        assertThat(responseSchedulePlace.getCategory()).isEqualTo(givenSchedulePlace.getCategory());
+        assertThat(responseSchedulePlace.getIsConfirmed()).isFalse();
     }
 
     @PlangoMockUser
@@ -238,12 +384,19 @@ class ScheduleControllerTest {
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
-                .latitude(36.3674097)
-                .longitude(127.3454477)
-                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
-                .placeName("충남대학교 공과대학 5호관")
                 .build();
         givenSchedule.setSingleOwnerScheduleMember(member);
+        givenSchedule.setSchedulePlaces(List.of(
+                SchedulePlace.builder()
+                        .latitude(36.3674097)
+                        .longitude(127.3454477)
+                        .roadAddress("대전광역시 유성구 온천2동 대학로 99")
+                        .placeName("충남대학교 공과대학 5호관")
+                        .memo("장소 메모")
+                        .category("수업")
+                        .schedule(givenSchedule)
+                        .build()
+        ));
         Schedule savedSchedule = scheduleRepository.save(givenSchedule);
 
         Diary givenDiary = Diary.builder()
@@ -263,18 +416,25 @@ class ScheduleControllerTest {
 
         ScheduleResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), ScheduleResponseDto.class);
 
-        assertThat(responseDto.getId()).isEqualTo(savedSchedule.getId());
+        assertThat(responseDto.getScheduleId()).isEqualTo(savedSchedule.getId());
         assertThat(responseDto.getTitle()).isEqualTo(savedSchedule.getTitle());
         assertThat(responseDto.getContent()).isEqualTo(savedSchedule.getContent());
         assertThat(responseDto.getDate()).isEqualTo(savedSchedule.getDate());
         assertThat(responseDto.getStartTime()).isEqualTo(savedSchedule.getStartTime());
         assertThat(responseDto.getEndTime()).isEqualTo(savedSchedule.getEndTime());
-        assertThat(responseDto.getLatitude()).isEqualTo(savedSchedule.getLatitude());
-        assertThat(responseDto.getLongitude()).isEqualTo(savedSchedule.getLongitude());
-        assertThat(responseDto.getRoadAddress()).isEqualTo(savedSchedule.getRoadAddress());
-        assertThat(responseDto.getPlaceName()).isEqualTo(savedSchedule.getPlaceName());
+        assertThat(responseDto.getSchedulePlaces()).hasSize(1);
         assertThat(responseDto.getIsDone()).isFalse();
         assertThat(responseDto.getHasDiary()).isTrue();
+
+        SchedulePlaceResponseDto responseSchedulePlace = responseDto.getSchedulePlaces().get(0);
+        SchedulePlace givenSchedulePlace = givenSchedule.getSchedulePlaces().get(0);
+        assertThat(responseSchedulePlace.getLatitude()).isEqualTo(givenSchedulePlace.getLatitude());
+        assertThat(responseSchedulePlace.getLongitude()).isEqualTo(givenSchedulePlace.getLongitude());
+        assertThat(responseSchedulePlace.getPlaceName()).isEqualTo(givenSchedulePlace.getPlaceName());
+        assertThat(responseSchedulePlace.getRoadAddress()).isEqualTo(givenSchedulePlace.getRoadAddress());
+        assertThat(responseSchedulePlace.getMemo()).isEqualTo(givenSchedulePlace.getMemo());
+        assertThat(responseSchedulePlace.getCategory()).isEqualTo(givenSchedulePlace.getCategory());
+        assertThat(responseSchedulePlace.getIsConfirmed()).isFalse();
     }
 
     @PlangoMockUser
@@ -289,7 +449,8 @@ class ScheduleControllerTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
 
         ErrorResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), ErrorResponseDto.class);
-        assertThat(responseDto.getMessage()).isEqualTo("존재하지 않는 일정입니다.");
+        // TODO 실패 응답 통일하기
+        assertThat(responseDto.getMessage()).startsWith("존재하지 않는");
     }
 
     @PlangoMockUser
@@ -329,10 +490,6 @@ class ScheduleControllerTest {
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
-                .latitude(36.3674097)
-                .longitude(127.3454477)
-                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
-                .placeName("충남대학교 공과대학 5호관")
                 .build();
         givenSchedule.setSingleOwnerScheduleMember(member);
         Schedule savedSchedule = scheduleRepository.save(givenSchedule);
@@ -343,10 +500,6 @@ class ScheduleControllerTest {
                 .date(LocalDate.of(2024, 7, 27))
                 .startTime(LocalTime.of(11, 0, 0))
                 .endTime(LocalTime.of(12, 0, 0))
-                .latitude(36.3682999)
-                .longitude(127.3420364)
-                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
-                .placeName("충남대학교 인문대학")
                 .build();
 
         // when
@@ -364,10 +517,6 @@ class ScheduleControllerTest {
         assertThat(foundSchedule.getDate()).isEqualTo(request.getDate());
         assertThat(foundSchedule.getStartTime()).isEqualTo(request.getStartTime());
         assertThat(foundSchedule.getEndTime()).isEqualTo(request.getEndTime());
-        assertThat(foundSchedule.getLatitude()).isEqualTo(request.getLatitude());
-        assertThat(foundSchedule.getLongitude()).isEqualTo(request.getLongitude());
-        assertThat(foundSchedule.getRoadAddress()).isEqualTo(request.getRoadAddress());
-        assertThat(foundSchedule.getPlaceName()).isEqualTo(request.getPlaceName());
     }
 
     @PlangoMockUser
@@ -383,10 +532,6 @@ class ScheduleControllerTest {
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
-                .latitude(36.3674097)
-                .longitude(127.3454477)
-                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
-                .placeName("충남대학교 공과대학 5호관")
                 .build();
         givenSchedule.setScheduleMembers(List.of(
                 ScheduleMember.createOwner(anotherMember, givenSchedule),
@@ -400,10 +545,6 @@ class ScheduleControllerTest {
                 .date(LocalDate.of(2024, 7, 27))
                 .startTime(LocalTime.of(11, 0, 0))
                 .endTime(LocalTime.of(12, 0, 0))
-                .latitude(36.3682999)
-                .longitude(127.3420364)
-                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
-                .placeName("충남대학교 인문대학")
                 .build();
 
         // when
@@ -429,10 +570,6 @@ class ScheduleControllerTest {
                 .date(LocalDate.of(2023, 6, 26))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
-                .latitude(36.3674097)
-                .longitude(127.3454477)
-                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
-                .placeName("충남대학교 공과대학 5호관")
                 .build();
         givenSchedule.setScheduleMembers(List.of(
                 ScheduleMember.createOwner(anotherMember, givenSchedule),
@@ -448,10 +585,6 @@ class ScheduleControllerTest {
                 .date(LocalDate.of(2024, 7, 27))
                 .startTime(LocalTime.of(11, 0, 0))
                 .endTime(LocalTime.of(12, 0, 0))
-                .latitude(36.3682999)
-                .longitude(127.3420364)
-                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
-                .placeName("충남대학교 인문대학")
                 .build();
 
         // when
@@ -933,6 +1066,50 @@ class ScheduleControllerTest {
         assertThat(responseDtos)
                 .usingRecursiveComparison()
                 .isEqualTo(expected);
+    }
+
+    @PlangoMockUser
+    @Test
+    void 일정_록록_조회시_confirm된_장소_목록이_조회된다() throws Exception {
+        // given
+        Member member = memberRepository.findAll().get(0);
+
+        Schedule givenSchedule = Schedule.builder()
+                .title("일정")
+                .date(LocalDate.of(2023, 10, 1))
+                .build();
+        givenSchedule.setSingleOwnerScheduleMember(member);
+        scheduleRepository.save(givenSchedule);
+
+        List<SchedulePlace> givenSchedulePlaces = List.of(
+                SchedulePlace.builder()
+                        .placeName("확정된 장소 1")
+                        .schedule(givenSchedule)
+                        .confirmed(true)
+                        .build(),
+                SchedulePlace.builder()
+                        .placeName("확정된 장소 2")
+                        .schedule(givenSchedule)
+                        .confirmed(true)
+                        .build(),
+                SchedulePlace.builder()
+                        .placeName("확정되지 않은 장소")
+                        .schedule(givenSchedule)
+                        .confirmed(false)
+                        .build()
+        );
+        schedulePlaceRepository.saveAll(givenSchedulePlaces);
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(get("/api/schedules")
+                        .queryParam("date", "2023-10-01"))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+        ScheduleListResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), ScheduleListResponseDto[].class)[0];
+        assertThat(responseDto.getConfirmedPlaceNames()).isEqualTo("확정된 장소 1, 확정된 장소 2");
     }
 
     private Member createAnotherMember() {

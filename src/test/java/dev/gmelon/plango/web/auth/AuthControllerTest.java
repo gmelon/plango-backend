@@ -348,7 +348,7 @@ class AuthControllerTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
 
         assertThat(scheduleQueryRepository.countByMemberId(member.getId())).isEqualTo(0);
-        assertThat(scheduleRepository.findByIdWithScheduleMembers(participatingSchedule.getId()).get().getScheduleMembers())
+        assertThat(scheduleRepository.findByIdWithMembers(participatingSchedule.getId()).get().getScheduleMembers())
                 .hasSize(1);
         assertThat(diaryRepository.findByContent(diary.getContent())).isEmpty();
         assertThat(notificationRepository.findAllByMemberId(member.getId(), 0)).hasSize(0);

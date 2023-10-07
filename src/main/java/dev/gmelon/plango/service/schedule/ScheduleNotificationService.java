@@ -104,7 +104,7 @@ public class ScheduleNotificationService {
     }
 
     private Schedule findScheduleById(Long scheduleId) {
-        return scheduleRepository.findByIdWithScheduleMembers(scheduleId)
+        return scheduleRepository.findByIdWithMembers(scheduleId)
                 .orElseThrow(NoSuchScheduleException::new);
     }
 

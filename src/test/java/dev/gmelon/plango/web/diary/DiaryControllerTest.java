@@ -69,7 +69,6 @@ class DiaryControllerTest {
                 .date(LocalDate.of(2023, 6, 25))
                 .startTime(LocalTime.of(10, 0, 0))
                 .endTime(LocalTime.of(11, 0, 0))
-                .placeName("일정 장소")
                 .build();
         scheduleOfMemberA.setSingleOwnerScheduleMember(memberA);
         scheduleRepository.save(scheduleOfMemberA);
@@ -251,7 +250,6 @@ class DiaryControllerTest {
         assertThat(responseDto.getSchedule().getDate()).isEqualTo(scheduleOfMemberA.getDate());
         assertThat(responseDto.getSchedule().getStartTime()).isEqualTo(scheduleOfMemberA.getStartTime());
         assertThat(responseDto.getSchedule().getEndTime()).isEqualTo(scheduleOfMemberA.getEndTime());
-        assertThat(responseDto.getSchedule().getPlaceName()).isEqualTo(scheduleOfMemberA.getPlaceName());
     }
 
     @PlangoMockUser
@@ -325,7 +323,6 @@ class DiaryControllerTest {
         assertThat(responseDto.getSchedule().getDate()).isEqualTo(scheduleOfMemberA.getDate());
         assertThat(responseDto.getSchedule().getStartTime()).isEqualTo(scheduleOfMemberA.getStartTime());
         assertThat(responseDto.getSchedule().getEndTime()).isEqualTo(scheduleOfMemberA.getEndTime());
-        assertThat(responseDto.getSchedule().getPlaceName()).isEqualTo(scheduleOfMemberA.getPlaceName());
     }
 
     @PlangoMockUser

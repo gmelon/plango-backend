@@ -1,14 +1,13 @@
 package dev.gmelon.plango.domain.schedule.query.dto;
 
-import lombok.AllArgsConstructor;
+import com.querydsl.core.annotations.QueryProjection;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-@AllArgsConstructor
-@Builder
 @Getter
 public class ScheduleListQueryDto {
 
@@ -24,20 +23,29 @@ public class ScheduleListQueryDto {
 
     private LocalTime endTime;
 
-    private long memberCount;
+    private int memberCount;
 
     private Boolean isOwner;
 
     private Boolean isAccepted;
 
-    private Double latitude;
-
-    private Double longitude;
-
-    private String roadAddress;
-
-    private String placeName;
+    @Setter
+    private String confirmedPlaceNames;
 
     private Boolean done;
 
+    @QueryProjection
+    @Builder
+    public ScheduleListQueryDto(Long id, String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime, int memberCount, Boolean isOwner, Boolean isAccepted, Boolean done) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.date = date;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.memberCount = memberCount;
+        this.isOwner = isOwner;
+        this.isAccepted = isAccepted;
+        this.done = done;
+    }
 }

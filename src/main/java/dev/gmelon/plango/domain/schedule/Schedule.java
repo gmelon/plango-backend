@@ -3,6 +3,7 @@ package dev.gmelon.plango.domain.schedule;
 import dev.gmelon.plango.domain.BaseTimeEntity;
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.member.Member;
+import dev.gmelon.plango.domain.schedule.place.SchedulePlace;
 import dev.gmelon.plango.exception.schedule.ScheduleOwnerNotExistsException;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,14 +42,6 @@ public class Schedule extends BaseTimeEntity {
 
     private LocalTime endTime;
 
-    private Double latitude;
-
-    private Double longitude;
-
-    private String roadAddress;
-
-    private String placeName;
-
     @Column(columnDefinition = "BOOLEAN DEFAULT 0", nullable = false)
     private boolean done;
 
@@ -58,21 +51,19 @@ public class Schedule extends BaseTimeEntity {
     @OneToMany(mappedBy = "schedule", cascade = ALL, orphanRemoval = true)
     private List<ScheduleMember> scheduleMembers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "schedule", cascade = ALL, orphanRemoval = true)
+    private List<SchedulePlace> schedulePlaces = new ArrayList<>();
+
     @Builder
     public Schedule(
             String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime,
-            Double latitude, Double longitude, String roadAddress, String placeName, boolean done,
-            List<Diary> diaries
+            boolean done, List<Diary> diaries
     ) {
         this.title = title;
         this.content = content;
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.roadAddress = roadAddress;
-        this.placeName = placeName;
         this.done = done;
         this.diaries = diaries;
     }
@@ -83,10 +74,6 @@ public class Schedule extends BaseTimeEntity {
         this.date = editor.getDate();
         this.startTime = editor.getStartTime();
         this.endTime = editor.getEndTime();
-        this.latitude = editor.getLatitude();
-        this.longitude = editor.getLongitude();
-        this.roadAddress = editor.getRoadAddress();
-        this.placeName = editor.getPlaceName();
     }
 
     public void changeDone(boolean done) {
@@ -101,8 +88,20 @@ public class Schedule extends BaseTimeEntity {
         this.scheduleMembers = scheduleMembers;
     }
 
+    public void setSchedulePlaces(List<SchedulePlace> schedulePlaces) {
+        this.schedulePlaces = schedulePlaces;
+    }
+
     public void setSingleOwnerScheduleMember(Member member) {
         this.scheduleMembers = List.of(ScheduleMember.createOwner(member, this));
+    }
+
+    public void addSchedulePlace(SchedulePlace schedulePlace) {
+        this.schedulePlaces.add(schedulePlace);
+    }
+
+    public void removeSchedulePlace(SchedulePlace schedulePlace) {
+        this.schedulePlaces.remove(schedulePlace);
     }
 
     public boolean isMember(Long memberId) {

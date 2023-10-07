@@ -1,9 +1,9 @@
 package dev.gmelon.plango.service.schedule.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import dev.gmelon.plango.domain.member.Member;
-import dev.gmelon.plango.domain.schedule.Schedule;
-import dev.gmelon.plango.domain.schedule.ScheduleMember;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleQueryDto.ScheduleMemberQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleQueryDto.SchedulePlaceQueryDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +19,7 @@ import static java.util.stream.Collectors.toList;
 @Getter
 public class ScheduleResponseDto {
 
-    private Long id;
+    private Long scheduleId;
 
     private String title;
 
@@ -34,70 +34,55 @@ public class ScheduleResponseDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss", timezone = "Asia/Seoul")
     private LocalTime endTime;
 
-    private Boolean isOwner;
-
-    private Boolean isAccepted;
-
     private List<ScheduleMemberResponseDto> scheduleMembers = new ArrayList<>();
 
-    private Double latitude;
-
-    private Double longitude;
-
-    private String roadAddress;
-
-    private String placeName;
+    private List<SchedulePlaceResponseDto> schedulePlaces = new ArrayList<>();
 
     private Boolean isDone;
 
     private Boolean hasDiary;
 
-    public static ScheduleResponseDto from(Schedule schedule, Member member, boolean hasDiary) {
+    public static ScheduleResponseDto from(ScheduleQueryDto queryDto) {
         return ScheduleResponseDto.builder()
-                .id(schedule.getId())
-                .title(schedule.getTitle())
-                .content(schedule.getContent())
-                .date(schedule.getDate())
-                .startTime(schedule.getStartTime())
-                .endTime(schedule.getEndTime())
-                .isOwner(schedule.isOwner(member.getId()))
-                .isAccepted(schedule.isAccepted(member.getId()))
-                .scheduleMembers(mapToResponseDto(schedule.getScheduleMembers()))
-                .latitude(schedule.getLatitude())
-                .longitude(schedule.getLongitude())
-                .roadAddress(schedule.getRoadAddress())
-                .placeName(schedule.getPlaceName())
-                .isDone(schedule.isDone())
-                .hasDiary(hasDiary)
+                .scheduleId(queryDto.getScheduleId())
+                .title(queryDto.getTitle())
+                .content(queryDto.getContent())
+                .date(queryDto.getDate())
+                .startTime(queryDto.getStartTime())
+                .endTime(queryDto.getEndTime())
+                .scheduleMembers(createScheduleMemberResponseDtos(queryDto.getScheduleMembers()))
+                .schedulePlaces(createSchedulePlaceResponseDtos(queryDto.getSchedulePlaces()))
+                .isDone(queryDto.getIsDone())
+                .hasDiary(queryDto.getHasDiary())
                 .build();
     }
 
-    private static List<ScheduleMemberResponseDto> mapToResponseDto(List<ScheduleMember> scheduleMembers) {
-        return scheduleMembers.stream()
+    private static List<ScheduleMemberResponseDto> createScheduleMemberResponseDtos(List<ScheduleMemberQueryDto> queryDtos) {
+        return queryDtos.stream()
                 .map(ScheduleMemberResponseDto::from)
+                .collect(toList());
+    }
+
+    private static List<SchedulePlaceResponseDto> createSchedulePlaceResponseDtos(List<SchedulePlaceQueryDto> queryDtos) {
+        return queryDtos.stream()
+                .map(SchedulePlaceResponseDto::from)
                 .collect(toList());
     }
 
     @Builder
     public ScheduleResponseDto(
-            Long id, String title, String content, LocalDate date, LocalTime startTime,
-            LocalTime endTime, Boolean isOwner, Boolean isAccepted, List<ScheduleMemberResponseDto> scheduleMembers,
-            Double latitude, Double longitude, String roadAddress, String placeName,
+            Long scheduleId, String title, String content, LocalDate date, LocalTime startTime,
+            LocalTime endTime, List<ScheduleMemberResponseDto> scheduleMembers, List<SchedulePlaceResponseDto> schedulePlaces,
             Boolean isDone, Boolean hasDiary
     ) {
-        this.id = id;
+        this.scheduleId = scheduleId;
         this.title = title;
         this.content = content;
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.isOwner = isOwner;
-        this.isAccepted = isAccepted;
         this.scheduleMembers = scheduleMembers;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.roadAddress = roadAddress;
-        this.placeName = placeName;
+        this.schedulePlaces = schedulePlaces;
         this.isDone = isDone;
         this.hasDiary = hasDiary;
     }
@@ -106,32 +91,91 @@ public class ScheduleResponseDto {
     @Getter
     public static class ScheduleMemberResponseDto {
 
-        private Long id;
+        private Long memberId;
+
         private String nickname;
+
         private String profileImageUrl;
+
         private Boolean isOwner;
+
         private Boolean isAccepted;
 
-        public static ScheduleMemberResponseDto from(ScheduleMember scheduleMember) {
-            Member member = scheduleMember.getMember();
+        private Boolean isCurrentMember;
 
+        public static ScheduleMemberResponseDto from(ScheduleMemberQueryDto queryDto) {
             return ScheduleMemberResponseDto.builder()
-                    .id(member.getId())
-                    .nickname(member.getNickname())
-                    .profileImageUrl(member.getProfileImageUrl())
-                    .isOwner(scheduleMember.isOwner())
-                    .isAccepted(scheduleMember.isAccepted())
+                    .memberId(queryDto.getMemberId())
+                    .nickname(queryDto.getNickname())
+                    .profileImageUrl(queryDto.getProfileImageUrl())
+                    .isOwner(queryDto.getIsOwner())
+                    .isAccepted(queryDto.getIsAccepted())
+                    .isCurrentMember(queryDto.getIsCurrentMember())
                     .build();
         }
 
         @Builder
-        public ScheduleMemberResponseDto(Long id, String nickname, String profileImageUrl, Boolean isOwner, Boolean isAccepted) {
-            this.id = id;
+        public ScheduleMemberResponseDto(Long memberId, String nickname, String profileImageUrl, Boolean isOwner,
+                                         Boolean isAccepted, Boolean isCurrentMember) {
+            this.memberId = memberId;
             this.nickname = nickname;
             this.profileImageUrl = profileImageUrl;
             this.isOwner = isOwner;
             this.isAccepted = isAccepted;
+            this.isCurrentMember = isCurrentMember;
         }
+    }
+
+    @NoArgsConstructor
+    @Getter
+    public static class SchedulePlaceResponseDto {
+
+        private Long placeId;
+
+        private String placeName;
+
+        private String roadAddress;
+
+        private Double latitude;
+
+        private Double longitude;
+
+        private String memo;
+
+        private String category;
+
+        private Boolean isConfirmed;
+
+        private List<Long> likedMemberIds;
+
+        @Builder
+        public SchedulePlaceResponseDto(Long placeId, String placeName, String roadAddress, Double latitude, Double longitude,
+                                        String memo, String category, Boolean isConfirmed, List<Long> likedMemberIds) {
+            this.placeId = placeId;
+            this.placeName = placeName;
+            this.roadAddress = roadAddress;
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.memo = memo;
+            this.category = category;
+            this.isConfirmed = isConfirmed;
+            this.likedMemberIds = likedMemberIds;
+        }
+
+        public static SchedulePlaceResponseDto from(SchedulePlaceQueryDto queryDto) {
+            return SchedulePlaceResponseDto.builder()
+                    .placeId(queryDto.getPlaceId())
+                    .placeName(queryDto.getPlaceName())
+                    .roadAddress(queryDto.getRoadAddress())
+                    .latitude(queryDto.getLatitude())
+                    .longitude(queryDto.getLongitude())
+                    .memo(queryDto.getMemo())
+                    .category(queryDto.getCategory())
+                    .isConfirmed(queryDto.getIsConfirmed())
+                    .likedMemberIds(queryDto.getLikedMemberIds())
+                    .build();
+        }
+
     }
 
 }

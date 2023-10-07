@@ -28,25 +28,13 @@ public class ScheduleEditRequestDto {
     @DateTimeFormat(pattern = "HH:mm:ss")
     private LocalTime endTime;
 
-    private Double latitude;
-
-    private Double longitude;
-
-    private String roadAddress;
-
-    private String placeName;
-
     @Builder
-    public ScheduleEditRequestDto(String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime, Double latitude, Double longitude, String roadAddress, String placeName) {
+    public ScheduleEditRequestDto(String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime) {
         this.title = title;
         this.content = content;
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.roadAddress = roadAddress;
-        this.placeName = placeName;
     }
 
     public ScheduleEditor toEditor() {
@@ -56,10 +44,6 @@ public class ScheduleEditRequestDto {
                 .date(date)
                 .startTime(startTime)
                 .endTime(endTime)
-                .latitude(latitude)
-                .longitude(longitude)
-                .roadAddress(roadAddress)
-                .placeName(placeName)
                 .build();
     }
 }

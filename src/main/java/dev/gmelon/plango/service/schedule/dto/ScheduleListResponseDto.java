@@ -32,13 +32,7 @@ public class ScheduleListResponseDto {
 
     private Boolean isOwner;
 
-    private Double latitude;
-
-    private Double longitude;
-
-    private String roadAddress;
-
-    private String placeName;
+    private String confirmedPlaceNames;
 
     private Boolean isDone;
 
@@ -50,20 +44,16 @@ public class ScheduleListResponseDto {
                 .date(queryDto.getDate())
                 .startTime(queryDto.getStartTime())
                 .endTime(queryDto.getEndTime())
-                .memberCount((int) queryDto.getMemberCount())
+                .memberCount(queryDto.getMemberCount())
                 .isOwner(queryDto.getIsOwner())
-                .latitude(queryDto.getLatitude())
-                .longitude(queryDto.getLongitude())
-                .roadAddress(queryDto.getRoadAddress())
-                .placeName(queryDto.getPlaceName())
+                .confirmedPlaceNames(queryDto.getConfirmedPlaceNames())
                 .isDone(queryDto.getDone())
                 .build();
     }
 
     @Builder
-    public ScheduleListResponseDto(Long id, String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime,
-                                   int memberCount, Boolean isOwner,
-                                   Double latitude, Double longitude, String roadAddress, String placeName, Boolean isDone) {
+    public ScheduleListResponseDto(Long id, String title, String content, LocalDate date,
+                                   LocalTime startTime, LocalTime endTime, int memberCount, Boolean isOwner, String confirmedPlaceNames, Boolean isDone) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -72,10 +62,7 @@ public class ScheduleListResponseDto {
         this.endTime = endTime;
         this.memberCount = memberCount;
         this.isOwner = isOwner;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.roadAddress = roadAddress;
-        this.placeName = placeName;
+        this.confirmedPlaceNames = confirmedPlaceNames;
         this.isDone = isDone;
     }
 }

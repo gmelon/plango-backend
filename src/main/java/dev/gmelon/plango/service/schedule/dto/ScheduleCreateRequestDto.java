@@ -1,11 +1,13 @@
 package dev.gmelon.plango.service.schedule.dto;
 
 import dev.gmelon.plango.domain.schedule.Schedule;
+import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceCreateRequestDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -30,28 +32,21 @@ public class ScheduleCreateRequestDto {
     @DateTimeFormat(pattern = "HH:mm:ss")
     private LocalTime endTime;
 
-    private Double latitude;
-
-    private Double longitude;
-
-    private String roadAddress;
-
-    private String placeName;
-
     private List<Long> participantIds = new ArrayList<>();
 
+    @Valid
+    private List<SchedulePlaceCreateRequestDto> schedulePlaces = new ArrayList<>();
+
     @Builder
-    public ScheduleCreateRequestDto(String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime, Double latitude, Double longitude, String roadAddress, String placeName, List<Long> participantIds) {
+    public ScheduleCreateRequestDto(String title, String content, LocalDate date, LocalTime startTime, LocalTime endTime,
+                                    List<Long> participantIds, List<SchedulePlaceCreateRequestDto> schedulePlaces) {
         this.title = title;
         this.content = content;
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.roadAddress = roadAddress;
-        this.placeName = placeName;
         this.participantIds = participantIds;
+        this.schedulePlaces = schedulePlaces;
     }
 
     public Schedule toEntity() {
@@ -61,10 +56,7 @@ public class ScheduleCreateRequestDto {
                 .date(date)
                 .startTime(startTime)
                 .endTime(endTime)
-                .latitude(latitude)
-                .longitude(longitude)
-                .roadAddress(roadAddress)
-                .placeName(placeName)
                 .build();
     }
+
 }
