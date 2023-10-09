@@ -1112,6 +1112,47 @@ class ScheduleControllerTest {
         assertThat(responseDto.getConfirmedPlaceNames()).isEqualTo("확정된 장소 1, 확정된 장소 2");
     }
 
+    @PlangoMockUser
+    @Test
+    void 키워드_검색시_공백을_제거하고_일정_제목_또는_본문에서_검색된다() throws Exception {
+        // given
+        Member member = memberRepository.findAll().get(0);
+        List<Schedule> givenSchedules = List.of(
+                Schedule.builder()
+                        .title("학교 수업")
+                        .content("일정 A 메모")
+                        .build(),
+                Schedule.builder()
+                        .title("일정 B")
+                        .content("학교수업")
+                        .build(),
+                Schedule.builder()
+                        .title("일정 C")
+                        .content("일정 C 메모")
+                        .build()
+        );
+        for (Schedule givenSchedule : givenSchedules) {
+            givenSchedule.setSingleOwnerScheduleMember(member);
+        }
+        scheduleRepository.saveAll(givenSchedules);
+
+        String query = "학 교 수 업";
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(get("/api/schedules")
+                .queryParam("query", query)
+        ).andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+        ScheduleSearchResponseDto[] responseDtos = objectMapper.readValue(response.getContentAsString(UTF_8), ScheduleSearchResponseDto[].class);
+        assertThat(responseDtos).hasSize(2);
+        assertThat(responseDtos)
+                .extracting(ScheduleSearchResponseDto::getTitle)
+                .containsExactlyInAnyOrder("학교 수업", "일정 B");
+    }
+
     private Member createAnotherMember() {
         Member member = Member.builder()
                 .email("b@b.com")

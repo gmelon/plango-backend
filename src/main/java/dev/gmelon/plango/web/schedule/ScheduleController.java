@@ -89,4 +89,12 @@ public class ScheduleController {
         scheduleService.delete(memberId, scheduleId);
     }
 
+    @GetMapping(params = "query")
+    public List<ScheduleSearchResponseDto> search(
+            @LoginMember Long memberId,
+            @RequestParam String query,
+            @RequestParam(defaultValue = "1") int page) {
+        return scheduleService.search(memberId, query, page);
+    }
+
 }

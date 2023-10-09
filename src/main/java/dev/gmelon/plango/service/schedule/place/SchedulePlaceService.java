@@ -7,7 +7,6 @@ import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.domain.schedule.place.SchedulePlace;
-import dev.gmelon.plango.domain.schedule.place.SchedulePlaceLikeRepository;
 import dev.gmelon.plango.domain.schedule.place.SchedulePlaceRepository;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
@@ -16,17 +15,23 @@ import dev.gmelon.plango.exception.schedule.ScheduleNotAcceptedException;
 import dev.gmelon.plango.exception.schedule.place.NoSuchSchedulePlaceException;
 import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceCreateRequestDto;
 import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceEditRequestDto;
+import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceSearchResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
 public class SchedulePlaceService {
 
+    private static final String WHITE_SPACE_REGEX = "\\s";
+
     private final SchedulePlaceRepository schedulePlaceRepository;
-    private final SchedulePlaceLikeRepository schedulePlaceLikeRepository;
     private final ScheduleRepository scheduleRepository;
     private final MemberRepository memberRepository;
     private final ScheduleMemberRepository scheduleMemberRepository;
@@ -87,6 +92,17 @@ public class SchedulePlaceService {
 
         SchedulePlace schedulePlace = findSchedulePlaceById(placeId);
         schedulePlace.dislike(memberId);
+    }
+
+    public List<SchedulePlaceSearchResponseDto> search(Long memberId, String query, int page) {
+        List<SchedulePlace> results = schedulePlaceRepository.search(memberId, trim(query), page);
+        return results.stream()
+                .map(SchedulePlaceSearchResponseDto::from)
+                .collect(toList());
+    }
+
+    private String trim(String string) {
+        return string.replaceAll(WHITE_SPACE_REGEX, "");
     }
 
     private void validateScheduleMember(Schedule schedule, Long memberId) {

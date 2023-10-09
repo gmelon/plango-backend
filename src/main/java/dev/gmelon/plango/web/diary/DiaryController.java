@@ -2,10 +2,7 @@ package dev.gmelon.plango.web.diary;
 
 import dev.gmelon.plango.config.auth.LoginMember;
 import dev.gmelon.plango.service.diary.DiaryService;
-import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
-import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
-import dev.gmelon.plango.service.diary.dto.DiaryListResponseDto;
-import dev.gmelon.plango.service.diary.dto.DiaryResponseDto;
+import dev.gmelon.plango.service.diary.dto.*;
 import dev.gmelon.plango.web.diary.validator.DiaryCreateRequestValidator;
 import dev.gmelon.plango.web.diary.validator.DiaryEditRequestValidator;
 import lombok.RequiredArgsConstructor;
@@ -81,4 +78,13 @@ public class DiaryController {
                        @PathVariable Long diaryId) {
         diaryService.delete(memberId, diaryId);
     }
+
+    @GetMapping(value = "/diaries", params = "query")
+    public List<DiarySearchResponseDto> search(
+            @LoginMember Long memberId,
+            @RequestParam String query,
+            @RequestParam(defaultValue = "1") int page) {
+        return diaryService.search(memberId, query, page);
+    }
+
 }

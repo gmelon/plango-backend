@@ -11,10 +11,7 @@ import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
-import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
-import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
-import dev.gmelon.plango.service.diary.dto.DiaryListResponseDto;
-import dev.gmelon.plango.service.diary.dto.DiaryResponseDto;
+import dev.gmelon.plango.service.diary.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -581,6 +578,47 @@ class DiaryControllerTest {
         assertThat(responseDtos)
                 .extracting(DiaryListResponseDto::getContent)
                 .isEqualTo(expectedContents);
+    }
+
+    @PlangoMockUser
+    @Test
+    void 키워드_검색시_공백을_제거하고_기록_본문에서_검색된다() throws Exception {
+        // given
+        Member member = memberRepository.findAll().get(0);
+        Schedule givenSchedule = Schedule.builder()
+                .title("일정 제목")
+                .content("일정 메모")
+                .build();
+        givenSchedule.setSingleOwnerScheduleMember(member);
+        scheduleRepository.save(givenSchedule);
+
+        List<Diary> givenDiaries = List.of(
+                Diary.builder()
+                        .content("기록 A")
+                        .schedule(givenSchedule)
+                        .build(),
+                Diary.builder()
+                        .content("기록 B")
+                        .schedule(givenSchedule)
+                        .build()
+        );
+        diaryRepository.saveAll(givenDiaries);
+
+        String query = "기 록";
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(get("/api/diaries")
+                .queryParam("query", query)
+        ).andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+        DiarySearchResponseDto[] responseDtos = objectMapper.readValue(response.getContentAsString(UTF_8), DiarySearchResponseDto[].class);
+        assertThat(responseDtos).hasSize(2);
+        assertThat(responseDtos)
+                .extracting(DiarySearchResponseDto::getContent)
+                .containsExactlyInAnyOrder("기록 A", "기록 B");
     }
 
     private Member createAnotherMember() {

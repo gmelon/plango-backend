@@ -14,10 +14,7 @@ import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
 import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
 import dev.gmelon.plango.exception.schedule.ScheduleNotAcceptedException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
-import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
-import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
-import dev.gmelon.plango.service.diary.dto.DiaryListResponseDto;
-import dev.gmelon.plango.service.diary.dto.DiaryResponseDto;
+import dev.gmelon.plango.service.diary.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +28,8 @@ import static java.util.stream.Collectors.toList;
 @Transactional(readOnly = true)
 @Service
 public class DiaryService {
+
+    private static final String WHITE_SPACE_REGEX = "\\s";
 
     private final DiaryRepository diaryRepository;
     private final ScheduleRepository scheduleRepository;
@@ -117,6 +116,17 @@ public class DiaryService {
         deleteDiaryImages(diary);
 
         diaryRepository.delete(diary);
+    }
+
+    public List<DiarySearchResponseDto> search(Long memberId, String query, int page) {
+        List<Diary> results = diaryRepository.search(memberId, trim(query), page);
+        return results.stream()
+                .map(DiarySearchResponseDto::from)
+                .collect(toList());
+    }
+
+    private String trim(String string) {
+        return string.replaceAll(WHITE_SPACE_REGEX, "");
     }
 
     private void deleteDiaryImages(Diary diary) {

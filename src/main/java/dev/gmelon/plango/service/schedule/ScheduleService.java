@@ -30,6 +30,8 @@ import static java.util.stream.Collectors.toList;
 @Service
 public class ScheduleService {
 
+    private static final String WHITE_SPACE_REGEX = "\\s";
+
     private final ScheduleRepository scheduleRepository;
     private final ScheduleQueryRepository scheduleQueryRepository;
     private final MemberRepository memberRepository;
@@ -185,6 +187,17 @@ public class ScheduleService {
                 .collect(toList());
     }
 
+    public List<ScheduleSearchResponseDto> search(Long memberId, String query, int page) {
+        List<Schedule> results = scheduleRepository.search(memberId, trim(query), page);
+        return results.stream()
+                .map(ScheduleSearchResponseDto::from)
+                .collect(toList());
+    }
+
+    private String trim(String string) {
+        return string.replaceAll(WHITE_SPACE_REGEX, "");
+    }
+
     private void validateMember(Schedule schedule, Member member) {
         if (!schedule.isMember(member.getId())) {
             throw new ScheduleAccessDeniedException();
@@ -212,4 +225,5 @@ public class ScheduleService {
         return memberRepository.findById(memberId)
                 .orElseThrow(NoSuchMemberException::new);
     }
+
 }

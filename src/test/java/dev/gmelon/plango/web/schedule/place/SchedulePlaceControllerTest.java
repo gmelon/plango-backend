@@ -16,6 +16,7 @@ import dev.gmelon.plango.service.schedule.dto.ScheduleResponseDto;
 import dev.gmelon.plango.service.schedule.dto.ScheduleResponseDto.SchedulePlaceResponseDto;
 import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceCreateRequestDto;
 import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceEditRequestDto;
+import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceSearchResponseDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -659,6 +660,47 @@ class SchedulePlaceControllerTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
 
         assertThat(schedulePlaceLikeRepository.countBySchedulePlaceIdAndMemberId(givenSchedulePlace.getId(), member.getId())).isEqualTo(0);
+    }
+
+    @PlangoMockUser
+    @Test
+    void 키워드_검색시_공백을_제거하고_장소_이름에서_검색된다() throws Exception {
+        // given
+        Member member = memberRepository.findAll().get(0);
+        Schedule givenSchedule = Schedule.builder()
+                .title("일정 제목")
+                .content("일정 메모")
+                .build();
+        givenSchedule.setSingleOwnerScheduleMember(member);
+        scheduleRepository.save(givenSchedule);
+
+        List<SchedulePlace> givenSchedulePlaces = List.of(
+                SchedulePlace.builder()
+                        .schedule(givenSchedule)
+                        .placeName("카페 A")
+                        .build(),
+                SchedulePlace.builder()
+                        .schedule(givenSchedule)
+                        .placeName("카페 B")
+                        .build()
+        );
+        schedulePlaceRepository.saveAll(givenSchedulePlaces);
+
+        String query = "카 페";
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(get("/api/schedulePlaces")
+                .queryParam("query", query)
+        ).andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+        SchedulePlaceSearchResponseDto[] responseDtos = objectMapper.readValue(response.getContentAsString(UTF_8), SchedulePlaceSearchResponseDto[].class);
+        assertThat(responseDtos).hasSize(2);
+        assertThat(responseDtos)
+                .extracting(SchedulePlaceSearchResponseDto::getPlaceName)
+                .containsExactlyInAnyOrder("카페 A", "카페 B");
     }
 
     private Member createAnotherMember() {
