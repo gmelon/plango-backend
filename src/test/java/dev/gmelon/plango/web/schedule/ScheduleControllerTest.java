@@ -1117,10 +1117,12 @@ class ScheduleControllerTest {
     void 키워드_검색시_공백을_제거하고_일정_제목_또는_본문에서_검색된다() throws Exception {
         // given
         Member member = memberRepository.findAll().get(0);
-        List<Schedule> givenSchedules = List.of(
+        Member anotherMember = createAnotherMember();
+
+        List<Schedule> givenMemberSchedules = List.of(
                 Schedule.builder()
-                        .title("학교 수업")
-                        .content("일정 A 메모")
+                        .title("현재 회원 - 학교 수업")
+                        .content("")
                         .build(),
                 Schedule.builder()
                         .title("일정 B")
@@ -1131,10 +1133,17 @@ class ScheduleControllerTest {
                         .content("일정 C 메모")
                         .build()
         );
-        for (Schedule givenSchedule : givenSchedules) {
+        for (Schedule givenSchedule : givenMemberSchedules) {
             givenSchedule.setSingleOwnerScheduleMember(member);
         }
-        scheduleRepository.saveAll(givenSchedules);
+        scheduleRepository.saveAll(givenMemberSchedules);
+
+        Schedule givenAnotherMemberSchedule = Schedule.builder()
+                .title("타 회원 - 학교 수업")
+                .content("")
+                .build();
+        givenAnotherMemberSchedule.setSingleOwnerScheduleMember(anotherMember);
+        scheduleRepository.save(givenAnotherMemberSchedule);
 
         String query = "학 교 수 업";
 
@@ -1150,7 +1159,7 @@ class ScheduleControllerTest {
         assertThat(responseDtos).hasSize(2);
         assertThat(responseDtos)
                 .extracting(ScheduleSearchResponseDto::getTitle)
-                .containsExactlyInAnyOrder("학교 수업", "일정 B");
+                .containsExactlyInAnyOrder("현재 회원 - 학교 수업", "일정 B");
     }
 
     private Member createAnotherMember() {

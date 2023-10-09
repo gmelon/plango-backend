@@ -585,6 +585,8 @@ class DiaryControllerTest {
     void 키워드_검색시_공백을_제거하고_기록_본문에서_검색된다() throws Exception {
         // given
         Member member = memberRepository.findAll().get(0);
+        Member anotherMember = createAnotherMember();
+
         Schedule givenSchedule = Schedule.builder()
                 .title("일정 제목")
                 .content("일정 메모")
@@ -596,10 +598,17 @@ class DiaryControllerTest {
                 Diary.builder()
                         .content("기록 A")
                         .schedule(givenSchedule)
+                        .member(member)
                         .build(),
                 Diary.builder()
                         .content("기록 B")
                         .schedule(givenSchedule)
+                        .member(member)
+                        .build(),
+                Diary.builder()
+                        .content("기록 C")
+                        .schedule(givenSchedule)
+                        .member(anotherMember)
                         .build()
         );
         diaryRepository.saveAll(givenDiaries);

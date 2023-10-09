@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 import static dev.gmelon.plango.domain.schedule.QSchedule.schedule;
+import static dev.gmelon.plango.domain.schedule.QScheduleMember.scheduleMember;
 import static dev.gmelon.plango.domain.schedule.place.QSchedulePlace.schedulePlace;
 import static java.lang.Math.max;
 
@@ -24,10 +25,11 @@ public class SchedulePlaceRepositoryImpl implements SchedulePlaceRepositoryCusto
         return jpaQueryFactory
                 .selectFrom(schedulePlace)
                 .join(schedulePlace.schedule, schedule).fetchJoin()
+                .join(schedule.scheduleMembers, scheduleMember)
+                .on(scheduleMember.member.id.eq(memberId))
                 .where(trim(schedulePlace.placeName).contains(trimmedQuery))
                 .offset(offset(page))
                 .limit(DEFAULT_PAGINATION_SIZE)
-                .distinct()
                 .fetch();
     }
 

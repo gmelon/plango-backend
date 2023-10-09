@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 import static dev.gmelon.plango.domain.diary.QDiary.diary;
+import static dev.gmelon.plango.domain.schedule.QSchedule.schedule;
 import static java.lang.Math.max;
 
 @RequiredArgsConstructor
@@ -22,7 +23,9 @@ public class DiaryRepositoryImpl implements DiaryRepositoryCustom {
     public List<Diary> search(Long memberId, String trimmedQuery, int page) {
         return jpaQueryFactory
                 .selectFrom(diary)
-                .where(trim(diary.content).contains(trimmedQuery))
+                .join(diary.schedule, schedule).fetchJoin()
+                .where(trim(diary.content).contains(trimmedQuery)
+                        .and(diary.member.id.eq(memberId)))
                 .offset(offset(page))
                 .limit(DEFAULT_PAGINATION_SIZE)
                 .fetch();

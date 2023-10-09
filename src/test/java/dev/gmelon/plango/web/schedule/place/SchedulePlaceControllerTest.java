@@ -667,24 +667,39 @@ class SchedulePlaceControllerTest {
     void 키워드_검색시_공백을_제거하고_장소_이름에서_검색된다() throws Exception {
         // given
         Member member = memberRepository.findAll().get(0);
-        Schedule givenSchedule = Schedule.builder()
-                .title("일정 제목")
+        Member anotherMember = createAnotherMember();
+
+        Schedule givenMemberSchedule = Schedule.builder()
+                .title("현재 회원 일정")
                 .content("일정 메모")
                 .build();
-        givenSchedule.setSingleOwnerScheduleMember(member);
-        scheduleRepository.save(givenSchedule);
+        givenMemberSchedule.setSingleOwnerScheduleMember(member);
+        scheduleRepository.save(givenMemberSchedule);
 
-        List<SchedulePlace> givenSchedulePlaces = List.of(
+        Schedule givenAnotherMemberSchedule = Schedule.builder()
+                .title("타 회원 일정")
+                .content("일정 메모")
+                .build();
+        givenAnotherMemberSchedule.setSingleOwnerScheduleMember(anotherMember);
+        scheduleRepository.save(givenAnotherMemberSchedule);
+
+        List<SchedulePlace> givenMemberSchedulePlaces = List.of(
                 SchedulePlace.builder()
-                        .schedule(givenSchedule)
+                        .schedule(givenMemberSchedule)
                         .placeName("카페 A")
                         .build(),
                 SchedulePlace.builder()
-                        .schedule(givenSchedule)
+                        .schedule(givenMemberSchedule)
                         .placeName("카페 B")
                         .build()
         );
-        schedulePlaceRepository.saveAll(givenSchedulePlaces);
+        schedulePlaceRepository.saveAll(givenMemberSchedulePlaces);
+
+        SchedulePlace givenAnotherMemberSchedulePlace = SchedulePlace.builder()
+                .schedule(givenAnotherMemberSchedule)
+                .placeName("카페 C")
+                .build();
+        schedulePlaceRepository.save(givenAnotherMemberSchedulePlace);
 
         String query = "카 페";
 
