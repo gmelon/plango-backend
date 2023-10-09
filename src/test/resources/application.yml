@@ -20,6 +20,7 @@ decorator:
   datasource:
     p6spy:
       enable-logging: true
+firebase-token-path: 'classpath:/firebase/firebase-adminsdk.json'
 #logging:
 #  level:
 #    root: trace
