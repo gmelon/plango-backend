@@ -9,3 +9,4 @@ decorator:
   datasource:
     p6spy:
       enable-logging: false
+firebase-token-path: 'file:/home/ec2-user/app/firebase/firebase-adminsdk.json'

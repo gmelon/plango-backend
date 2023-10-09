@@ -9,7 +9,10 @@ import dev.gmelon.plango.exception.fcm.FirebaseTokenRefreshFailureException;
 import dev.gmelon.plango.infrastructure.fcm.dto.FcmRequestDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -27,12 +30,19 @@ import static java.util.stream.Collectors.toList;
 @Service
 public class FirebaseCloudMessageService {
 
-    private static final String CREDENTIAL_JSON_PATH = "firebase/firebase-adminsdk.json";
     private static final String CLOUD_MESSAGING_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
     private static final String API_URL = "https://fcm.googleapis.com/v1/projects/plango-395216/messages:send";
+    private static final ResourcePatternResolver resourcePatternResolver;
 
     private final FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
     private final RestTemplate restTemplate;
+
+    @Value("${firebase-token-path}")
+    private String firebaseTokenPath;
+
+    static {
+        resourcePatternResolver = ResourcePatternUtils.getResourcePatternResolver(new DefaultResourceLoader());
+    }
 
     public void sendMessageTo(Notification notification, Member targetMember) {
         List<String> targetTokens = findAllTokensByMember(targetMember);
@@ -68,7 +78,7 @@ public class FirebaseCloudMessageService {
         GoogleCredentials googleCredentials = null;
         try {
             googleCredentials = GoogleCredentials
-                    .fromStream(new ClassPathResource(CREDENTIAL_JSON_PATH).getInputStream())
+                    .fromStream(resourcePatternResolver.getResource(firebaseTokenPath).getInputStream())
                     .createScoped(CLOUD_MESSAGING_SCOPE);
             googleCredentials.refreshIfExpired();
         } catch (IOException e) {

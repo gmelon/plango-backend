@@ -11,3 +11,4 @@ spring:
     hibernate:
       ddl-auto: create
     database: h2
+firebase-token-path: 'classpath:/firebase/firebase-adminsdk.json'
