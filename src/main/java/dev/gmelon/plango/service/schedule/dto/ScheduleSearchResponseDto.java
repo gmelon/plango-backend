@@ -1,5 +1,6 @@
 package dev.gmelon.plango.service.schedule.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,6 +18,7 @@ public class ScheduleSearchResponseDto {
 
     private String content;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private LocalDate date;
 
     @Builder
