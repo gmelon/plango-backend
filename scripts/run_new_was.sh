@@ -28,7 +28,7 @@ echo "> firebase access token 파일을 resource 폴더로 복사합니다."
 mkdir -p /home/ec2-user/app/plango-backend/src/main/resources/firebase
 cp /home/ec2-user/app/firebase/firebase-adminsdk.json /home/ec2-user/app/plango-backend/src/main/resources/firebase/firebase-adminsdk.json
 
-nohup java -jar -Dspring.config.location=classpath:/application.yml,classpath:/application-real.yml,/home/ec2-user/app/application-real-db.yml,/home/ec2-user/app/application-real-s3.yml,/home/ec2-user/app/application-real-auth.yml \
+nohup java -jar -Dspring.config.location=classpath:/application.yml,classpath:/application-real.yml,/home/ec2-user/app/application-real-db.yml,/home/ec2-user/app/application-real-s3.yml,/home/ec2-user/app/application-real-auth.yml,classpath:/firebase/firebase-adminsdk.json \
                 -Dspring.profiles.active=real \
                 -Dserver.port=${TARGET_PORT} /home/ec2-user/app/plango-backend/build/libs/* > /home/ec2-user/app/nohup.out 2>&1 &
 echo "> 이제 새로운 WAS가 ${TARGET_PORT} 에서 실행됩니다."
