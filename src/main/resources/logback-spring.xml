@@ -1,0 +1,36 @@
+<configuration>
+
+    <property name="LOG_PATTERN" value="%highlight(%-5level) %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%cyan(%class{0}):%line] - %msg%n" />
+    <property name="LOG_FILE_PATH" value="/home/ec2-user/app/logs/plango-real.%d{yyyy-MM-dd}.%i.log" />
+
+    <!-- Console Appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Rolling File Appender for Production Environment -->
+    <springProfile name="real">
+        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>logs/myapp.log</file>
+            <encoder>
+                <pattern>${LOG_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_FILE_PATH}</fileNamePattern>
+                <maxHistory>180</maxHistory> <!-- 최대 180일까지 보관 -->
+            </rollingPolicy>
+        </appender>
+    </springProfile>
+
+    <!-- Logger Configuration -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <springProfile name="real">
+            <appender-ref ref="FILE"/>
+        </springProfile>
+    </root>
+</configuration>

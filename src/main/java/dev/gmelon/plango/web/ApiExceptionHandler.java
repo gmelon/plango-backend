@@ -5,6 +5,7 @@ import dev.gmelon.plango.exception.InternalServerException;
 import dev.gmelon.plango.exception.PlangoException;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import dev.gmelon.plango.exception.dto.InputInvalidErrorResponseDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.ResponseEntity;
@@ -30,12 +31,13 @@ import javax.validation.ConstraintViolationException;
 
 import static org.springframework.http.HttpStatus.*;
 
-// TODO 로깅
+@Slf4j
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
     @ExceptionHandler(InternalServerException.class)
     public ResponseEntity<ErrorResponseDto> internalServerExceptionHandler(InternalServerException exception) {
+        logWarn(exception);
         return ResponseEntity
                 .status(exception.getStatus())
                 .body(ErrorResponseDto.internalSeverError());
@@ -43,6 +45,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(InputInvalidException.class)
     public ResponseEntity<InputInvalidErrorResponseDto> inputInvalidExceptionHandler(InputInvalidException exception) {
+        logWarn(exception);
         return ResponseEntity
                 .status(exception.getStatus())
                 .body(InputInvalidErrorResponseDto.from(exception));
@@ -50,6 +53,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(PlangoException.class)
     public ResponseEntity<ErrorResponseDto> plangoExceptionHandler(PlangoException exception) {
+        logWarn(exception);
         return ResponseEntity
                 .status(exception.getStatus())
                 .body(ErrorResponseDto.from(exception));
@@ -57,6 +61,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponseDto> authenticationExceptionHandler(AuthenticationException exception) {
+        logWarn(exception);
         return ResponseEntity
                 .status(UNAUTHORIZED)
                 .body(ErrorResponseDto.unAuthorized());
@@ -64,6 +69,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponseDto> accessDeniedExceptionHandler(AccessDeniedException exception) {
+        logWarn(exception);
         return ResponseEntity
                 .status(NOT_FOUND)
                 .body(ErrorResponseDto.notFound());
@@ -75,6 +81,7 @@ public class ApiExceptionHandler {
             MissingServletRequestPartException.class
     })
     public ResponseEntity<ErrorResponseDto> badRequestExceptionHandler(Exception exception) {
+        logWarn(exception);
         return ResponseEntity
                 .status(BAD_REQUEST)
                 .body(ErrorResponseDto.from(exception));
@@ -82,6 +89,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<InputInvalidErrorResponseDto> missingServletRequestParameterExceptionHandler(MissingServletRequestParameterException exception) {
+        logWarn(exception);
         return ResponseEntity
                 .badRequest()
                 .body(InputInvalidErrorResponseDto.from(exception));
@@ -89,6 +97,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(TypeMismatchException.class)
     public ResponseEntity<InputInvalidErrorResponseDto> typeMismatchExceptionHandler(TypeMismatchException exception) {
+        logWarn(exception);
         return ResponseEntity
                 .badRequest()
                 .body(InputInvalidErrorResponseDto.from(exception));
@@ -96,6 +105,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<InputInvalidErrorResponseDto> constraintViolationExceptionHandler(ConstraintViolationException exception) {
+        logWarn(exception);
         return ResponseEntity
                 .badRequest()
                 .body(InputInvalidErrorResponseDto.from(exception));
@@ -103,6 +113,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<InputInvalidErrorResponseDto> argumentNotValidExceptionHandler(MethodArgumentNotValidException exception) {
+        logWarn(exception);
         return ResponseEntity
                 .badRequest()
                 .body(InputInvalidErrorResponseDto.from(exception));
@@ -110,6 +121,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(BindException.class)
     public ResponseEntity<InputInvalidErrorResponseDto> bindExceptionHandler(BindException exception) {
+        logWarn(exception);
         return ResponseEntity
                 .badRequest()
                 .body(InputInvalidErrorResponseDto.from(exception));
@@ -117,6 +129,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ErrorResponseDto> notFoundExceptionHandler(Exception exception) {
+        logWarn(exception);
         return ResponseEntity
                 .status(NOT_FOUND)
                 .body(ErrorResponseDto.notFound());
@@ -124,6 +137,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponseDto> methodNotAllowedExceptionHandler(Exception exception) {
+        logWarn(exception);
         return ResponseEntity
                 .status(METHOD_NOT_ALLOWED)
                 .body(ErrorResponseDto.from(exception));
@@ -131,6 +145,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
     public ResponseEntity<ErrorResponseDto> notAcceptableExceptionHandler(Exception exception) {
+        logWarn(exception);
         return ResponseEntity
                 .status(NOT_ACCEPTABLE)
                 .body(ErrorResponseDto.from(exception));
@@ -138,6 +153,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ErrorResponseDto> unSupportedMediaTypeExceptionHandler(Exception exception) {
+        logWarn(exception);
         return ResponseEntity
                 .status(UNSUPPORTED_MEDIA_TYPE)
                 .body(ErrorResponseDto.from(exception));
@@ -149,6 +165,7 @@ public class ApiExceptionHandler {
             HttpMessageNotWritableException.class,
     })
     public ResponseEntity<ErrorResponseDto> internalServerErrorExceptionHandler(Exception exception) {
+        logWarn(exception);
         return ResponseEntity
                 .status(INTERNAL_SERVER_ERROR)
                 .body(ErrorResponseDto.from(exception));
@@ -156,6 +173,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(AsyncRequestTimeoutException.class)
     public ResponseEntity<ErrorResponseDto> serviceUnavailableExceptionHandler(Exception exception) {
+        logWarn(exception);
         return ResponseEntity
                 .status(SERVICE_UNAVAILABLE)
                 .body(ErrorResponseDto.from(exception));
@@ -163,8 +181,13 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> unhandledExceptionHandler(Exception exception) {
+        logWarn(exception);
         return ResponseEntity
                 .internalServerError()
                 .body(ErrorResponseDto.internalSeverError());
+    }
+
+    private void logWarn(Exception exception) {
+        log.warn("{}\n{}", exception.getMessage(), exception.getStackTrace());
     }
 }
