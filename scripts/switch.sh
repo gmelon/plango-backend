@@ -23,7 +23,7 @@ echo "set \$service_url http://127.0.0.1:${TARGET_PORT};" | tee /home/ec2-user/s
 echo "> 새로운 Nginx 활성 프록시 포트는 ${TARGET_PORT} 입니다."
 
 # Slack으로 Nginx 상태 알리기
-./send_slack_message.sh "새로운 Nginx 활성 프록시 포트는 ${TARGET_PORT} 입니다."
+/home/ec2-user/app/scripts/send_slack_message.sh "새로운 Nginx 활성 프록시 포트는 ${TARGET_PORT} 입니다."
 
 # Reload nginx
 sudo service nginx reload
