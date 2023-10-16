@@ -25,9 +25,17 @@ do
 
     if [ "${RESPONSE_CODE}" -eq 200 ]; then
         echo "> 새로운 WAS가 정상적으로 실행되고 있습니다."
+
+        # Slack으로 서버 실행 성공 알림 보내기
+        ./send_slack_message.sh "서버 실행에 성공했습니다."
+
         exit 0
     elif [ "${RETRY_COUNT}" -eq 10 ]; then
         echo "> health check에 실패했습니다."
+
+        # Slack으로 서버 실행 실패 알림 보내기
+        ./send_slack_message.sh "서버 실행에 실패했습니다."
+
         exit 1
     fi
     sleep 10
