@@ -13,7 +13,8 @@ elif [ "${CURRENT_PORT}" -eq 8082 ]; then
   echo "> 현재 실행 중인 WAS의 포트 번호는 ${CURRENT_PORT} 입니다."
   TARGET_PORT=8081
 else
-  echo "> 현재 실행 중인 WAS가 없습니다."
+  echo "> 현재 실행 중인 WAS가 없어 8081 포트로 지정합니다."
+  TARGET_PORT=8081
 fi
 
 TARGET_PID=$(lsof -Fp -i TCP:${TARGET_PORT} | grep -Po 'p[0-9]+' | grep -Po '[0-9]+')

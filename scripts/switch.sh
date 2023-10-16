@@ -13,8 +13,7 @@ if [ "${CURRENT_PORT}" -eq 8081 ]; then
 elif [ "${CURRENT_PORT}" -eq 8082 ]; then
     TARGET_PORT=8081
 else
-    echo "> 현재 실행 중인 WAS가 없습니다."
-    exit 1
+    TARGET_PORT=8081
 fi
 
 # 프록시 포트를 TARGET_PORT로 변경한다
