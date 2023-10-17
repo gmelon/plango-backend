@@ -31,7 +31,7 @@ class NotificationTypeTest {
         String formattedContent = TestNotificationType.SCHEDULE_INVITED.formatContent(contentArguments);
 
         // then
-        assertThat(formattedContent).isEqualTo("A님이 B님을 일정에 초대했습니다.");
+        assertThat(formattedContent).isEqualTo("");
     }
 
     @Test

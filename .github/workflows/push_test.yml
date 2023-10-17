@@ -3,7 +3,7 @@ name: plango-push-test
 on:
   push:
     branches:
-      - main
+      - feat/push-test-script-test
 
 jobs:
   test:
