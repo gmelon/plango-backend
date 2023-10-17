@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup JDK 11
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v1
         with:
           java-version: 11
 
@@ -26,10 +26,10 @@ jobs:
         run: ./gradlew test
         shell: bash
 
-      - name: Check Test Status
+      - name: When tests fail, send a Slack notification.
+        if: failure()
         run: |
-          if [ ${{ job.status }} != "success" ]; then
-            curl -X POST -H 'Content-type: application/json' --data '{
-              "text": "Push한 코드가 테스트에 실패했습니다. 내용을 확인해주세요."
-            }' ${{ secrets.SLACK_WEBHOOK_URL }}
-          fi
+          curl -X POST -H 'Content-type: application/json' --data '{
+            "text": "Push한 코드가 테스트에 실패했습니다. 내용을 확인해주세요."
+          }' ${{ secrets.SLACK_WEBHOOK_URL }}
+        shell: bash
