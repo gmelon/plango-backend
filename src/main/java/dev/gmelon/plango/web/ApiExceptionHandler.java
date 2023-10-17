@@ -136,7 +136,7 @@ public class ApiExceptionHandler {
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorResponseDto> methodNotAllowedExceptionHandler(Exception exception) {
+    public ResponseEntity<ErrorResponseDto> methodNotAllowedExceptionHandler(HttpRequestMethodNotSupportedException exception) {
         logWarn(exception);
         return ResponseEntity
                 .status(METHOD_NOT_ALLOWED)
