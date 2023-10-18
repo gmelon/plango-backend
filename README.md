@@ -29,7 +29,7 @@
 
 ## Infrastructures
 ### Product
-<img width="1729" alt="image" src="https://github.com/gmelon/plango-backend/assets/33623106/669ba49f-425e-482d-9291-1c00c998973d">
+<img width="1705" alt="image" src="https://github.com/gmelon/plango-backend/assets/33623106/d7b41680-5588-4e98-8d58-ae087de32c57">
 
 ### CI/CD
 <img width="1501" alt="image" src="https://github.com/gmelon/plango-backend/assets/33623106/0b313e21-76d8-45c3-8363-f239b2be123b">
