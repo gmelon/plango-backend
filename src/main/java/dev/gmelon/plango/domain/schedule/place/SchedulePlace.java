@@ -1,26 +1,30 @@
 package dev.gmelon.plango.domain.schedule.place;
 
+import static javax.persistence.CascadeType.ALL;
+import static javax.persistence.GenerationType.IDENTITY;
+
 import dev.gmelon.plango.domain.BaseTimeEntity;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.schedule.Schedule;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.proxy.HibernateProxy;
 
-import javax.persistence.*;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
-import static java.util.stream.Collectors.toList;
-import static javax.persistence.CascadeType.ALL;
-import static javax.persistence.GenerationType.IDENTITY;
-import static lombok.AccessLevel.PROTECTED;
-
 @Getter
-@NoArgsConstructor(access = PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class SchedulePlace extends BaseTimeEntity {
 
@@ -67,23 +71,8 @@ public class SchedulePlace extends BaseTimeEntity {
     }
 
     public void edit(SchedulePlaceEditor editor) {
-        this.placeName = editor.getPlaceName();
-        this.roadAddress = editor.getRoadAddress();
-        this.latitude = editor.getLatitude();
-        this.longitude = editor.getLongitude();
         this.memo = editor.getMemo();
         this.category = editor.getCategory();
-    }
-
-    public List<Long> likedMemberIds() {
-        return schedulePlaceLikes.stream()
-                .map(SchedulePlaceLike::memberId)
-                .collect(toList());
-    }
-
-    public boolean isMemberLikes(Long memberId) {
-        return schedulePlaceLikes.stream()
-                .anyMatch(like -> like.isMemberEquals(memberId));
     }
 
     public void confirm() {

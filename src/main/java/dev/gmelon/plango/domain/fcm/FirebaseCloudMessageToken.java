@@ -1,20 +1,25 @@
 package dev.gmelon.plango.domain.fcm;
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 import dev.gmelon.plango.domain.member.Member;
+import java.time.LocalDateTime;
+import java.util.Objects;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.proxy.HibernateProxy;
 
-import javax.persistence.*;
-import java.time.LocalDateTime;
-import java.util.Objects;
-
-import static javax.persistence.GenerationType.IDENTITY;
-import static lombok.AccessLevel.PROTECTED;
-
 @Getter
-@NoArgsConstructor(access = PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class FirebaseCloudMessageToken {
 
@@ -37,19 +42,15 @@ public class FirebaseCloudMessageToken {
         this.id = id;
         this.member = member;
         this.tokenValue = tokenValue;
-
         this.lastUpdatedDate = lastUpdatedDate;
-        if (lastUpdatedDate == null) {
-            this.lastUpdatedDate = LocalDateTime.now();
-        }
     }
 
     public boolean isMemberEquals(Long memberId) {
         return member.getId().equals(memberId);
     }
 
-    public void update() {
-        this.lastUpdatedDate = LocalDateTime.now();
+    public void update(LocalDateTime currentDate) {
+        this.lastUpdatedDate = currentDate;
     }
 
     @Override

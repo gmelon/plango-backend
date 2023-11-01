@@ -1,21 +1,24 @@
 package dev.gmelon.plango.domain.schedule.place;
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 import dev.gmelon.plango.domain.BaseTimeEntity;
 import dev.gmelon.plango.domain.member.Member;
+import java.util.Objects;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.proxy.HibernateProxy;
 
-import javax.persistence.*;
-
-import java.util.Objects;
-
-import static javax.persistence.GenerationType.IDENTITY;
-import static lombok.AccessLevel.PROTECTED;
-
 @Getter
-@NoArgsConstructor(access = PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class SchedulePlaceLike extends BaseTimeEntity {
 
@@ -36,10 +39,6 @@ public class SchedulePlaceLike extends BaseTimeEntity {
         this.id = id;
         this.member = member;
         this.schedulePlace = schedulePlace;
-    }
-
-    public boolean isMemberEquals(Long memberId) {
-        return Objects.equals(memberId(), memberId);
     }
 
     public boolean isMemberAndPlaceEquals(Long memberId, Long schedulePlaceId) {

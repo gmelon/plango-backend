@@ -1,21 +1,25 @@
 package dev.gmelon.plango.domain.place;
 
+import static javax.persistence.FetchType.LAZY;
+import static javax.persistence.GenerationType.IDENTITY;
+
 import dev.gmelon.plango.domain.member.Member;
+import java.time.LocalDateTime;
+import java.util.Objects;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.proxy.HibernateProxy;
 
-import javax.persistence.*;
-import java.time.LocalDateTime;
-import java.util.Objects;
-
-import static javax.persistence.FetchType.LAZY;
-import static javax.persistence.GenerationType.IDENTITY;
-import static lombok.AccessLevel.PROTECTED;
-
 @Getter
-@NoArgsConstructor(access = PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class PlaceSearchRecord {
 
@@ -38,18 +42,10 @@ public class PlaceSearchRecord {
         this.lastSearchedDate = lastSearchedDate;
         this.keyword = keyword;
         this.member = member;
-
-        setDefaultValuesWhenNull();
     }
 
-    private void setDefaultValuesWhenNull() {
-        if (this.lastSearchedDate == null) {
-            this.lastSearchedDate = LocalDateTime.now();
-        }
-    }
-
-    public void search() {
-        this.lastSearchedDate = LocalDateTime.now();
+    public void search(LocalDateTime currentTime) {
+        this.lastSearchedDate = currentTime;
     }
 
     public Long memberId() {

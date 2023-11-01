@@ -6,19 +6,11 @@ import lombok.Getter;
 @Getter
 public class SchedulePlaceEditor {
 
-    private String placeName;
-    private String roadAddress;
-    private Double latitude;
-    private Double longitude;
     private String memo;
     private String category;
 
     @Builder
-    public SchedulePlaceEditor(String placeName, String roadAddress, Double latitude, Double longitude, String memo, String category) {
-        this.placeName = placeName;
-        this.roadAddress = roadAddress;
-        this.latitude = latitude;
-        this.longitude = longitude;
+    public SchedulePlaceEditor(String memo, String category) {
         this.memo = memo;
         this.category = category;
     }

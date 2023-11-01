@@ -1,5 +1,12 @@
 package dev.gmelon.plango.web.schedule.place;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.member.Member;
@@ -17,6 +24,7 @@ import dev.gmelon.plango.service.schedule.dto.ScheduleResponseDto.SchedulePlaceR
 import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceCreateRequestDto;
 import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceEditRequestDto;
 import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceSearchResponseDto;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,12 +34,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.List;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 @Sql(value = "classpath:/reset.sql")
 @AutoConfigureMockMvc
@@ -198,10 +200,6 @@ class SchedulePlaceControllerTest {
         schedulePlaceRepository.save(givenSchedulePlace);
 
         SchedulePlaceEditRequestDto editRequest = SchedulePlaceEditRequestDto.builder()
-                .latitude(36.3674097)
-                .longitude(127.3454477)
-                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
-                .placeName("충남대학교 공과대학 5호관")
                 .memo("두번째 수업")
                 .category("수업")
                 .build();
@@ -219,10 +217,6 @@ class SchedulePlaceControllerTest {
         assertThat(foundSchedulePlaces).hasSize(1);
 
         SchedulePlace foundSchedulePlace = foundSchedulePlaces.get(0);
-        assertThat(foundSchedulePlace.getLatitude()).isEqualTo(editRequest.getLatitude());
-        assertThat(foundSchedulePlace.getLongitude()).isEqualTo(editRequest.getLongitude());
-        assertThat(foundSchedulePlace.getRoadAddress()).isEqualTo(editRequest.getRoadAddress());
-        assertThat(foundSchedulePlace.getPlaceName()).isEqualTo(editRequest.getPlaceName());
         assertThat(foundSchedulePlace.getMemo()).isEqualTo(editRequest.getMemo());
         assertThat(foundSchedulePlace.getCategory()).isEqualTo(editRequest.getCategory());
     }
@@ -252,10 +246,6 @@ class SchedulePlaceControllerTest {
         schedulePlaceRepository.save(givenSchedulePlace);
 
         SchedulePlaceEditRequestDto editRequest = SchedulePlaceEditRequestDto.builder()
-                .latitude(36.3674097)
-                .longitude(127.3454477)
-                .roadAddress("대전광역시 유성구 온천2동 대학로 99")
-                .placeName("충남대학교 공과대학 5호관")
                 .memo("두번째 수업")
                 .category("수업")
                 .build();

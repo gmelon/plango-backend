@@ -1,28 +1,31 @@
 package dev.gmelon.plango.domain.schedule;
 
+import static javax.persistence.CascadeType.ALL;
+import static javax.persistence.GenerationType.IDENTITY;
+
 import dev.gmelon.plango.domain.BaseTimeEntity;
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.schedule.place.SchedulePlace;
 import dev.gmelon.plango.exception.schedule.ScheduleOwnerNotExistsException;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.hibernate.proxy.HibernateProxy;
-
-import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import static javax.persistence.CascadeType.ALL;
-import static javax.persistence.GenerationType.IDENTITY;
-import static lombok.AccessLevel.PROTECTED;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.proxy.HibernateProxy;
 
 @Getter
-@NoArgsConstructor(access = PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class Schedule extends BaseTimeEntity {
 
@@ -76,20 +79,20 @@ public class Schedule extends BaseTimeEntity {
         this.endTime = editor.getEndTime();
     }
 
-    public void changeDone(boolean done) {
-        this.done = done;
-    }
-
-    public void deleteScheduleMember(ScheduleMember scheduleMember) {
-        scheduleMembers.remove(scheduleMember);
-    }
-
     public void setScheduleMembers(List<ScheduleMember> scheduleMembers) {
         this.scheduleMembers = scheduleMembers;
     }
 
     public void setSchedulePlaces(List<SchedulePlace> schedulePlaces) {
         this.schedulePlaces = schedulePlaces;
+    }
+
+    public void changeDone(boolean done) {
+        this.done = done;
+    }
+
+    public void deleteScheduleMember(ScheduleMember scheduleMember) {
+        scheduleMembers.remove(scheduleMember);
     }
 
     public void setSingleOwnerScheduleMember(Member member) {
@@ -117,7 +120,6 @@ public class Schedule extends BaseTimeEntity {
     public boolean isOwner(Long memberId) {
         return scheduleMembers.stream()
                 .anyMatch(scheduleMember -> scheduleMember.isOwner() && scheduleMember.isMemberEquals(memberId));
-
     }
 
     public Long ownerId() {

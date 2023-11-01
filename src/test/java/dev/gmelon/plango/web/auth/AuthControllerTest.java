@@ -1,5 +1,10 @@
 package dev.gmelon.plango.web.auth;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.config.security.PlangoMockUser;
@@ -22,6 +27,10 @@ import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import dev.gmelon.plango.exception.dto.InputInvalidErrorResponseDto;
 import dev.gmelon.plango.service.auth.AuthService;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -33,15 +42,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.List;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @Sql(value = "classpath:/reset.sql")
 @AutoConfigureMockMvc
@@ -325,6 +325,7 @@ class AuthControllerTest {
         PlaceSearchRecord placeSearchRecord = PlaceSearchRecord.builder()
                 .keyword("검색어")
                 .member(member)
+                .lastSearchedDate(LocalDateTime.now())
                 .build();
         placeSearchRecordRepository.save(placeSearchRecord);
 
@@ -332,10 +333,12 @@ class AuthControllerTest {
                 FirebaseCloudMessageToken.builder()
                         .tokenValue("123-abc")
                         .member(member)
+                        .lastUpdatedDate(LocalDateTime.now())
                         .build(),
                 FirebaseCloudMessageToken.builder()
                         .tokenValue("456-def")
                         .member(member)
+                        .lastUpdatedDate(LocalDateTime.now())
                         .build()
         );
         firebaseCloudMessageTokenRepository.saveAll(memberTokens);

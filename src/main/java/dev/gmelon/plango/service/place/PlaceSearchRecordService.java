@@ -9,12 +9,13 @@ import dev.gmelon.plango.exception.place.NoSuchPlaceSearchRecordException;
 import dev.gmelon.plango.exception.place.PlaceSearchRecordAccessDeniedException;
 import dev.gmelon.plango.service.place.dto.PlaceSearchRecordListResponseDto;
 import dev.gmelon.plango.service.place.dto.PlaceSearchRecordRequestDto;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,6 +24,7 @@ public class PlaceSearchRecordService {
 
     private final PlaceSearchRecordRepository placeSearchRecordRepository;
     private final MemberRepository memberRepository;
+    private final Clock clock;
 
     public List<PlaceSearchRecordListResponseDto> findAll(Long memberId, int page) {
         return placeSearchRecordRepository.findAllByMemberId(memberId, page).stream()
@@ -35,7 +37,7 @@ public class PlaceSearchRecordService {
         Member member = findMemberById(memberId);
 
         PlaceSearchRecord placeSearchRecord = findPlaceSearchRecordOrCreate(requestDto, member);
-        placeSearchRecord.search();
+        placeSearchRecord.search(LocalDateTime.now(clock));
     }
 
     private Member findMemberById(Long memberId) {
@@ -45,7 +47,7 @@ public class PlaceSearchRecordService {
 
     private PlaceSearchRecord findPlaceSearchRecordOrCreate(PlaceSearchRecordRequestDto requestDto, Member member) {
         return placeSearchRecordRepository.findByKeywordAndMemberId(requestDto.getKeyword(), member.getId())
-                .orElseGet(() -> placeSearchRecordRepository.save(requestDto.toEntity(member)));
+                .orElseGet(() -> placeSearchRecordRepository.save(requestDto.toEntity(member, LocalDateTime.now(clock))));
     }
 
     @Transactional

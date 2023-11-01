@@ -9,6 +9,8 @@ import dev.gmelon.plango.exception.fcm.NoSuchFirebaseCloudMessageTokenException;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.service.fcm.dto.FirebaseCloudMessageTokenCreateOrUpdateRequestDto;
 import dev.gmelon.plango.service.fcm.dto.FirebaseCloudMessageTokenDeleteRequestDto;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ public class FirebaseCloudMessageTokenService {
 
     private final FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
     private final MemberRepository memberRepository;
+    private final Clock clock;
 
     @Transactional
     public void createOrUpdate(Long memberId, FirebaseCloudMessageTokenCreateOrUpdateRequestDto requestDto) {
@@ -39,13 +42,14 @@ public class FirebaseCloudMessageTokenService {
         FirebaseCloudMessageToken token = FirebaseCloudMessageToken.builder()
                 .member(findMemberById(memberId))
                 .tokenValue(requestDto.getTokenValue())
+                .lastUpdatedDate(LocalDateTime.now(clock))
                 .build();
         firebaseCloudMessageTokenRepository.save(token);
     }
 
     private void update(Optional<FirebaseCloudMessageToken> tokenOptional) {
         FirebaseCloudMessageToken token = tokenOptional.get();
-        token.update();
+        token.update(LocalDateTime.now(clock));
     }
 
     @Transactional

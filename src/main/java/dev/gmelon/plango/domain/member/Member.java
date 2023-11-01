@@ -1,6 +1,7 @@
 package dev.gmelon.plango.domain.member;
 
 import dev.gmelon.plango.domain.BaseTimeEntity;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,10 +12,9 @@ import javax.persistence.*;
 import java.util.Objects;
 
 import static javax.persistence.GenerationType.IDENTITY;
-import static lombok.AccessLevel.PROTECTED;
 
 @Getter
-@NoArgsConstructor(access = PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class Member extends BaseTimeEntity {
 
@@ -38,6 +38,7 @@ public class Member extends BaseTimeEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Getter(AccessLevel.NONE)
     private MemberRole role;
 
     @Builder

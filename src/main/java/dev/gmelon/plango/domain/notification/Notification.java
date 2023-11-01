@@ -3,6 +3,7 @@ package dev.gmelon.plango.domain.notification;
 import dev.gmelon.plango.domain.BaseTimeEntity;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.notification.type.NotificationType;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,10 +14,9 @@ import java.util.Objects;
 
 import static javax.persistence.FetchType.LAZY;
 import static javax.persistence.GenerationType.IDENTITY;
-import static lombok.AccessLevel.PROTECTED;
 
 @Getter
-@NoArgsConstructor(access = PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class Notification extends BaseTimeEntity {
 

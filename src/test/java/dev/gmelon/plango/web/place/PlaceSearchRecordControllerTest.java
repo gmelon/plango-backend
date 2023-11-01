@@ -1,5 +1,12 @@
 package dev.gmelon.plango.web.place;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.member.Member;
@@ -8,6 +15,12 @@ import dev.gmelon.plango.domain.place.PlaceSearchRecord;
 import dev.gmelon.plango.domain.place.PlaceSearchRecordRepository;
 import dev.gmelon.plango.service.place.dto.PlaceSearchRecordListResponseDto;
 import dev.gmelon.plango.service.place.dto.PlaceSearchRecordRequestDto;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -17,21 +30,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 @Sql(value = "classpath:/reset.sql")
 @AutoConfigureMockMvc
@@ -212,10 +210,12 @@ class PlaceSearchRecordControllerTest {
                 PlaceSearchRecord.builder()
                         .member(member)
                         .keyword("강남역")
+                        .lastSearchedDate(LocalDateTime.now())
                         .build(),
                 PlaceSearchRecord.builder()
                         .member(member)
                         .keyword("수서역")
+                        .lastSearchedDate(LocalDateTime.now())
                         .build()
         );
         placeSearchRecordRepository.saveAll(placeSearchRecords);
@@ -273,6 +273,7 @@ class PlaceSearchRecordControllerTest {
         assertThat(foundPlaceSearchRecords).hasSize(2);
 
         PlaceSearchRecord foundPlaceSearchRecord = assertDoesNotThrow(() -> placeSearchRecordRepository.findByKeywordAndMemberId(requestKeyword, member.getId()).get());
+        // TODO 날짜 테스트 개선
         assertThat(foundPlaceSearchRecord.getLastSearchedDate().toLocalDate()).isEqualTo(LocalDate.now());
     }
 
