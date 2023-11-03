@@ -23,9 +23,7 @@ public interface DiaryRepository extends JpaRepository<Diary, Long>, DiaryReposi
             "where d.schedule.id = :scheduleId")
     List<Diary> findAllByScheduleId(@Param("scheduleId") Long scheduleId);
 
-    @Query("select distinct d from Diary d left outer join fetch d.diaryImages " +
-            "where d.schedule.id in :scheduleIds")
-    List<Diary> findAllByScheduleIds(@Param("scheduleIds") List<Long> scheduleIds);
+    List<Diary> findAllByScheduleIdIn(List<Long> scheduleIds);
 
     @Query("select distinct d from Diary d left outer join fetch d.diaryImages join fetch d.schedule " +
             "where d.schedule.id = :scheduleId " +

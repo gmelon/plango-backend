@@ -85,19 +85,6 @@ public class AuthService {
         memberRepository.deleteById(memberId);
     }
 
-    private void deleteDiaries(List<Long> scheduleIds, Long memberId) {
-        deleteAllDiaryImages(scheduleIds);
-        diaryRepository.deleteAllInBatchByMemberId(memberId);
-    }
-
-    private void deleteAllDiaryImages(List<Long> scheduleIds) {
-        List<String> diaryImageUrls = diaryRepository.findAllByScheduleIds(scheduleIds).stream()
-                .flatMap(diary -> diary.getDiaryImageUrls().stream())
-                .collect(toList());
-
-        s3Repository.deleteAll(diaryImageUrls);
-    }
-
     private void deleteProfileImage(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(NoSuchMemberException::new);
@@ -106,5 +93,22 @@ public class AuthService {
         if (profileImageUrl != null) {
             s3Repository.delete(profileImageUrl);
         }
+    }
+
+    private void deleteDiaries(List<Long> scheduleIds, Long memberId) {
+        deleteAllDiaryImages(scheduleIds);
+        diaryRepository.deleteAllInBatchByMemberId(memberId);
+    }
+
+    private void deleteAllDiaryImages(List<Long> scheduleIds) {
+        if (scheduleIds.isEmpty()) {
+            return;
+        }
+
+        List<String> diaryImageUrls = diaryRepository.findAllByScheduleIdIn(scheduleIds).stream()
+                .flatMap(diary -> diary.getDiaryImageUrls().stream())
+                .collect(toList());
+
+        s3Repository.deleteAll(diaryImageUrls);
     }
 }
