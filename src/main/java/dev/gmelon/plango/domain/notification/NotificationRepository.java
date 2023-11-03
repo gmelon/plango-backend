@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long>, NotificationRepositoryCustom {
 
-    void deleteAllByMemberId(Long memberId);
+    void deleteAllInBatchByMemberId(Long memberId);
 
 }

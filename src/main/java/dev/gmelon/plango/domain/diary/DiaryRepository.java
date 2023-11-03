@@ -1,14 +1,12 @@
 package dev.gmelon.plango.domain.diary;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DiaryRepository extends JpaRepository<Diary, Long>, DiaryRepositoryCustom {
@@ -45,10 +43,5 @@ public interface DiaryRepository extends JpaRepository<Diary, Long>, DiaryReposi
 
     Optional<Diary> findByContent(String content);
 
-    @Modifying
-    @Query("delete from Diary d " +
-            "where d.schedule.id in :scheduleIds")
-    void deleteAllByScheduleIds(@Param("scheduleIds") List<Long> scheduleIds);
-
-    void deleteAllByMemberId(Long memberId);
+    void deleteAllInBatchByMemberId(Long memberId);
 }

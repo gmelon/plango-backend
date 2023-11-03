@@ -58,7 +58,7 @@ public class NotificationService {
 
     @Transactional
     public void deleteAll(Long memberId) {
-        notificationRepository.deleteAllByMemberId(memberId);
+        notificationRepository.deleteAllInBatchByMemberId(memberId);
     }
 
     @Transactional

@@ -1,5 +1,7 @@
 package dev.gmelon.plango.service.auth;
 
+import static java.util.stream.Collectors.toList;
+
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
 import dev.gmelon.plango.domain.member.Member;
@@ -8,19 +10,17 @@ import dev.gmelon.plango.domain.notification.NotificationRepository;
 import dev.gmelon.plango.domain.place.PlaceSearchRecordRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.domain.schedule.place.SchedulePlaceLikeRepository;
 import dev.gmelon.plango.exception.member.DuplicateEmailException;
 import dev.gmelon.plango.exception.member.DuplicateNicknameException;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -36,6 +36,7 @@ public class AuthService {
     private final PlaceSearchRecordRepository placeSearchRecordRepository;
     private final NotificationRepository notificationRepository;
     private final FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
+    private final SchedulePlaceLikeRepository schedulePlaceLikeRepository;
 
     @Transactional
     public void signup(SignupRequestDto requestDto) {
@@ -69,24 +70,24 @@ public class AuthService {
 
     @Transactional
     public void signout(Long memberId) {
-        placeSearchRecordRepository.deleteAllByMemberId(memberId);
-        notificationRepository.deleteAllByMemberId(memberId);
-        firebaseCloudMessageTokenRepository.deleteAllByMemberId(memberId);
+        placeSearchRecordRepository.deleteAllInBatchByMemberId(memberId);
+        notificationRepository.deleteAllInBatchByMemberId(memberId);
+        firebaseCloudMessageTokenRepository.deleteAllInBatchByMemberId(memberId);
 
         deleteProfileImage(memberId);
         List<Long> scheduleIds = scheduleRepository.findAllIdsByOwnerMemberId(memberId);
         deleteDiaries(scheduleIds, memberId);
-        scheduleMemberRepository.deleteAllByScheduleIds(scheduleIds);
-        scheduleRepository.deleteAllByScheduleIds(scheduleIds);
+        scheduleRepository.deleteAllInBatchByIdIn(scheduleIds);
 
-        scheduleMemberRepository.deleteAllByMemberId(memberId);
+        scheduleMemberRepository.deleteAllInBatchByMemberId(memberId);
+        schedulePlaceLikeRepository.deleteAllInBatchByMemberId(memberId);
+
         memberRepository.deleteById(memberId);
     }
 
     private void deleteDiaries(List<Long> scheduleIds, Long memberId) {
         deleteAllDiaryImages(scheduleIds);
-        diaryRepository.deleteAllByMemberId(memberId);
-        diaryRepository.deleteAllByScheduleIds(scheduleIds);
+        diaryRepository.deleteAllInBatchByMemberId(memberId);
     }
 
     private void deleteAllDiaryImages(List<Long> scheduleIds) {
