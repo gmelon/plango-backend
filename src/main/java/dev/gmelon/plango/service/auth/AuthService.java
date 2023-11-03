@@ -96,16 +96,25 @@ public class AuthService {
     }
 
     private void deleteDiaries(List<Long> scheduleIds, Long memberId) {
-        deleteAllDiaryImages(scheduleIds);
+        deleteAllMyScheduleDiaryImages(scheduleIds);
+        deleteAllParticipatedScheduleDiaryImages(memberId);
         diaryRepository.deleteAllInBatchByMemberId(memberId);
     }
 
-    private void deleteAllDiaryImages(List<Long> scheduleIds) {
+    private void deleteAllMyScheduleDiaryImages(List<Long> scheduleIds) {
         if (scheduleIds.isEmpty()) {
             return;
         }
 
         List<String> diaryImageUrls = diaryRepository.findAllByScheduleIdIn(scheduleIds).stream()
+                .flatMap(diary -> diary.getDiaryImageUrls().stream())
+                .collect(toList());
+
+        s3Repository.deleteAll(diaryImageUrls);
+    }
+
+    private void deleteAllParticipatedScheduleDiaryImages(Long memberId) {
+        List<String> diaryImageUrls = diaryRepository.findAllByMemberId(memberId).stream()
                 .flatMap(diary -> diary.getDiaryImageUrls().stream())
                 .collect(toList());
 
