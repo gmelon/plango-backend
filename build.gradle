@@ -3,6 +3,7 @@ import java.time.LocalDateTime
 buildscript {
 	ext {
 		queryDslVersion = "5.0.0"
+		jwtVersion = "0.12.3"
 	}
 }
 
@@ -52,6 +53,11 @@ dependencies {
 			"javax.persistence:javax.persistence-api",
 			"javax.annotation:javax.annotation-api",
 			"com.querydsl:querydsl-apt:${queryDslVersion}:jpa")
+
+	// JWT
+	implementation "io.jsonwebtoken:jjwt-api:${jwtVersion}"
+	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
+	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
