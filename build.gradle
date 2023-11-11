@@ -59,6 +59,10 @@ dependencies {
 	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
 	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
 
+	// Redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'it.ozimov:embedded-redis:0.7.2'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'io.rest-assured:rest-assured:4.5.1'

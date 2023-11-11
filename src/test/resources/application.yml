@@ -1,8 +1,9 @@
 spring:
   profiles:
     active:
-      - s3
-      - auth
+      - test
+      - test-s3
+      - test-auth
   session:
     store-type: none
   jackson:
@@ -12,6 +13,8 @@ spring:
     hibernate:
       ddl-auto: create
     database: h2
+  redis:
+    port: 6379
 server:
   servlet:
     session:
@@ -21,6 +24,3 @@ decorator:
     p6spy:
       enable-logging: true
 firebase-token-path: 'classpath:/firebase/firebase-adminsdk.json'
-#logging:
-#  level:
-#    root: trace
