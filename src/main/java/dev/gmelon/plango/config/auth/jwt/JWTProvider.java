@@ -4,7 +4,8 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import dev.gmelon.plango.config.auth.dto.MemberPrincipal;
-import dev.gmelon.plango.config.auth.dto.TokenResponseDto;
+import dev.gmelon.plango.domain.member.Member;
+import dev.gmelon.plango.service.auth.dto.TokenResponseDto;
 import dev.gmelon.plango.exception.auth.JWTException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -16,6 +17,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Component
 public class JWTProvider implements InitializingBean {
+    private static final String ID_KEY = "id";
     private static final String EMAIL_KEY = "email";
     private static final String AUTHORITIES_KEY = "authorities";
     private static final int ACCESS_TOKEN_EXPIRATION_MINUTES = 30;
@@ -49,6 +52,16 @@ public class JWTProvider implements InitializingBean {
         key = Keys.hmacShaKeyFor(keyBytes);
     }
 
+    public TokenResponseDto createToken(Member member) {
+        UsernamePasswordAuthenticationToken authentication = UsernamePasswordAuthenticationToken.authenticated(
+                new MemberPrincipal(member),
+                EMPTY_CREDENTIALS,
+                Collections.singleton(new SimpleGrantedAuthority(member.getRole()))
+        );
+
+        return createToken(authentication);
+    }
+
     public TokenResponseDto createToken(Authentication authentication) {
         LocalDateTime accessTokenExpiration = LocalDateTime.now(clock).plusMinutes(ACCESS_TOKEN_EXPIRATION_MINUTES);
         LocalDateTime refreshTokenExpiration = LocalDateTime.now(clock).plusDays(REFRESH_TOKEN_EXPIRATION_DAYS);
@@ -62,10 +75,11 @@ public class JWTProvider implements InitializingBean {
     }
 
     private String accessToken(Authentication authentication, LocalDateTime accessTokenExpiration) {
+        MemberPrincipal principal = (MemberPrincipal) authentication.getPrincipal();
         return Jwts.builder()
-                .claim(EMAIL_KEY, authentication.getName())
+                .claim(ID_KEY, principal.getId())
+                .claim(EMAIL_KEY, principal.getUsername())
                 .claim(AUTHORITIES_KEY, joinedAuthorities(authentication))
-                .issuedAt(Timestamp.valueOf(LocalDateTime.now(clock)))
                 .expiration(Timestamp.valueOf(accessTokenExpiration))
                 .signWith(key)
                 .compact();
@@ -78,8 +92,9 @@ public class JWTProvider implements InitializingBean {
     }
 
     private String refreshToken(Authentication authentication, LocalDateTime refreshTokenExpiration) {
+        MemberPrincipal principal = (MemberPrincipal) authentication.getPrincipal();
         return Jwts.builder()
-                .claim(EMAIL_KEY, authentication.getName())
+                .claim(EMAIL_KEY, principal.getUsername())
                 .issuedAt(Timestamp.valueOf(LocalDateTime.now(clock)))
                 .expiration(Timestamp.valueOf(refreshTokenExpiration))
                 .signWith(key)
@@ -93,8 +108,11 @@ public class JWTProvider implements InitializingBean {
         Claims payload = parseToken(accessToken);
 
         List<GrantedAuthority> authorities = parseAuthorities(payload);
-        MemberPrincipal principal = MemberPrincipal.of(payload.get(EMAIL_KEY, String.class),
-                authorities);
+        MemberPrincipal principal = MemberPrincipal.of(
+                payload.get(ID_KEY, Long.class),
+                payload.get(EMAIL_KEY, String.class),
+                authorities
+        );
         return UsernamePasswordAuthenticationToken.authenticated(principal, EMPTY_CREDENTIALS, authorities);
     }
 
@@ -107,7 +125,7 @@ public class JWTProvider implements InitializingBean {
     /**
      * Refresh Token을 파싱하여 회원의 email을 반환한다.
      */
-    public String parseRefreshToken(String refreshToken) {
+    public String parseEmailFromRefreshToken(String refreshToken) {
         Claims payload = parseToken(refreshToken);
 
         return payload.get(EMAIL_KEY, String.class);
@@ -122,9 +140,9 @@ public class JWTProvider implements InitializingBean {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (UnsupportedJwtException exception) {
-            throw new JWTException("지원하지 않는 토큰입니다.");
+            throw JWTException.unSupportedToken();
         } catch (JwtException | IllegalArgumentException exception) {
-            throw new JWTException("유효하지 않은 토큰입니다.");
+            throw JWTException.invalidToken();
         }
         return payload;
     }

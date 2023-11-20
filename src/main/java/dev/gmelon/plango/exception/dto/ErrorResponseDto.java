@@ -39,4 +39,10 @@ public class ErrorResponseDto {
                 .message(ErrorMessages.UNAUTHORIZED_ERROR_MESSAGE)
                 .build();
     }
+
+    public static ErrorResponseDto loginFailed() {
+        return ErrorResponseDto.builder()
+                .message(ErrorMessages.LOGIN_FAILURE_ERROR_MESSAGE)
+                .build();
+    }
 }

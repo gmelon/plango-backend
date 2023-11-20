@@ -2,31 +2,46 @@ package dev.gmelon.plango.service.auth;
 
 import static java.util.stream.Collectors.toList;
 
+import dev.gmelon.plango.config.auth.jwt.JWTProvider;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.notification.NotificationRepository;
 import dev.gmelon.plango.domain.place.PlaceSearchRecordRepository;
+import dev.gmelon.plango.domain.refreshtoken.RefreshToken;
+import dev.gmelon.plango.domain.refreshtoken.RefreshTokenRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.domain.schedule.place.SchedulePlaceLikeRepository;
+import dev.gmelon.plango.exception.auth.RefreshTokenTheftException;
+import dev.gmelon.plango.exception.auth.NoSuchRefreshTokenException;
 import dev.gmelon.plango.exception.member.DuplicateEmailException;
 import dev.gmelon.plango.exception.member.DuplicateNicknameException;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
+import dev.gmelon.plango.service.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
+import dev.gmelon.plango.service.auth.dto.TokenRefreshRequestDto;
+import dev.gmelon.plango.service.auth.dto.TokenResponseDto;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
 public class AuthService {
 
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final JWTProvider jwtProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final MemberRepository memberRepository;
     private final ScheduleRepository scheduleRepository;
     private final ScheduleMemberRepository scheduleMemberRepository;
@@ -37,6 +52,67 @@ public class AuthService {
     private final NotificationRepository notificationRepository;
     private final FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
     private final SchedulePlaceLikeRepository schedulePlaceLikeRepository;
+
+    @Transactional
+    public TokenResponseDto login(LoginRequestDto requestDto) {
+        Authentication authenticate = authenticationManagerBuilder.getObject()
+                .authenticate(requestDto.toAuthentication());
+
+        TokenResponseDto responseDto = jwtProvider.createToken(authenticate);
+        saveRefreshToken(authenticate.getName(), responseDto.getRefreshToken());
+
+        return responseDto;
+    }
+
+    private void saveRefreshToken(String email, String refreshTokenValue) {
+        RefreshToken refreshToken = RefreshToken.builder()
+                .email(email)
+                .tokenValue(refreshTokenValue)
+                .build();
+        refreshTokenRepository.save(refreshToken);
+    }
+
+    @Transactional
+    public void logout(Long memberId) {
+        Member member = findMemberById(memberId);
+        refreshTokenRepository.deleteById(member.getEmail());
+    }
+
+    @Transactional
+    public TokenResponseDto tokenRefresh(TokenRefreshRequestDto requestDto) {
+        String email = jwtProvider.parseEmailFromRefreshToken(requestDto.getRefreshToken());
+        RefreshToken refreshToken = findRefreshTokenByEmail(email);
+
+        if (!refreshToken.getTokenValue().equals(requestDto.getRefreshToken())) {
+            log.warn("Refresh Token 불일치. 토큰 탈취 가능성이 있습니다. 회원 email : {}", email);
+            refreshTokenRepository.deleteById(email);
+            throw new RefreshTokenTheftException();
+        }
+
+        TokenResponseDto tokenResponseDto = createNewToken(email);
+        updateRefreshToken(refreshToken, tokenResponseDto);
+        return tokenResponseDto;
+    }
+
+    private RefreshToken findRefreshTokenByEmail(String email) {
+        return refreshTokenRepository.findById(email)
+                .orElseThrow(NoSuchRefreshTokenException::new);
+    }
+
+    private TokenResponseDto createNewToken(String email) {
+        Member member = findMemberByEmail(email);
+        return jwtProvider.createToken(member);
+    }
+
+    private void updateRefreshToken(RefreshToken refreshToken, TokenResponseDto tokenResponseDto) {
+        refreshToken.updateTokenValue(tokenResponseDto.getRefreshToken());
+        refreshTokenRepository.save(refreshToken);
+    }
+
+    private Member findMemberByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(NoSuchMemberException::new);
+    }
 
     @Transactional
     public void signup(SignupRequestDto requestDto) {
@@ -86,8 +162,7 @@ public class AuthService {
     }
 
     private void deleteProfileImage(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(NoSuchMemberException::new);
+        Member member = findMemberById(memberId);
 
         String profileImageUrl = member.getProfileImageUrl();
         if (profileImageUrl != null) {
@@ -119,5 +194,10 @@ public class AuthService {
                 .collect(toList());
 
         s3Repository.deleteAll(diaryImageUrls);
+    }
+
+    private Member findMemberById(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(NoSuchMemberException::new);
     }
 }

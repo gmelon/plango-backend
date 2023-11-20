@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import dev.gmelon.plango.config.auth.dto.MemberPrincipal;
-import dev.gmelon.plango.config.auth.dto.TokenResponseDto;
+import dev.gmelon.plango.service.auth.dto.TokenResponseDto;
 import dev.gmelon.plango.exception.auth.JWTException;
 import java.time.Clock;
 import java.time.ZoneId;
@@ -28,7 +28,7 @@ class JWTProviderTest {
     @BeforeAll
     static void beforeAll() {
         List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(ROLE_USER.name()));
-        MemberPrincipal principal = MemberPrincipal.of("a@a.com", authorities);
+        MemberPrincipal principal = MemberPrincipal.of(1L, "a@a.com", authorities);
 
         MEMBER_AUTHENTICATION = UsernamePasswordAuthenticationToken.authenticated(principal, "", authorities);
     }
@@ -71,7 +71,7 @@ class JWTProviderTest {
         TokenResponseDto tokenResponseDto = jwtProvider.createToken(MEMBER_AUTHENTICATION);
 
         // when
-        String parsedMemberEmail = jwtProvider.parseRefreshToken(tokenResponseDto.getRefreshToken());
+        String parsedMemberEmail = jwtProvider.parseEmailFromRefreshToken(tokenResponseDto.getRefreshToken());
 
         // then
         assertThat(parsedMemberEmail).isEqualTo(MEMBER_AUTHENTICATION.getName());
@@ -84,7 +84,7 @@ class JWTProviderTest {
         TokenResponseDto tokenResponseDto = jwtProvider.createToken(MEMBER_AUTHENTICATION);
 
         // when, then
-        assertThatThrownBy(() -> jwtProvider.parseRefreshToken(tokenResponseDto.getRefreshToken()))
+        assertThatThrownBy(() -> jwtProvider.parseEmailFromRefreshToken(tokenResponseDto.getRefreshToken()))
                 .isInstanceOf(JWTException.class);
     }
 

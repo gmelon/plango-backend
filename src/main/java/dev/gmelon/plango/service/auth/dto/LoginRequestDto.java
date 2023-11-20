@@ -1,16 +1,16 @@
-package dev.gmelon.plango.config.auth.dto;
+package dev.gmelon.plango.service.auth.dto;
 
+import javax.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import javax.validation.constraints.NotBlank;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
 @NoArgsConstructor
 @Getter
 public class LoginRequestDto {
 
-    // TODO validation error message 작성하기
     @NotBlank
     private String emailOrNickname;
 
@@ -21,6 +21,10 @@ public class LoginRequestDto {
     public LoginRequestDto(String emailOrNickname, String password) {
         this.emailOrNickname = emailOrNickname;
         this.password = password;
+    }
+
+    public Authentication toAuthentication() {
+        return UsernamePasswordAuthenticationToken.unauthenticated(emailOrNickname.trim(), password.trim());
     }
 
 }

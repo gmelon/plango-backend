@@ -1,10 +1,19 @@
 package dev.gmelon.plango.web;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.METHOD_NOT_ALLOWED;
+import static org.springframework.http.HttpStatus.NOT_ACCEPTABLE;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
+import static org.springframework.http.HttpStatus.UNSUPPORTED_MEDIA_TYPE;
+
 import dev.gmelon.plango.exception.InputInvalidException;
 import dev.gmelon.plango.exception.InternalServerException;
 import dev.gmelon.plango.exception.PlangoException;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import dev.gmelon.plango.exception.dto.InputInvalidErrorResponseDto;
+import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.TypeMismatchException;
@@ -26,10 +35,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
-
-import javax.validation.ConstraintViolationException;
-
-import static org.springframework.http.HttpStatus.*;
 
 @Slf4j
 @RestControllerAdvice
@@ -63,8 +68,8 @@ public class ApiExceptionHandler {
     public ResponseEntity<ErrorResponseDto> authenticationExceptionHandler(AuthenticationException exception) {
         logWarn(exception);
         return ResponseEntity
-                .status(UNAUTHORIZED)
-                .body(ErrorResponseDto.unAuthorized());
+                .status(BAD_REQUEST)
+                .body(ErrorResponseDto.loginFailed());
     }
 
     @ExceptionHandler(AccessDeniedException.class)

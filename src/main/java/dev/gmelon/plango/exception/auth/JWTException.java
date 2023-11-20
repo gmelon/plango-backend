@@ -5,6 +5,14 @@ import org.springframework.http.HttpStatus;
 
 public class JWTException extends PlangoException {
     public JWTException(String message) {
-        super(message, HttpStatus.FORBIDDEN);
+        super(message, HttpStatus.BAD_REQUEST);
+    }
+
+    public static JWTException unSupportedToken() {
+        return new JWTException("지원하지 않는 토큰입니다.");
+    }
+
+    public static JWTException invalidToken() {
+        return new JWTException("유효하지 않은 토큰입니다.");
     }
 }

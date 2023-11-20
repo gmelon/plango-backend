@@ -4,6 +4,7 @@ import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.place.PlaceSearchRecord;
 import dev.gmelon.plango.domain.place.PlaceSearchRecordRepository;
+import dev.gmelon.plango.domain.refreshtoken.RefreshTokenRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
@@ -12,31 +13,33 @@ import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.service.schedule.ScheduleService;
 import dev.gmelon.plango.service.schedule.dto.ScheduleCreateRequestDto;
 import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceCreateRequestDto;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 
 @Profile("local")
 @RequiredArgsConstructor
 @Component
-public class TestDataInit {
-
+public class TestDataGenerator implements ApplicationRunner {
     private final AuthService authService;
     private final MemberRepository memberRepository;
     private final ScheduleService scheduleService;
     private final PlaceSearchRecordRepository placeSearchRecordRepository;
     private final ScheduleRepository scheduleRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    @PostConstruct
-    public void dataInit() {
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        resetRedisRepositories();
+
         SignupRequestDto memberRequestA = SignupRequestDto.builder()
                 .email("hsh1769@naver.com")
                 .password("1111")
@@ -169,8 +172,10 @@ public class TestDataInit {
         Long createdScheduleDId = scheduleService.create(memberA.getId(), scheduleRequestD);
         // memberB는 수락 완료, memberC는 수락 대기
         Schedule scheduleD = scheduleRepository.findByIdWithMembers(createdScheduleDId).get();
-        scheduleD.getScheduleMembers().add(ScheduleMember.builder().member(memberB).accepted(true).schedule(scheduleD).build());
-        scheduleD.getScheduleMembers().add(ScheduleMember.builder().member(memberC).accepted(false).schedule(scheduleD).build());
+        scheduleD.getScheduleMembers()
+                .add(ScheduleMember.builder().member(memberB).accepted(true).schedule(scheduleD).build());
+        scheduleD.getScheduleMembers()
+                .add(ScheduleMember.builder().member(memberC).accepted(false).schedule(scheduleD).build());
         scheduleRepository.save(scheduleD);
 
         List<PlaceSearchRecord> placeSearchRecords = IntStream.rangeClosed(1, 10)
@@ -184,4 +189,7 @@ public class TestDataInit {
         placeSearchRecordRepository.saveAll(placeSearchRecords);
     }
 
+    private void resetRedisRepositories() {
+        refreshTokenRepository.deleteAll();
+    }
 }

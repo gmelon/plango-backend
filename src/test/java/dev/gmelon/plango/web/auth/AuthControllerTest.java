@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.gmelon.plango.config.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
@@ -19,6 +18,7 @@ import dev.gmelon.plango.domain.notification.Notification;
 import dev.gmelon.plango.domain.notification.NotificationRepository;
 import dev.gmelon.plango.domain.place.PlaceSearchRecord;
 import dev.gmelon.plango.domain.place.PlaceSearchRecordRepository;
+import dev.gmelon.plango.domain.refreshtoken.RefreshTokenRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
@@ -26,11 +26,16 @@ import dev.gmelon.plango.domain.schedule.query.ScheduleQueryRepository;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import dev.gmelon.plango.exception.dto.InputInvalidErrorResponseDto;
 import dev.gmelon.plango.service.auth.AuthService;
+import dev.gmelon.plango.service.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
+import dev.gmelon.plango.service.auth.dto.TokenRefreshRequestDto;
+import dev.gmelon.plango.service.auth.dto.TokenResponseDto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import org.apache.http.HttpHeaders;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -38,7 +43,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -71,6 +75,13 @@ class AuthControllerTest {
     private PlaceSearchRecordRepository placeSearchRecordRepository;
     @Autowired
     private FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @BeforeEach
+    void setUp() {
+        refreshTokenRepository.deleteAll();
+    }
 
     @Test
     void 정상_값으로_회원가입() throws Exception {
@@ -121,7 +132,8 @@ class AuthControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
 
-        InputInvalidErrorResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), InputInvalidErrorResponseDto.class);
+        InputInvalidErrorResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8),
+                InputInvalidErrorResponseDto.class);
 
         assertThat(responseDto.getField()).isEqualTo("email");
         assertThat(responseDto.getMessage()).isEqualTo("이미 존재하는 이메일입니다.");
@@ -152,7 +164,8 @@ class AuthControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
 
-        InputInvalidErrorResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), InputInvalidErrorResponseDto.class);
+        InputInvalidErrorResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8),
+                InputInvalidErrorResponseDto.class);
 
         assertThat(responseDto.getField()).isEqualTo("nickname");
         assertThat(responseDto.getMessage()).isEqualTo("이미 존재하는 닉네임입니다.");
@@ -181,7 +194,12 @@ class AuthControllerTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        assertThat(response.getHeader("Set-Cookie")).isNotBlank();
+
+        TokenResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8),
+                TokenResponseDto.class);
+        assertThat(responseDto.getAccessToken()).isNotBlank();
+        assertThat(responseDto.getRefreshToken()).isNotBlank();
+        assertThat(refreshTokenRepository.findById(signupRequest.getEmail())).isNotEmpty();
     }
 
     @Test
@@ -201,7 +219,8 @@ class AuthControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
 
-        ErrorResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), ErrorResponseDto.class);
+        ErrorResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8),
+                ErrorResponseDto.class);
 
         assertThat(responseDto.getMessage()).isEqualTo("아이디 또는 비밀번호가 올바르지 않습니다.");
     }
@@ -229,7 +248,12 @@ class AuthControllerTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        assertThat(response.getHeader("Set-Cookie")).isNotBlank();
+
+        TokenResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8),
+                TokenResponseDto.class);
+        assertThat(responseDto.getAccessToken()).isNotBlank();
+        assertThat(responseDto.getRefreshToken()).isNotBlank();
+        assertThat(refreshTokenRepository.findById(signupRequest.getEmail())).isNotEmpty();
     }
 
     @Test
@@ -249,22 +273,171 @@ class AuthControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
 
-        ErrorResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), ErrorResponseDto.class);
+        ErrorResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8),
+                ErrorResponseDto.class);
 
         assertThat(responseDto.getMessage()).isEqualTo("아이디 또는 비밀번호가 올바르지 않습니다.");
     }
 
-    @PlangoMockUser
     @Test
     void 로그아웃() throws Exception {
+        // given
+        SignupRequestDto signupRequest = SignupRequestDto.builder()
+                .email("a@a.com")
+                .password("passwordA")
+                .nickname("nameA")
+                .build();
+        authService.signup(signupRequest);
+        LoginRequestDto loginRequest = LoginRequestDto.builder()
+                .emailOrNickname("nameA")
+                .password("passwordA")
+                .build();
+        MockHttpServletResponse loginResponse = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andReturn().getResponse();
+
+        String accessToken = objectMapper.readValue(loginResponse.getContentAsString(UTF_8),
+                TokenResponseDto.class).getAccessToken();
+
         // when
-        MockHttpServletResponse response = mockMvc.perform(post("/api/auth/logout"))
+        MockHttpServletResponse response = mockMvc.perform(post("/api/auth/logout")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
                 .andReturn().getResponse();
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+
+        assertThat(refreshTokenRepository.findById(signupRequest.getEmail())).isEmpty();
     }
+
+    @Test
+    void 정상_Refresh_Token으로_토큰_갱신() throws Exception {
+        // given
+        SignupRequestDto signupRequest = SignupRequestDto.builder()
+                .email("a@a.com")
+                .password("passwordA")
+                .nickname("nameA")
+                .build();
+        authService.signup(signupRequest);
+        LoginRequestDto loginRequest = LoginRequestDto.builder()
+                .emailOrNickname("nameA")
+                .password("passwordA")
+                .build();
+        MockHttpServletResponse loginResponse = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andReturn().getResponse();
+
+        String refreshToken = objectMapper.readValue(loginResponse.getContentAsString(UTF_8),
+                TokenResponseDto.class).getRefreshToken();
+        TokenRefreshRequestDto tokenRefreshRequestDto = TokenRefreshRequestDto.builder()
+                .refreshToken(refreshToken)
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/auth/token-refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(tokenRefreshRequestDto)))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+        TokenResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8),
+                TokenResponseDto.class);
+        assertThat(responseDto.getAccessToken()).isNotBlank();
+        assertThat(responseDto.getRefreshToken()).isNotBlank();
+        assertThat(refreshTokenRepository.findById(signupRequest.getEmail())).isPresent();
+    }
+
+    @Test
+    void 비정상_Refresh_Token으로_토큰_갱신() throws Exception {
+        // given
+        SignupRequestDto signupRequest = SignupRequestDto.builder()
+                .email("a@a.com")
+                .password("passwordA")
+                .nickname("nameA")
+                .build();
+        authService.signup(signupRequest);
+        LoginRequestDto loginRequest = LoginRequestDto.builder()
+                .emailOrNickname("nameA")
+                .password("passwordA")
+                .build();
+        MockHttpServletResponse loginResponse = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andReturn().getResponse();
+
+        String refreshToken = objectMapper.readValue(loginResponse.getContentAsString(UTF_8),
+                TokenResponseDto.class).getRefreshToken();
+        TokenRefreshRequestDto tokenRefreshRequestDto = TokenRefreshRequestDto.builder()
+                .refreshToken(refreshToken + "unvalid")
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/auth/token-refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(tokenRefreshRequestDto)))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    // TODO refresh token 갱신 요청 시 동시성 문제 해결
+//    @Test
+//    void 동일한_Refresh_Token으로_2회_이상_토큰_갱신_시도() throws Exception {
+//        // given
+//        SignupRequestDto signupRequest = SignupRequestDto.builder()
+//                .email("a@a.com")
+//                .password("passwordA")
+//                .nickname("nameA")
+//                .build();
+//        authService.signup(signupRequest);
+//        LoginRequestDto loginRequest = LoginRequestDto.builder()
+//                .emailOrNickname("nameA")
+//                .password("passwordA")
+//                .build();
+//        MockHttpServletResponse loginResponse = mockMvc.perform(post("/api/auth/login")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(loginRequest)))
+//                .andReturn().getResponse();
+//
+//        String refreshToken = objectMapper.readValue(loginResponse.getContentAsString(UTF_8),
+//                TokenResponseDto.class).getRefreshToken();
+//        TokenRefreshRequestDto tokenRefreshRequestDto = TokenRefreshRequestDto.builder()
+//                .refreshToken(refreshToken)
+//                .build();
+//
+//        // when
+//        int executeCount = 2;
+//        CountDownLatch countDownLatch = new CountDownLatch(executeCount);
+//        ExecutorService executorService = Executors.newSingleThreadExecutor();
+//        AtomicReference<MockHttpServletResponse> response = new AtomicReference<>();
+//        for (int i = 0; i < executeCount; i++) {
+//            executorService.submit(() -> {
+//                try {
+//                    response.set(mockMvc.perform(post("/api/auth/token-refresh")
+//                                    .contentType(MediaType.APPLICATION_JSON)
+//                                    .content(objectMapper.writeValueAsString(tokenRefreshRequestDto)))
+//                            .andReturn().getResponse());
+//                } catch (Exception e) {
+//                    throw new RuntimeException(e);
+//                } finally {
+//                    countDownLatch.countDown();
+//                }
+//            });
+//        }
+//
+//        countDownLatch.await(10, TimeUnit.SECONDS);
+//        executorService.shutdown();
+//
+//        // then
+//        assertThat(response.get().getStatus()).isEqualTo(HttpStatus.FORBIDDEN.value());
+//
+//        assertThat(refreshTokenRepository.findById(signupRequest.getEmail())).isEmpty();
+//    }
 
     @PlangoMockUser
     @Test

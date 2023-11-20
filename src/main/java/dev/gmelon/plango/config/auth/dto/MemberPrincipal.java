@@ -21,8 +21,9 @@ public class MemberPrincipal extends User {
         this.id = member.getId();
     }
 
-    public static MemberPrincipal of(String email, List<? extends GrantedAuthority> authorities) {
+    public static MemberPrincipal of(Long id, String email, List<? extends GrantedAuthority> authorities) {
         Member member = Member.builder()
+                .id(id)
                 .email(email)
                 .password(EMPTY_CREDENTIALS)
                 .role(MemberRole.parse(authorities.get(FIRST_MATCHED_ROLE_INDEX).toString()))

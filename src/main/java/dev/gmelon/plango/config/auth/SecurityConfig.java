@@ -1,7 +1,10 @@
 package dev.gmelon.plango.config.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.gmelon.plango.config.auth.handler.*;
+import dev.gmelon.plango.config.auth.handler.CustomAccessDeniedHandler;
+import dev.gmelon.plango.config.auth.handler.CustomAuthenticationEntryPoint;
+import dev.gmelon.plango.config.auth.jwt.JWTAuthenticationFilter;
+import dev.gmelon.plango.config.auth.jwt.JWTExceptionHandlerFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -15,16 +18,11 @@ import org.springframework.security.authorization.SpringAuthorizationEventPublis
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-
-import javax.sql.DataSource;
 
 @RequiredArgsConstructor
 @EnableMethodSecurity
@@ -33,8 +31,9 @@ import javax.sql.DataSource;
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
-    private final DataSource dataSource;
     private final ObjectMapper objectMapper;
+    private final JWTAuthenticationFilter jwtAuthenticationFilter;
+    private final JWTExceptionHandlerFilter jwtExceptionHandlerFilter;
 
     @Value("${remember-me.token-key}")
     private String rememberMeTokenKey;
@@ -50,55 +49,23 @@ public class SecurityConfig {
                 .authorizeHttpRequests()
                 .antMatchers("/h2-console/**").permitAll() // TODO mvc로는 왜 안 되는지
                 .mvcMatchers("/", "/error", "/favicon.ico", "/health").permitAll()
-                .mvcMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/logout").permitAll()
+                .mvcMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/token-refresh").permitAll()
                 .anyRequest().authenticated()
                 .and()
-                .addFilterBefore(jsonEmailPasswordAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-                .rememberMe(rm -> rm.rememberMeServices(getRememberMeServices()))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtExceptionHandlerFilter, JWTAuthenticationFilter.class)
                 .exceptionHandling(exception -> {
                     exception.authenticationEntryPoint(new CustomAuthenticationEntryPoint(objectMapper));
                     exception.accessDeniedHandler(new CustomAccessDeniedHandler(objectMapper));
                 })
-                .logout()
-                .logoutUrl("/api/auth/logout")
-                .logoutSuccessHandler(new CustomLogoutSuccessHandler())
-                .and()
                 .headers().frameOptions().disable()
+                .and()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .csrf().disable() // TODO 확인
                 .formLogin().disable()
                 .httpBasic().disable()
                 .build();
-    }
-
-    @Bean
-    public JsonEmailPasswordAuthenticationFilter jsonEmailPasswordAuthenticationFilter() {
-        JsonEmailPasswordAuthenticationFilter filter = new JsonEmailPasswordAuthenticationFilter("/api/auth/login", objectMapper);
-        filter.setSecurityContextRepository(new HttpSessionSecurityContextRepository());
-        filter.setAuthenticationManager(authenticationManager());
-        filter.setAuthenticationSuccessHandler(new CustomAuthenticationSuccessHandler());
-        filter.setAuthenticationFailureHandler(new CustomAuthenticationFailureHandler(objectMapper));
-        filter.setRememberMeServices(getRememberMeServices());
-
-        return filter;
-    }
-
-    private PersistentTokenBasedRememberMeServices getRememberMeServices() {
-        PersistentTokenBasedRememberMeServices rememberMeServices = new PersistentTokenBasedRememberMeServices(
-                rememberMeTokenKey,
-                customUserDetailsService,
-                persistentTokenRepository()
-        );
-        rememberMeServices.setAlwaysRemember(true);
-        rememberMeServices.setTokenValiditySeconds(2592000); // 30 days
-        return rememberMeServices;
-    }
-
-    @Bean
-    public PersistentTokenRepository persistentTokenRepository() {
-        JdbcTokenRepositoryImpl jdbcTokenRepository = new JdbcTokenRepositoryImpl();
-        jdbcTokenRepository.setDataSource(dataSource);
-        return jdbcTokenRepository;
     }
 
     @Bean

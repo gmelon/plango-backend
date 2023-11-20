@@ -1,4 +1,4 @@
-package dev.gmelon.plango.config.auth.dto;
+package dev.gmelon.plango.service.auth.dto;
 
 import java.time.LocalDateTime;
 import lombok.Builder;
