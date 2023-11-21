@@ -382,7 +382,7 @@ class AuthControllerTest {
                 .andReturn().getResponse();
 
         // then
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
     // TODO refresh token 갱신 요청 시 동시성 문제 해결
