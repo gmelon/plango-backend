@@ -58,7 +58,7 @@ public class TestDataGenerator implements ApplicationRunner {
         Member memberB = memberRepository.findByEmail(memberRequestB.getEmail()).get();
 
         SignupRequestDto memberRequestC = SignupRequestDto.builder()
-                .email("hsh1769@kakao.com")
+                .email("hsh1769@gmelon.dev")
                 .password("1111")
                 .nickname("gmelon C")
                 .build();

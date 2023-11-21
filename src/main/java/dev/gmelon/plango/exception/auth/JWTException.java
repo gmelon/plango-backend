@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 
 public class JWTException extends PlangoException {
     public JWTException(String message) {
-        super(message, HttpStatus.BAD_REQUEST);
+        super(message, HttpStatus.UNAUTHORIZED);
     }
 
     public static JWTException unSupportedToken() {
