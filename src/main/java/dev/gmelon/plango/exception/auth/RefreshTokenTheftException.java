@@ -7,6 +7,6 @@ public class RefreshTokenTheftException extends PlangoException {
     private static final String MESSAGE = "유효하지 않은 Refresh Token 입니다.";
 
     public RefreshTokenTheftException() {
-        super(MESSAGE, HttpStatus.FORBIDDEN);
+        super(MESSAGE, HttpStatus.UNAUTHORIZED);
     }
 }

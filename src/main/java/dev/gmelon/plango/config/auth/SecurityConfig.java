@@ -3,6 +3,7 @@ package dev.gmelon.plango.config.auth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.auth.handler.CustomAccessDeniedHandler;
 import dev.gmelon.plango.config.auth.handler.CustomAuthenticationEntryPoint;
+import dev.gmelon.plango.config.auth.handler.CustomOauth2SuccessHandler;
 import dev.gmelon.plango.config.auth.jwt.JWTAuthenticationFilter;
 import dev.gmelon.plango.config.auth.jwt.JWTExceptionHandlerFilter;
 import lombok.RequiredArgsConstructor;
@@ -29,11 +30,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @Configuration
 public class SecurityConfig {
-
+    private final CustomOauth2UserService customOauth2UserService;
+    private final CustomOauth2SuccessHandler customOauth2SuccessHandler;
     private final CustomUserDetailsService customUserDetailsService;
-    private final ObjectMapper objectMapper;
     private final JWTAuthenticationFilter jwtAuthenticationFilter;
     private final JWTExceptionHandlerFilter jwtExceptionHandlerFilter;
+    private final ObjectMapper objectMapper;
 
     @Value("${remember-me.token-key}")
     private String rememberMeTokenKey;
@@ -60,11 +62,19 @@ public class SecurityConfig {
                 })
                 .headers().frameOptions().disable()
                 .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .csrf().disable() // TODO 확인
                 .formLogin().disable()
                 .httpBasic().disable()
+                .oauth2Login(oauth2LoginCustomizer -> oauth2LoginCustomizer
+                        .redirectionEndpoint(redirectionEndpointCustomizer ->
+                                redirectionEndpointCustomizer.baseUri("/oauth2/login/code/**"))
+                        .successHandler(customOauth2SuccessHandler)
+                        .userInfoEndpoint()
+                        .userService(customOauth2UserService)
+                )
                 .build();
     }
 
@@ -78,7 +88,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthorizationEventPublisher authorizationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+    public AuthorizationEventPublisher authorizationEventPublisher(
+            ApplicationEventPublisher applicationEventPublisher) {
         return new SpringAuthorizationEventPublisher(applicationEventPublisher);
     }
 
