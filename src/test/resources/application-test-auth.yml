@@ -1,3 +1,9 @@
+auth:
+  social:
+    apple:
+      client_id: ''
+      team_id: ''
+      key_id: ''
 remember-me:
   token-key: test-key
-jwt-key: DcJYZJgc5uXGyIeJ+w6bkg1ZdD0ad3tpCb2jo6sKMys=
+jwt-key: DcJYZJgc5uXGyIeJ+w6bkg1ZdD0ad3tpCb2jo6sKMys= # local only

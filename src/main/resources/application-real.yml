@@ -9,4 +9,5 @@ decorator:
   datasource:
     p6spy:
       enable-logging: false
-firebase-token-path: 'file:/home/ec2-user/app/firebase/firebase-adminsdk.json'
+firebase-token-path: 'file:/home/ec2-user/app/tokens/firebase-adminsdk.json'
+apple-key-path: 'file:/home/ec2-user/app/tokens/apple_plango_key.p8'

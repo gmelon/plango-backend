@@ -1,5 +1,14 @@
 package dev.gmelon.plango.web.diary;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.diary.Diary;
@@ -7,11 +16,19 @@ import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.member.MemberType;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
-import dev.gmelon.plango.service.diary.dto.*;
+import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
+import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
+import dev.gmelon.plango.service.diary.dto.DiaryListResponseDto;
+import dev.gmelon.plango.service.diary.dto.DiaryResponseDto;
+import dev.gmelon.plango.service.diary.dto.DiarySearchResponseDto;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,16 +40,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.List;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 @Sql(value = "classpath:/reset.sql")
 @AutoConfigureMockMvc
@@ -636,6 +643,7 @@ class DiaryControllerTest {
                 .password("passwordB")
                 .nickname("nameB")
                 .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
         return memberRepository.save(member);
     }

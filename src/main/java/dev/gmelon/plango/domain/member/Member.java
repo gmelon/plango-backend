@@ -1,17 +1,20 @@
 package dev.gmelon.plango.domain.member;
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 import dev.gmelon.plango.domain.BaseTimeEntity;
+import java.util.Objects;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.proxy.HibernateProxy;
-
-import javax.persistence.*;
-
-import java.util.Objects;
-
-import static javax.persistence.GenerationType.IDENTITY;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -41,8 +44,13 @@ public class Member extends BaseTimeEntity {
     @Getter(AccessLevel.NONE)
     private MemberRole role;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private MemberType type;
+
     @Builder
-    public Member(Long id, String email, String password, String nickname, String bio, String profileImageUrl, MemberRole role) {
+    public Member(Long id, String email, String password, String nickname, String bio, String profileImageUrl,
+                  MemberRole role, MemberType type) {
         this.id = id;
         this.email = email;
         this.password = password;
@@ -50,6 +58,7 @@ public class Member extends BaseTimeEntity {
         this.bio = bio;
         this.profileImageUrl = profileImageUrl;
         this.role = role;
+        this.type = type;
     }
 
     public String getRole() {

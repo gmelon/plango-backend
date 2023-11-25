@@ -40,6 +40,7 @@ dependencies {
 
 	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.13'
 	implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.8.1'
+	implementation 'org.json:json:20230227'
 
 	implementation 'org.mariadb.jdbc:mariadb-java-client'
 	implementation 'com.h2database:h2'

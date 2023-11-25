@@ -23,4 +23,5 @@ decorator:
   datasource:
     p6spy:
       enable-logging: true
-firebase-token-path: 'classpath:/firebase/firebase-adminsdk.json'
+firebase-token-path: 'classpath:/tokens/firebase-adminsdk.json'
+apple-key-path: 'classpath:/tokens/apple_plango_key.p8'

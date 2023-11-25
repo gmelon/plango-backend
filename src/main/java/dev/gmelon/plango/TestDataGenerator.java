@@ -41,7 +41,7 @@ public class TestDataGenerator implements ApplicationRunner {
         resetRedisRepositories();
 
         SignupRequestDto memberRequestA = SignupRequestDto.builder()
-                .email("hsh1769@naver.com")
+                .email("test1@naver.com")
                 .password("1111")
                 .nickname("gmelon A")
                 .profileImageUrl("https://avatars.githubusercontent.com/u/33623106?v=4")
@@ -50,7 +50,7 @@ public class TestDataGenerator implements ApplicationRunner {
         Member memberA = memberRepository.findByEmail(memberRequestA.getEmail()).get();
 
         SignupRequestDto memberRequestB = SignupRequestDto.builder()
-                .email("hsh1769@daum.net")
+                .email("test2@daum.net")
                 .password("1111")
                 .nickname("gmelon B")
                 .build();
@@ -58,7 +58,7 @@ public class TestDataGenerator implements ApplicationRunner {
         Member memberB = memberRepository.findByEmail(memberRequestB.getEmail()).get();
 
         SignupRequestDto memberRequestC = SignupRequestDto.builder()
-                .email("hsh1769@gmelon.dev")
+                .email("test3@gmelon.dev")
                 .password("1111")
                 .nickname("gmelon C")
                 .build();

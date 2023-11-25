@@ -2,10 +2,14 @@ package dev.gmelon.plango.web.auth;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.gmelon.plango.config.auth.social.SocialClients;
+import dev.gmelon.plango.config.auth.social.dto.SocialAccountResponse;
 import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
@@ -14,6 +18,7 @@ import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.member.MemberType;
 import dev.gmelon.plango.domain.notification.Notification;
 import dev.gmelon.plango.domain.notification.NotificationRepository;
 import dev.gmelon.plango.domain.place.PlaceSearchRecord;
@@ -28,6 +33,7 @@ import dev.gmelon.plango.exception.dto.InputInvalidErrorResponseDto;
 import dev.gmelon.plango.service.auth.AuthService;
 import dev.gmelon.plango.service.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
+import dev.gmelon.plango.service.auth.dto.SnsLoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenRefreshRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenResponseDto;
 import java.time.LocalDate;
@@ -40,6 +46,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -77,6 +84,9 @@ class AuthControllerTest {
     private FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
+
+    @MockBean
+    private SocialClients socialClients;
 
     @BeforeEach
     void setUp() {
@@ -312,6 +322,30 @@ class AuthControllerTest {
     }
 
     @Test
+    void sns_login시_신규_회원인_경우_회원_가입이_진행된다() throws Exception {
+        // given
+        when(socialClients.requestAccountResponse(any(), any()))
+                .thenReturn(SocialAccountResponse.builder()
+                        .email("a@a.com")
+                        .nickname("gmelon")
+                        .build());
+
+        SnsLoginRequestDto requestDto = SnsLoginRequestDto.builder()
+                .token("token")
+                .memberType(MemberType.KAKAO)
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/auth/sns-login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(memberRepository.findByEmail("a@a.com")).isPresent();
+    }
+
+    @Test
     void 정상_Refresh_Token으로_토큰_갱신() throws Exception {
         // given
         SignupRequestDto signupRequest = SignupRequestDto.builder()
@@ -542,6 +576,7 @@ class AuthControllerTest {
                 .nickname("nameA")
                 .password("passwordA")
                 .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
         Member savedMember = memberRepository.save(member);
 
@@ -589,6 +624,7 @@ class AuthControllerTest {
                 .password("passwordB")
                 .nickname("nameB")
                 .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
         return memberRepository.save(member);
     }

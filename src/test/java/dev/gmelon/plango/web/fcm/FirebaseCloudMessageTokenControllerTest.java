@@ -1,5 +1,9 @@
 package dev.gmelon.plango.web.fcm;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageToken;
@@ -7,8 +11,10 @@ import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.member.MemberType;
 import dev.gmelon.plango.service.fcm.dto.FirebaseCloudMessageTokenCreateOrUpdateRequestDto;
 import dev.gmelon.plango.service.fcm.dto.FirebaseCloudMessageTokenDeleteRequestDto;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -18,12 +24,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDateTime;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @Sql(value = "classpath:/reset.sql")
 @AutoConfigureMockMvc
@@ -153,6 +153,7 @@ class FirebaseCloudMessageTokenControllerTest {
                 .password("passwordB")
                 .nickname("nameB")
                 .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
         return memberRepository.save(member);
     }

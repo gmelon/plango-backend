@@ -1,5 +1,13 @@
 package dev.gmelon.plango.web.schedule;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.diary.Diary;
@@ -7,6 +15,7 @@ import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.member.MemberType;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
@@ -15,9 +24,19 @@ import dev.gmelon.plango.domain.schedule.place.SchedulePlace;
 import dev.gmelon.plango.domain.schedule.place.SchedulePlaceRepository;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import dev.gmelon.plango.service.schedule.ScheduleMemberService;
-import dev.gmelon.plango.service.schedule.dto.*;
+import dev.gmelon.plango.service.schedule.dto.ScheduleCountResponseDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleCreateRequestDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleEditDoneRequestDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleEditRequestDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleListResponseDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleResponseDto;
 import dev.gmelon.plango.service.schedule.dto.ScheduleResponseDto.SchedulePlaceResponseDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleSearchResponseDto;
 import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceCreateRequestDto;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -30,16 +49,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.List;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 @Sql(value = "classpath:/reset.sql")
 @AutoConfigureMockMvc
@@ -1168,6 +1177,7 @@ class ScheduleControllerTest {
                 .password("passwordB")
                 .nickname("nameB")
                 .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
         return memberRepository.save(member);
     }

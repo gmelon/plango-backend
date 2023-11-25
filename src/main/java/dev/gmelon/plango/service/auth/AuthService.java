@@ -3,6 +3,8 @@ package dev.gmelon.plango.service.auth;
 import static java.util.stream.Collectors.toList;
 
 import dev.gmelon.plango.config.auth.jwt.JWTProvider;
+import dev.gmelon.plango.config.auth.social.SocialClients;
+import dev.gmelon.plango.config.auth.social.dto.SocialAccountResponse;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
 import dev.gmelon.plango.domain.member.Member;
@@ -14,17 +16,20 @@ import dev.gmelon.plango.domain.refreshtoken.RefreshTokenRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.domain.schedule.place.SchedulePlaceLikeRepository;
-import dev.gmelon.plango.exception.auth.RefreshTokenTheftException;
 import dev.gmelon.plango.exception.auth.NoSuchRefreshTokenException;
+import dev.gmelon.plango.exception.auth.RefreshTokenTheftException;
 import dev.gmelon.plango.exception.member.DuplicateEmailException;
 import dev.gmelon.plango.exception.member.DuplicateNicknameException;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
+import dev.gmelon.plango.service.auth.dto.SnsLoginRequestDto;
+import dev.gmelon.plango.service.auth.dto.SnsRevokeRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenRefreshRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenResponseDto;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -38,7 +43,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 @Service
 public class AuthService {
-
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JWTProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -52,6 +56,7 @@ public class AuthService {
     private final NotificationRepository notificationRepository;
     private final FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
     private final SchedulePlaceLikeRepository schedulePlaceLikeRepository;
+    private final SocialClients socialClients;
 
     @Transactional
     public TokenResponseDto login(LoginRequestDto requestDto) {
@@ -62,6 +67,21 @@ public class AuthService {
         saveRefreshToken(authenticate.getName(), responseDto.getRefreshToken());
 
         return responseDto;
+    }
+
+    @Transactional
+    public TokenResponseDto snsLogin(SnsLoginRequestDto requestDto) {
+        SocialAccountResponse socialAccountResponse = socialClients.requestAccountResponse(requestDto.getMemberType(),
+                requestDto.getToken());
+
+        Optional<Member> memberOptional = memberRepository.findByEmail(socialAccountResponse.getEmail());
+        if (memberOptional.isPresent()) {
+            return jwtProvider.createToken(memberOptional.get());
+        }
+
+        Member member = requestDto.toEntity(socialAccountResponse);
+        memberRepository.save(member);
+        return jwtProvider.createToken(member);
     }
 
     private void saveRefreshToken(String email, String refreshTokenValue) {
@@ -76,6 +96,10 @@ public class AuthService {
     public void logout(Long memberId) {
         Member member = findMemberById(memberId);
         refreshTokenRepository.deleteById(member.getEmail());
+    }
+
+    public void snsRevoke(SnsRevokeRequestDto requestDto) {
+        socialClients.revokeToken(requestDto.getMemberType(), requestDto.getSnsTargetId(), requestDto.getToken());
     }
 
     @Transactional

@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests()
                 .antMatchers("/h2-console/**").permitAll() // TODO mvc로는 왜 안 되는지
                 .mvcMatchers("/", "/error", "/favicon.ico", "/health").permitAll()
-                .mvcMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/token-refresh").permitAll()
+                .mvcMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/token-refresh", "/api/auth/sns-login").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

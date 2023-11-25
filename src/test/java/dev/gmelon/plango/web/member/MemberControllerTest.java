@@ -1,10 +1,16 @@
 package dev.gmelon.plango.web.member;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.member.MemberType;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
@@ -20,11 +26,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 @Sql(value = "classpath:/reset.sql")
 @AutoConfigureMockMvc
@@ -74,6 +75,7 @@ class MemberControllerTest {
                 .bio("소개 B")
                 .profileImageUrl("https://plango-backend/imageB.jpg")
                 .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
         memberRepository.save(memberB);
 
@@ -104,6 +106,7 @@ class MemberControllerTest {
                 .nickname("멤버 B 닉네임")
                 .profileImageUrl("https://plango-backend/imageB.jpg")
                 .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
         memberRepository.save(memberB);
 

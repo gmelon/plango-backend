@@ -41,6 +41,8 @@ public class QMember extends EntityPathBase<Member> {
 
     public final EnumPath<MemberRole> role = createEnum("role", MemberRole.class);
 
+    public final EnumPath<MemberType> type = createEnum("type", MemberType.class);
+
     public QMember(String variable) {
         super(Member.class, forVariable(variable));
     }

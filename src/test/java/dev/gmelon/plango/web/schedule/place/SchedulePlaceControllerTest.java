@@ -12,6 +12,7 @@ import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.member.MemberType;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
@@ -714,6 +715,7 @@ class SchedulePlaceControllerTest {
                 .password("passwordB")
                 .nickname("nameB")
                 .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
         return memberRepository.save(member);
     }

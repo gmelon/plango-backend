@@ -1,8 +1,13 @@
 package dev.gmelon.plango.service.notification;
 
+import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.NotificationArguments;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.member.MemberType;
 import dev.gmelon.plango.domain.notification.Notification;
 import dev.gmelon.plango.domain.notification.NotificationRepository;
 import dev.gmelon.plango.domain.notification.type.TestNotificationType;
@@ -13,10 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.jdbc.Sql;
-
-import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.NotificationArguments;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
 
 @Sql(value = "classpath:/reset.sql")
 @SpringBootTest
@@ -42,6 +43,7 @@ class NotificationServiceTest {
                 .password("passwordA")
                 .nickname("nameA")
                 .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
         memberRepository.save(memberA);
 
@@ -50,6 +52,7 @@ class NotificationServiceTest {
                 .password("passwordB")
                 .nickname("nameB")
                 .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
         memberRepository.save(memberB);
     }

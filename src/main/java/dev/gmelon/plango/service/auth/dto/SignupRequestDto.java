@@ -2,6 +2,7 @@ package dev.gmelon.plango.service.auth.dto;
 
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.member.MemberType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,6 +47,7 @@ public class SignupRequestDto {
                 .nickname(nickname)
                 .profileImageUrl(profileImageUrl)
                 .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
     }
 }

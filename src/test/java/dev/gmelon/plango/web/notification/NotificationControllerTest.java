@@ -1,13 +1,23 @@
 package dev.gmelon.plango.web.notification;
 
+import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.SCHEDULE_INVITED;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.security.PlangoMockUser;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.member.MemberType;
 import dev.gmelon.plango.domain.notification.Notification;
 import dev.gmelon.plango.domain.notification.NotificationRepository;
 import dev.gmelon.plango.service.notification.dto.NotificationResponseDto;
+import java.util.List;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,16 +26,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.List;
-import java.util.stream.IntStream;
-
-import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.SCHEDULE_INVITED;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 @Sql(value = "classpath:/reset.sql")
 @AutoConfigureMockMvc
@@ -155,6 +155,7 @@ class NotificationControllerTest {
                 .password("passwordB")
                 .nickname("nameB")
                 .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
         return memberRepository.save(member);
     }
