@@ -47,4 +47,14 @@ public class MemberController {
         memberService.changePassword(memberId, requestDto);
     }
 
+    @GetMapping("/terms")
+    public TermsAcceptedResponseDto termsAccepted(@LoginMember Long memberId) {
+        return memberService.termsAccepted(memberId);
+    }
+
+    @PatchMapping("/terms")
+    public void acceptTerms(@LoginMember Long memberId) {
+        memberService.acceptTerms(memberId);
+    }
+
 }

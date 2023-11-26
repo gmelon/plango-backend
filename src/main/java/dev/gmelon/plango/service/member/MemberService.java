@@ -1,20 +1,24 @@
 package dev.gmelon.plango.service.member;
 
+import static java.util.stream.Collectors.toList;
+
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.exception.member.DuplicateNicknameException;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.member.PasswordMismatchException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
-import dev.gmelon.plango.service.member.dto.*;
+import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
+import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
+import dev.gmelon.plango.service.member.dto.MemberSearchRequestDto;
+import dev.gmelon.plango.service.member.dto.MemberSearchResponseDto;
+import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
+import dev.gmelon.plango.service.member.dto.TermsAcceptedResponseDto;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -44,7 +48,8 @@ public class MemberService {
         return MemberProfileResponseDto.from(member);
     }
 
-    public List<MemberSearchResponseDto> searchWithoutCurrentMember(Long currentMemberId, MemberSearchRequestDto requestDto) {
+    public List<MemberSearchResponseDto> searchWithoutCurrentMember(Long currentMemberId,
+                                                                    MemberSearchRequestDto requestDto) {
         String trimmedNickname = trimWhiteSpaces(requestDto.getNickname());
 
         List<Member> members = memberRepository.searchByNicknameWithoutCurrentMember(currentMemberId, trimmedNickname);
@@ -105,6 +110,19 @@ public class MemberService {
 
     private boolean isImageChangedOrDeleted(String prevProfileImageUrl, MemberEditProfileRequestDto requestDto) {
         return requestDto.getProfileImageUrl() == null || !prevProfileImageUrl.equals(requestDto.getProfileImageUrl());
+    }
+
+    public TermsAcceptedResponseDto termsAccepted(Long memberId) {
+        Member member = findMemberById(memberId);
+        return TermsAcceptedResponseDto.builder()
+                .termsAccepted(member.isTermsAccepted())
+                .build();
+    }
+
+    @Transactional
+    public void acceptTerms(Long memberId) {
+        Member member = findMemberById(memberId);
+        member.acceptTerms();
     }
 
     private Member findMemberById(Long memberId) {

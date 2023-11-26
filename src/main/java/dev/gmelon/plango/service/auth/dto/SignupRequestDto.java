@@ -48,6 +48,7 @@ public class SignupRequestDto {
                 .profileImageUrl(profileImageUrl)
                 .role(MemberRole.ROLE_USER)
                 .type(MemberType.EMAIL)
+                .termsAccepted(true)
                 .build();
     }
 }

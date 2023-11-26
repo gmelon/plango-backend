@@ -48,9 +48,12 @@ public class Member extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private MemberType type;
 
+    @Column(columnDefinition = "BOOLEAN DEFAULT 0", nullable = false)
+    private boolean termsAccepted;
+
     @Builder
     public Member(Long id, String email, String password, String nickname, String bio, String profileImageUrl,
-                  MemberRole role, MemberType type) {
+                  MemberRole role, MemberType type, boolean termsAccepted) {
         this.id = id;
         this.email = email;
         this.password = password;
@@ -59,6 +62,7 @@ public class Member extends BaseTimeEntity {
         this.profileImageUrl = profileImageUrl;
         this.role = role;
         this.type = type;
+        this.termsAccepted = termsAccepted;
     }
 
     public String getRole() {
@@ -77,6 +81,14 @@ public class Member extends BaseTimeEntity {
 
     public void changePassword(String newPassword) {
         this.password = newPassword;
+    }
+
+    public void acceptTerms() {
+        this.termsAccepted = true;
+    }
+
+    public void rejectTerms() {
+        this.termsAccepted = false;
     }
 
     @Override

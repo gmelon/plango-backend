@@ -115,6 +115,7 @@ class AuthControllerTest {
         Member member = memberRepository.findByEmail(request.getEmail()).get();
         assertThat(passwordEncoder.matches(request.getPassword(), member.getPassword())).isTrue();
         assertThat(member.getNickname()).isEqualTo(request.getNickname());
+        assertThat(member.isTermsAccepted()).isTrue();
     }
 
     @Test

@@ -31,6 +31,7 @@ public class PlangoMockSecurityContext implements WithSecurityContextFactory<Pla
 
         Member member = memberRepository.findAll().get(0);
         changeMemberRoleIfNotUser(annotation, member);
+        changeTermsAcceptedIfNotTrue(annotation, member);
 
         return new MemberPrincipal(member);
     }
@@ -38,6 +39,12 @@ public class PlangoMockSecurityContext implements WithSecurityContextFactory<Pla
     private void changeMemberRoleIfNotUser(PlangoMockUser annotation, Member member) {
         if (annotation.role() !=  MemberRole.ROLE_USER) {
             member.changeRole(annotation.role());
+        }
+    }
+
+    private void changeTermsAcceptedIfNotTrue(PlangoMockUser annotation, Member member) {
+        if (!annotation.termsAccepted()) {
+            member.rejectTerms();
         }
     }
 

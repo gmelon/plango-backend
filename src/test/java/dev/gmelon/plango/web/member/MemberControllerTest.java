@@ -11,7 +11,6 @@ import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.member.MemberType;
-import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
 import dev.gmelon.plango.service.member.dto.MemberSearchResponseDto;
@@ -37,8 +36,6 @@ class MemberControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ScheduleRepository scheduleRepository;
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
@@ -214,5 +211,20 @@ class MemberControllerTest {
         assertThat(member.getNickname()).isEqualTo(request.getNickname());
         assertThat(member.getBio()).isEqualTo(request.getBio());
         assertThat(member.getProfileImageUrl()).isEqualTo(request.getProfileImageUrl());
+    }
+
+    @PlangoMockUser(termsAccepted = false)
+    @Test
+    void 약관_동의() throws Exception {
+        // when
+        MockHttpServletResponse response = mockMvc.perform(patch("/api/members/terms")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+        Member member = memberRepository.findAll().get(0);
+        assertThat(member.isTermsAccepted()).isTrue();
     }
 }

@@ -20,4 +20,6 @@ public @interface PlangoMockUser {
 
     MemberRole role() default MemberRole.ROLE_USER;
 
+    boolean termsAccepted() default true;
+
 }
