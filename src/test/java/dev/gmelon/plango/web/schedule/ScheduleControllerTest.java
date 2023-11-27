@@ -28,7 +28,7 @@ import dev.gmelon.plango.service.schedule.dto.ScheduleCountResponseDto;
 import dev.gmelon.plango.service.schedule.dto.ScheduleCreateRequestDto;
 import dev.gmelon.plango.service.schedule.dto.ScheduleEditDoneRequestDto;
 import dev.gmelon.plango.service.schedule.dto.ScheduleEditRequestDto;
-import dev.gmelon.plango.service.schedule.dto.ScheduleListResponseDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleDateListResponseDto;
 import dev.gmelon.plango.service.schedule.dto.ScheduleResponseDto;
 import dev.gmelon.plango.service.schedule.dto.ScheduleResponseDto.SchedulePlaceResponseDto;
 import dev.gmelon.plango.service.schedule.dto.ScheduleSearchResponseDto;
@@ -890,14 +890,14 @@ class ScheduleControllerTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
         List<String> expectedScheduleTitles = List.of("일정 5", "일정 2");
 
-        ScheduleListResponseDto[] responseDtos = objectMapper.readValue(response.getContentAsString(UTF_8), ScheduleListResponseDto[].class);
+        ScheduleDateListResponseDto[] responseDtos = objectMapper.readValue(response.getContentAsString(UTF_8), ScheduleDateListResponseDto[].class);
 
         assertThat(responseDtos.length).isEqualTo(expectedScheduleTitles.size());
         assertThat(responseDtos)
-                .extracting(ScheduleListResponseDto::getTitle)
+                .extracting(ScheduleDateListResponseDto::getTitle)
                 .isEqualTo(expectedScheduleTitles);
         assertThat(responseDtos)
-                .extracting(ScheduleListResponseDto::getDate)
+                .extracting(ScheduleDateListResponseDto::getDate)
                 .containsOnly(LocalDate.of(2023, 6, 26));
     }
 
@@ -992,14 +992,14 @@ class ScheduleControllerTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
         List<String> expectedScheduleTitles = List.of("일정 3", "일정 4", "일정 2", "일정 5");
 
-        ScheduleListResponseDto[] responseDtos = objectMapper.readValue(response.getContentAsString(UTF_8), ScheduleListResponseDto[].class);
+        ScheduleDateListResponseDto[] responseDtos = objectMapper.readValue(response.getContentAsString(UTF_8), ScheduleDateListResponseDto[].class);
 
         assertThat(responseDtos.length).isEqualTo(expectedScheduleTitles.size());
         assertThat(responseDtos)
-                .extracting(ScheduleListResponseDto::getTitle)
+                .extracting(ScheduleDateListResponseDto::getTitle)
                 .isEqualTo(expectedScheduleTitles);
         assertThat(responseDtos)
-                .extracting(ScheduleListResponseDto::getDate)
+                .extracting(ScheduleDateListResponseDto::getDate)
                 .containsOnly(LocalDate.of(2023, 6, 26));
     }
 
@@ -1117,7 +1117,7 @@ class ScheduleControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
 
-        ScheduleListResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), ScheduleListResponseDto[].class)[0];
+        ScheduleDateListResponseDto responseDto = objectMapper.readValue(response.getContentAsString(UTF_8), ScheduleDateListResponseDto[].class)[0];
         assertThat(responseDto.getConfirmedPlaceNames()).isEqualTo("확정된 장소 1, 확정된 장소 2");
     }
 

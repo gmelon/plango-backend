@@ -1,5 +1,7 @@
 package dev.gmelon.plango.service.diary;
 
+import static java.util.stream.Collectors.toList;
+
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
@@ -14,15 +16,17 @@ import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
 import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
 import dev.gmelon.plango.exception.schedule.ScheduleNotAcceptedException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
-import dev.gmelon.plango.service.diary.dto.*;
+import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
+import dev.gmelon.plango.service.diary.dto.DiaryDateListResponseDto;
+import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
+import dev.gmelon.plango.service.diary.dto.DiaryListResponseDto;
+import dev.gmelon.plango.service.diary.dto.DiaryResponseDto;
+import dev.gmelon.plango.service.diary.dto.DiarySearchResponseDto;
+import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -92,11 +96,11 @@ public class DiaryService {
                 .orElseThrow(NoSuchDiaryException::new);
     }
 
-    public List<DiaryListResponseDto> findAllByDate(Long memberId, LocalDate requestDate) {
+    public List<DiaryDateListResponseDto> findAllByDate(Long memberId, LocalDate requestDate) {
         List<Diary> diaries = diaryRepository.findAllByMemberIdAndDate(memberId, requestDate);
 
         return diaries.stream()
-                .map(diary -> DiaryListResponseDto.from(diary, diary.getSchedule()))
+                .map(diary -> DiaryDateListResponseDto.from(diary, diary.getSchedule()))
                 .collect(toList());
     }
 
@@ -106,6 +110,12 @@ public class DiaryService {
 
         Diary diary = findDiaryById(diaryId);
         diary.edit(requestDto.toEditor());
+    }
+
+    public List<DiaryListResponseDto> findAll(Long memberId, int page, int size) {
+        return diaryRepository.findAllByMemberId(memberId, page, size).stream()
+                .map(DiaryListResponseDto::from)
+                .collect(toList());
     }
 
     @Transactional

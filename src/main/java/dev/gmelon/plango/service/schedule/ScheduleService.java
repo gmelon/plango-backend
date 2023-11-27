@@ -105,14 +105,14 @@ public class ScheduleService {
         }
     }
 
-    public List<ScheduleListResponseDto> findAllByDate(Long memberId, LocalDate requestDate, boolean noDiaryOnly) {
+    public List<ScheduleDateListResponseDto> findAllByDate(Long memberId, LocalDate requestDate, boolean noDiaryOnly) {
         List<ScheduleListQueryDto> schedules = scheduleQueryRepository.findAllByMemberIdAndDate(memberId, requestDate);
         if (noDiaryOnly) {
             schedules = filterDoNotHaveDiaryOnly(memberId, schedules);
         }
 
         return schedules.stream()
-                .map(ScheduleListResponseDto::from)
+                .map(ScheduleDateListResponseDto::from)
                 .collect(toList());
     }
 

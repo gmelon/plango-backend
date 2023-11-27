@@ -23,7 +23,7 @@ import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
 import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
-import dev.gmelon.plango.service.diary.dto.DiaryListResponseDto;
+import dev.gmelon.plango.service.diary.dto.DiaryDateListResponseDto;
 import dev.gmelon.plango.service.diary.dto.DiaryResponseDto;
 import dev.gmelon.plango.service.diary.dto.DiarySearchResponseDto;
 import java.time.LocalDate;
@@ -579,11 +579,11 @@ class DiaryControllerTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
         List<String> expectedContents = List.of("일정 1 기록", "일정 2 기록", "일정 3 기록", "일정 4 기록");
 
-        DiaryListResponseDto[] responseDtos = objectMapper.readValue(response.getContentAsString(UTF_8), DiaryListResponseDto[].class);
+        DiaryDateListResponseDto[] responseDtos = objectMapper.readValue(response.getContentAsString(UTF_8), DiaryDateListResponseDto[].class);
 
         assertThat(responseDtos.length).isEqualTo(expectedContents.size());
         assertThat(responseDtos)
-                .extracting(DiaryListResponseDto::getContent)
+                .extracting(DiaryDateListResponseDto::getContent)
                 .isEqualTo(expectedContents);
     }
 

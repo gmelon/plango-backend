@@ -1,16 +1,15 @@
 package dev.gmelon.plango.domain.diary;
 
+import static dev.gmelon.plango.domain.diary.QDiary.diary;
+import static dev.gmelon.plango.domain.schedule.QSchedule.schedule;
+import static java.lang.Math.max;
+
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.core.types.dsl.StringTemplate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import lombok.RequiredArgsConstructor;
-
 import java.util.List;
-
-import static dev.gmelon.plango.domain.diary.QDiary.diary;
-import static dev.gmelon.plango.domain.schedule.QSchedule.schedule;
-import static java.lang.Math.max;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class DiaryRepositoryImpl implements DiaryRepositoryCustom {
@@ -26,7 +25,7 @@ public class DiaryRepositoryImpl implements DiaryRepositoryCustom {
                 .join(diary.schedule, schedule).fetchJoin()
                 .where(trim(diary.content).contains(trimmedQuery)
                         .and(diary.member.id.eq(memberId)))
-                .offset(offset(page))
+                .offset(offset(page, DEFAULT_PAGINATION_SIZE))
                 .limit(DEFAULT_PAGINATION_SIZE)
                 .fetch();
     }
@@ -35,8 +34,20 @@ public class DiaryRepositoryImpl implements DiaryRepositoryCustom {
         return Expressions.stringTemplate("function('replace', {0}, {1}, {2})", field, " ", "");
     }
 
-    private int offset(int page) {
-        return (max(1, page) - 1) * DEFAULT_PAGINATION_SIZE;
+    @Override
+    public List<Diary> findAllByMemberId(Long memberId, int page, int size) {
+        return jpaQueryFactory
+                .selectFrom(diary)
+                .where(diary.member.id.eq(memberId))
+                .join(diary.schedule, schedule)
+                .orderBy(schedule.date.desc())
+                .offset(offset(page, size))
+                .limit(DEFAULT_PAGINATION_SIZE)
+                .fetch();
+    }
+
+    private int offset(int page, int size) {
+        return (max(1, page) - 1) * size;
     }
 
 }

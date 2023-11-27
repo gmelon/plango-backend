@@ -54,7 +54,7 @@ public class ScheduleController {
     }
 
     @GetMapping(params = "date")
-    public List<ScheduleListResponseDto> findAllByDate(
+    public List<ScheduleDateListResponseDto> findAllByDate(
             @LoginMember Long memberId,
             @DateTimeFormat(pattern = "yyyy-MM-dd") @RequestParam("date") LocalDate requestDate,
             @RequestParam(defaultValue = "false") boolean noDiaryOnly) {

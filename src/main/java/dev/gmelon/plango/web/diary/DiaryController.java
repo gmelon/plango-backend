@@ -2,20 +2,34 @@ package dev.gmelon.plango.web.diary;
 
 import dev.gmelon.plango.config.auth.LoginMember;
 import dev.gmelon.plango.service.diary.DiaryService;
-import dev.gmelon.plango.service.diary.dto.*;
+import dev.gmelon.plango.service.diary.dto.DiaryCreateRequestDto;
+import dev.gmelon.plango.service.diary.dto.DiaryDateListResponseDto;
+import dev.gmelon.plango.service.diary.dto.DiaryEditRequestDto;
+import dev.gmelon.plango.service.diary.dto.DiaryListResponseDto;
+import dev.gmelon.plango.service.diary.dto.DiaryResponseDto;
+import dev.gmelon.plango.service.diary.dto.DiarySearchResponseDto;
 import dev.gmelon.plango.web.diary.validator.DiaryCreateRequestValidator;
 import dev.gmelon.plango.web.diary.validator.DiaryEditRequestValidator;
+import java.time.LocalDate;
+import java.util.List;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-import java.time.LocalDate;
-import java.util.List;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RequestMapping("/api")
@@ -59,7 +73,7 @@ public class DiaryController {
     }
 
     @GetMapping(path = "/diaries", params = "date")
-    public List<DiaryListResponseDto> findAllByDate(
+    public List<DiaryDateListResponseDto> findAllByDate(
             @LoginMember Long memberId,
             @DateTimeFormat(pattern = "yyyy-MM-dd") @RequestParam("date") LocalDate requestDate) {
         return diaryService.findAllByDate(memberId, requestDate);
@@ -70,6 +84,13 @@ public class DiaryController {
                      @PathVariable Long diaryId,
                      @RequestBody @Valid DiaryEditRequestDto requestDto) {
         diaryService.edit(memberId, diaryId, requestDto);
+    }
+
+    @GetMapping("/diaries")
+    public List<DiaryListResponseDto> findAll(@LoginMember Long memberId,
+                                              @RequestParam(defaultValue = "1") int page,
+                                              @RequestParam int size) {
+        return diaryService.findAll(memberId, page, size);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

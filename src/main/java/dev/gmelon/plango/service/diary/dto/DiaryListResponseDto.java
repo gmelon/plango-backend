@@ -1,58 +1,39 @@
 package dev.gmelon.plango.service.diary.dto;
 
 import dev.gmelon.plango.domain.diary.Diary;
-import dev.gmelon.plango.domain.schedule.Schedule;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @NoArgsConstructor
 @Getter
 public class DiaryListResponseDto {
-
     private Long id;
+    private String firstImageUrl;
+    private int imageCount;
     private String content;
-    private List<String> imageUrls = new ArrayList<>();
-    private ScheduleOfDiaryListResponseDto schedule;
 
-    public static DiaryListResponseDto from(Diary diary, Schedule schedule) {
-        ScheduleOfDiaryListResponseDto scheduleResponse = ScheduleOfDiaryListResponseDto.from(schedule);
+    @Builder
+    public DiaryListResponseDto(Long id, String firstImageUrl, int imageCount, String content) {
+        this.id = id;
+        this.firstImageUrl = firstImageUrl;
+        this.imageCount = imageCount;
+        this.content = content;
+    }
 
+    public static DiaryListResponseDto from(Diary diary) {
         return DiaryListResponseDto.builder()
                 .id(diary.getId())
+                .firstImageUrl(firstImageUrl(diary))
+                .imageCount(diary.getDiaryImageUrls().size())
                 .content(diary.getContent())
-                .imageUrls(diary.getDiaryImageUrls())
-                .schedule(scheduleResponse)
                 .build();
     }
 
-    @Builder
-    public DiaryListResponseDto(Long id, String content, List<String> imageUrls, ScheduleOfDiaryListResponseDto schedule) {
-        this.id = id;
-        this.content = content;
-        this.imageUrls = imageUrls;
-        this.schedule = schedule;
-    }
-
-    @NoArgsConstructor
-    @Getter
-    public static class ScheduleOfDiaryListResponseDto {
-
-        private String title;
-
-        public static ScheduleOfDiaryListResponseDto from(Schedule schedule) {
-            return ScheduleOfDiaryListResponseDto.builder()
-                    .title(schedule.getTitle())
-                    .build();
+    private static String firstImageUrl(Diary diary) {
+        if (diary.hasImage()) {
+            return diary.getDiaryImageUrls().get(0);
         }
-
-        @Builder
-        public ScheduleOfDiaryListResponseDto(String title) {
-            this.title = title;
-        }
+        return null;
     }
-
 }

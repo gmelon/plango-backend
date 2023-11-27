@@ -11,7 +11,7 @@ import java.time.LocalTime;
 
 @NoArgsConstructor
 @Getter
-public class ScheduleListResponseDto {
+public class ScheduleDateListResponseDto {
 
     private Long id;
 
@@ -36,8 +36,8 @@ public class ScheduleListResponseDto {
 
     private Boolean isDone;
 
-    public static ScheduleListResponseDto from(ScheduleListQueryDto queryDto) {
-        return ScheduleListResponseDto.builder()
+    public static ScheduleDateListResponseDto from(ScheduleListQueryDto queryDto) {
+        return ScheduleDateListResponseDto.builder()
                 .id(queryDto.getId())
                 .title(queryDto.getTitle())
                 .content(queryDto.getContent())
@@ -52,8 +52,8 @@ public class ScheduleListResponseDto {
     }
 
     @Builder
-    public ScheduleListResponseDto(Long id, String title, String content, LocalDate date,
-                                   LocalTime startTime, LocalTime endTime, int memberCount, Boolean isOwner, String confirmedPlaceNames, Boolean isDone) {
+    public ScheduleDateListResponseDto(Long id, String title, String content, LocalDate date,
+                                       LocalTime startTime, LocalTime endTime, int memberCount, Boolean isOwner, String confirmedPlaceNames, Boolean isDone) {
         this.id = id;
         this.title = title;
         this.content = content;
