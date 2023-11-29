@@ -48,6 +48,9 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
+	// mail
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
 	// QueryDSL
 	implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
 	annotationProcessor(
