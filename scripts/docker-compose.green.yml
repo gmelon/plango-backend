@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  plango:
+    build: .
+    restart: on-failure
+    volumes:
+      - /home/ec2-user/app:/home/ec2-user/app
+    ports:
+      - "8082:8080"
+
+networks:
+  default:
+    external:
+      name: plango
