@@ -92,7 +92,10 @@ public class AuthService {
 
         Member member = requestDto.toEntity(socialAccountResponse);
         memberRepository.save(member);
-        return jwtProvider.createToken(member);
+
+        TokenResponseDto responseDto = jwtProvider.createToken(member);
+        saveRefreshToken(member.getEmail(), responseDto.getRefreshToken());
+        return responseDto;
     }
 
     private void validateMemberTypeEquals(SnsLoginRequestDto requestDto, Member member) {
