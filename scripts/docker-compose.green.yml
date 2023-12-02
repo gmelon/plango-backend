@@ -2,7 +2,7 @@ version: "3"
 
 services:
   plango:
-    build: ../
+    build: /home/ec2-user/app/plango-backend/
     restart: on-failure
     volumes:
       - /home/ec2-user/app:/home/ec2-user/app

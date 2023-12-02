@@ -24,7 +24,7 @@ fi
 
 # 새로운 docker-compose up
 echo "> ${NEW_CONTAINER} 실행"
-sudo docker-compose -p plango-"${NEW_CONTAINER}" -f ./docker-compose."${NEW_CONTAINER}".yml up -d --build
+sudo docker-compose -p plango-"${NEW_CONTAINER}" -f /home/ec2-user/app/plango-backend/scripts/docker-compose."${NEW_CONTAINER}".yml up -d --build
 
 # 새로운 환경 health check
 for RETRY_COUNT in $(seq 1 10);
@@ -62,7 +62,7 @@ echo "> 새로운 Nginx 활성 프록시 포트는 ${NEW_PORT} 입니다."
 sudo service nginx reload
 
 # 기존에 실행 중이었던 환경 종료
-sudo docker-compose -p plango-${OLD_CONTAINER} -f ./docker-compose.${OLD_CONTAINER}.yml down
+sudo docker-compose -p plango-${OLD_CONTAINER} -f /home/ec2-user/app/plango-backend/scripts/docker-compose.${OLD_CONTAINER}.yml down
 
 # 종료된 컨테이너와 이미지 삭제
 sudo docker container prune -f
