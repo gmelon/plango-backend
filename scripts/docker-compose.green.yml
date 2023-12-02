@@ -6,6 +6,8 @@ services:
     restart: on-failure
     volumes:
       - /home/ec2-user/app:/home/ec2-user/app
+    environment:
+      TZ: "Asia/Seoul"
     ports:
       - "8082:8080"
 
