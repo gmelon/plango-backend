@@ -86,7 +86,8 @@ public class AuthService {
         Optional<Member> memberOptional = memberRepository.findByEmail(socialAccountResponse.getEmail());
         if (memberOptional.isPresent()) {
             Member member = memberOptional.get();
-            validateMemberTypeEquals(requestDto, member);
+            // TODO memberType 다를 경우 어떻게 예외 처리 할지
+//            validateMemberTypeEquals(requestDto, member);
             return jwtProvider.createToken(member);
         }
 
