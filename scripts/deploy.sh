@@ -3,19 +3,23 @@
 echo ">>> 새로운 WAS 실행"
 
 # 현재 실행 중인 환경을 조회
-IS_BLUE_RUNNING=$(sudo docker-compose -p plango-blue -f ./docker-compose.blue.yml ps | grep Up)
+CURRENT_PORT=$(cat /home/ec2-user/service_url.inc  | grep -Po '[0-9]+' | tail -1)
 
-if [ -z "${IS_BLUE_RUNNING}" ]
-then
-  # GREEN 실행 중
-  NEW_CONTAINER=blue
-  OLD_CONTAINER=green
-  NEW_PORT=8081
+if [ "${CURRENT_PORT}" -eq 8081 ]; then
+    # BLUE 실행 중
+    NEW_CONTAINER=green
+    OLD_CONTAINER=blue
+    NEW_PORT=8082
+elif [ "${CURRENT_PORT}" -eq 8082 ]; then
+    # GREEN 실행 중
+    NEW_CONTAINER=blue
+    OLD_CONTAINER=green
+    NEW_PORT=8081
 else
-  # BLUE 실행 중
-  NEW_CONTAINER=green
-  OLD_CONTAINER=blue
-  NEW_PORT=8082
+    # 기본 값 - BLUE 실행
+    NEW_CONTAINER=blue
+    OLD_CONTAINER=green
+    NEW_PORT=8081
 fi
 
 # 새로운 docker-compose up
@@ -33,6 +37,7 @@ do
 
         # Slack으로 서버 실행 성공 알림 보내기
         /home/ec2-user/app/scripts/send_slack_message.sh "서버 실행에 성공했습니다."
+        break
 
     elif [ "${RETRY_COUNT}" -eq 10 ]; then
         echo "> health check에 실패했습니다."
