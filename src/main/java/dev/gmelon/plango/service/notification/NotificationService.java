@@ -1,5 +1,7 @@
 package dev.gmelon.plango.service.notification;
 
+import static java.util.stream.Collectors.toList;
+
 import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
@@ -12,14 +14,13 @@ import dev.gmelon.plango.exception.notification.NoSuchNotificationException;
 import dev.gmelon.plango.exception.notification.NotificationAccessDeniedException;
 import dev.gmelon.plango.infrastructure.fcm.FirebaseCloudMessageService;
 import dev.gmelon.plango.service.notification.dto.NotificationResponseDto;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
-import static java.util.stream.Collectors.toList;
-
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
@@ -62,7 +63,6 @@ public class NotificationService {
     }
 
     @Transactional
-    // TODO @Async 적용 (+ 트랜잭션 분리)
     public void send(Long targetMemberId, NotificationType notificationType, NotificationArguments notificationArguments) {
         Member targetMember = findMemberById(targetMemberId);
 
@@ -75,7 +75,12 @@ public class NotificationService {
                 .build();
         notificationRepository.save(notification);
 
-        firebaseCloudMessageService.sendMessageTo(notification, targetMember);
+        // TODO @Async 적용해서 트랜잭션 분리하기
+        try {
+            firebaseCloudMessageService.sendMessageTo(notification, targetMember);
+        } catch (RuntimeException exception) {
+            log.error("FCM 푸시 발송 실패.", exception);
+        }
     }
 
     private Member findMemberById(Long receiverMemberId) {
