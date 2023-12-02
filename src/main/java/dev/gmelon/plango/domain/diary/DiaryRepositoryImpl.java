@@ -25,6 +25,8 @@ public class DiaryRepositoryImpl implements DiaryRepositoryCustom {
                 .join(diary.schedule, schedule).fetchJoin()
                 .where(trim(diary.content).contains(trimmedQuery)
                         .and(diary.member.id.eq(memberId)))
+                .orderBy(schedule.date.desc())
+                .orderBy(schedule.startTime.desc().nullsFirst())
                 .offset(offset(page, DEFAULT_PAGINATION_SIZE))
                 .limit(DEFAULT_PAGINATION_SIZE)
                 .fetch();
@@ -41,6 +43,7 @@ public class DiaryRepositoryImpl implements DiaryRepositoryCustom {
                 .where(diary.member.id.eq(memberId))
                 .join(diary.schedule, schedule)
                 .orderBy(schedule.date.desc())
+                .orderBy(schedule.startTime.desc().nullsFirst())
                 .offset(offset(page, size))
                 .limit(DEFAULT_PAGINATION_SIZE)
                 .fetch();

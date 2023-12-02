@@ -1,16 +1,15 @@
 package dev.gmelon.plango.domain.schedule;
 
+import static dev.gmelon.plango.domain.schedule.QSchedule.schedule;
+import static dev.gmelon.plango.domain.schedule.QScheduleMember.scheduleMember;
+import static java.lang.Math.max;
+
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.core.types.dsl.StringTemplate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import lombok.RequiredArgsConstructor;
-
 import java.util.List;
-
-import static dev.gmelon.plango.domain.schedule.QSchedule.schedule;
-import static dev.gmelon.plango.domain.schedule.QScheduleMember.scheduleMember;
-import static java.lang.Math.max;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class ScheduleRepositoryImpl implements ScheduleRepositoryCustom {
@@ -27,6 +26,8 @@ public class ScheduleRepositoryImpl implements ScheduleRepositoryCustom {
                 .on(scheduleMember.member.id.eq(memberId))
                 .where(trim(schedule.title).contains(trimmedQuery)
                         .or(trim(schedule.content).contains(trimmedQuery)))
+                .orderBy(schedule.date.desc())
+                .orderBy(schedule.startTime.desc().nullsFirst())
                 .offset(offset(page))
                 .limit(DEFAULT_PAGINATION_SIZE)
                 .fetch();
