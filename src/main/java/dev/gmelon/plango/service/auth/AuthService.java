@@ -19,6 +19,7 @@ import dev.gmelon.plango.domain.schedule.place.SchedulePlaceLikeRepository;
 import dev.gmelon.plango.exception.auth.NoSuchRefreshTokenException;
 import dev.gmelon.plango.exception.auth.RefreshTokenTheftException;
 import dev.gmelon.plango.exception.member.DuplicateEmailException;
+import dev.gmelon.plango.exception.member.DuplicateMemberException;
 import dev.gmelon.plango.exception.member.DuplicateNicknameException;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
@@ -69,6 +70,14 @@ public class AuthService {
         return responseDto;
     }
 
+    private void saveRefreshToken(String email, String refreshTokenValue) {
+        RefreshToken refreshToken = RefreshToken.builder()
+                .email(email)
+                .tokenValue(refreshTokenValue)
+                .build();
+        refreshTokenRepository.save(refreshToken);
+    }
+
     @Transactional
     public TokenResponseDto snsLogin(SnsLoginRequestDto requestDto) {
         SocialAccountResponse socialAccountResponse = socialClients.requestAccountResponse(requestDto.getMemberType(),
@@ -76,7 +85,9 @@ public class AuthService {
 
         Optional<Member> memberOptional = memberRepository.findByEmail(socialAccountResponse.getEmail());
         if (memberOptional.isPresent()) {
-            return jwtProvider.createToken(memberOptional.get());
+            Member member = memberOptional.get();
+            validateMemberTypeEquals(requestDto, member);
+            return jwtProvider.createToken(member);
         }
 
         Member member = requestDto.toEntity(socialAccountResponse);
@@ -84,12 +95,10 @@ public class AuthService {
         return jwtProvider.createToken(member);
     }
 
-    private void saveRefreshToken(String email, String refreshTokenValue) {
-        RefreshToken refreshToken = RefreshToken.builder()
-                .email(email)
-                .tokenValue(refreshTokenValue)
-                .build();
-        refreshTokenRepository.save(refreshToken);
+    private void validateMemberTypeEquals(SnsLoginRequestDto requestDto, Member member) {
+        if (!member.typeEquals(requestDto.getMemberType())) {
+            throw new DuplicateMemberException();
+        }
     }
 
     @Transactional
@@ -147,21 +156,25 @@ public class AuthService {
         memberRepository.save(requestDto.toEntity());
     }
 
+    // TODO 리팩토링
     private void validateUniqueColumns(SignupRequestDto requestDto) {
-        validateEmailIsUnique(requestDto);
-        validateNicknameIsUnique(requestDto);
+        validateEmailNotEquals(requestDto.getEmail());
+        validateEmailNotEquals(requestDto.getNickname());
+
+        validateNicknameNotEquals(requestDto.getEmail());
+        validateNicknameNotEquals(requestDto.getNickname());
     }
 
-    private void validateEmailIsUnique(SignupRequestDto requestDto) {
-        boolean isEmailAlreadyExists = memberRepository.findByEmail(requestDto.getEmail())
+    private void validateEmailNotEquals(String value) {
+        boolean isEmailAlreadyExists = memberRepository.findByEmail(value)
                 .isPresent();
         if (isEmailAlreadyExists) {
             throw new DuplicateEmailException();
         }
     }
 
-    private void validateNicknameIsUnique(SignupRequestDto requestDto) {
-        boolean isNicknameAlreadyExists = memberRepository.findByNickname(requestDto.getNickname())
+    private void validateNicknameNotEquals(String value) {
+        boolean isNicknameAlreadyExists = memberRepository.findByNickname(value)
                 .isPresent();
         if (isNicknameAlreadyExists) {
             throw new DuplicateNicknameException();

@@ -91,6 +91,10 @@ public class Member extends BaseTimeEntity {
         this.termsAccepted = false;
     }
 
+    public boolean typeEquals(MemberType type) {
+        return this.type == type;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;
