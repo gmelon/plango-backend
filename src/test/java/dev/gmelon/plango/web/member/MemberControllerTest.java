@@ -213,6 +213,64 @@ class MemberControllerTest {
         assertThat(member.getProfileImageUrl()).isEqualTo(request.getProfileImageUrl());
     }
 
+    @PlangoMockUser
+    @Test
+    void 프로필_수정시_기존에_존재하면_닉네임과_중복되면_예외발생() throws Exception {
+        // given
+        Member anotherMember = Member.builder()
+                .email("anotherMember@mail.com")
+                .nickname("anotherMember")
+                .password("")
+                .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
+                .build();
+        memberRepository.save(anotherMember);
+
+        MemberEditProfileRequestDto request = MemberEditProfileRequestDto.builder()
+                .nickname("anotherMember")
+                .bio("소개 B")
+                .profileImageUrl("https://plango-backend/imageB.jpg")
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(patch("/api/members/profile")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @PlangoMockUser
+    @Test
+    void 프로필_수정시_기존에_존재하면_이메일과_중복되면_예외발생() throws Exception {
+        // given
+        Member anotherMember = Member.builder()
+                .email("anotherMember@mail.com")
+                .nickname("anotherMember")
+                .password("")
+                .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
+                .build();
+        memberRepository.save(anotherMember);
+
+        MemberEditProfileRequestDto request = MemberEditProfileRequestDto.builder()
+                .nickname("anotherMember@mail.com")
+                .bio("소개 B")
+                .profileImageUrl("https://plango-backend/imageB.jpg")
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(patch("/api/members/profile")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
     @PlangoMockUser(termsAccepted = false)
     @Test
     void 약관_동의() throws Exception {

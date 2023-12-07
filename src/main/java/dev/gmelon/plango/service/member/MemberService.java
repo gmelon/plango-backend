@@ -93,6 +93,10 @@ public class MemberService {
             return;
         }
 
+        memberRepository.findByEmail(requestDto.getNickname())
+                .ifPresent((member) -> {
+                    throw new DuplicateNicknameException();
+                });
         memberRepository.findByNickname(requestDto.getNickname())
                 .ifPresent((member) -> {
                     throw new DuplicateNicknameException();
