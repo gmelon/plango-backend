@@ -66,5 +66,6 @@ sudo docker-compose -p plango-${OLD_CONTAINER} -f /home/ec2-user/app/plango-back
 
 # 종료된 컨테이너와 이미지 삭제
 sudo docker container prune -f
+sudo docker image prune -f
 
 exit 0
