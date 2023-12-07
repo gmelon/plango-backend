@@ -42,10 +42,10 @@ public class KakaoClient implements SocialClient {
         try {
             JSONObject jsonObject = new JSONObject(response.getBody());
             JSONObject kakaoAccount = jsonObject.getJSONObject("kakao_account");
-            JSONObject profile = kakaoAccount.getJSONObject("profile");
+            String email = kakaoAccount.getString("email");
             return SocialAccountResponse.builder()
-                    .email(kakaoAccount.getString("email"))
-                    .nickname(profile.getString("nickname"))
+                    .email(email)
+                    .nickname(email)
                     .build();
         } catch (JSONException exception) {
             throw new InvalidSocialTokenException(exception);

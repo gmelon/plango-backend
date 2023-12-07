@@ -83,9 +83,10 @@ public class AppleClient implements SocialClient {
                     .build()
                     .parseSignedClaims(idToken)
                     .getPayload();
+            String email = payload.get("email", String.class);
             return SocialAccountResponse.builder()
-                    .email(payload.get("email", String.class))
-                    .nickname(payload.get("email", String.class))
+                    .email(email)
+                    .nickname(email)
                     .build();
         } catch (JwtException | JsonProcessingException exception) {
             throw new InvalidSocialTokenException(exception);
