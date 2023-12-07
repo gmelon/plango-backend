@@ -1,22 +1,5 @@
 package dev.gmelon.plango.domain.schedule.query;
 
-import com.querydsl.core.annotations.QueryProjection;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.CaseBuilder;
-import com.querydsl.core.types.dsl.NumberExpression;
-import com.querydsl.jpa.JPAExpressions;
-import com.querydsl.jpa.impl.JPAQueryFactory;
-import dev.gmelon.plango.domain.schedule.query.dto.*;
-import dev.gmelon.plango.domain.schedule.query.dto.ScheduleQueryDto.ScheduleMemberQueryDto;
-import dev.gmelon.plango.domain.schedule.query.dto.ScheduleQueryDto.SchedulePlaceQueryDto;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-
 import static dev.gmelon.plango.domain.diary.QDiary.diary;
 import static dev.gmelon.plango.domain.member.QMember.member;
 import static dev.gmelon.plango.domain.schedule.QSchedule.schedule;
@@ -24,7 +7,35 @@ import static dev.gmelon.plango.domain.schedule.QScheduleMember.scheduleMember;
 import static dev.gmelon.plango.domain.schedule.place.QSchedulePlace.schedulePlace;
 import static dev.gmelon.plango.domain.schedule.place.QSchedulePlaceLike.schedulePlaceLike;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
+
+import com.querydsl.core.annotations.QueryProjection;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import dev.gmelon.plango.domain.schedule.query.dto.QScheduleCountQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.QScheduleListQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.QScheduleQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.QScheduleQueryDto_ScheduleMemberQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.QScheduleQueryDto_SchedulePlaceQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.QScheduleTitleQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleCountQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleListQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleQueryDto.ScheduleMemberQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleQueryDto.SchedulePlaceQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleTitleQueryDto;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class ScheduleQueryRepositoryImpl implements ScheduleQueryRepositoryCustom {
@@ -121,12 +132,15 @@ public class ScheduleQueryRepositoryImpl implements ScheduleQueryRepositoryCusto
                 .fetch();
     }
 
-    private void setLikesToPlaces(List<SchedulePlaceQueryDto> schedulePlaceDtos, List<SchedulePlaceLikeQueryDto> schedulePlaceLikeDtos) {
+    private void setLikesToPlaces(List<SchedulePlaceQueryDto> schedulePlaceDtos,
+                                  List<SchedulePlaceLikeQueryDto> schedulePlaceLikeDtos) {
         Map<Long, List<Long>> likeMemberIdsMap = schedulePlaceLikeDtos.stream()
-                .collect(groupingBy(SchedulePlaceLikeQueryDto::getPlaceId, mapping(SchedulePlaceLikeQueryDto::getMemberId, toList())));
+                .collect(groupingBy(SchedulePlaceLikeQueryDto::getPlaceId,
+                        mapping(SchedulePlaceLikeQueryDto::getMemberId, toList())));
 
         schedulePlaceDtos
-                .forEach(schedulePlaceDto -> schedulePlaceDto.setLikedMemberIds(likeMemberIdsMap.getOrDefault(schedulePlaceDto.getPlaceId(), emptyList())));
+                .forEach(schedulePlaceDto -> schedulePlaceDto.setLikedMemberIds(
+                        likeMemberIdsMap.getOrDefault(schedulePlaceDto.getPlaceId(), emptyList())));
     }
 
     @Getter
@@ -145,7 +159,8 @@ public class ScheduleQueryRepositoryImpl implements ScheduleQueryRepositoryCusto
     }
 
     @Override
-    public List<ScheduleCountQueryDto> countOfDaysByMemberId(Long memberId, LocalDate startDate, LocalDate endDate) {
+    public List<ScheduleCountQueryDto> countBetweenDatesByMemberId(Long memberId, LocalDate startDate,
+                                                                   LocalDate endDate) {
         NumberExpression<Integer> doneSchedule = new CaseBuilder().when(schedule.done.isTrue()).then(1).otherwise(0);
 
         return jpaQueryFactory
@@ -161,6 +176,24 @@ public class ScheduleQueryRepositoryImpl implements ScheduleQueryRepositoryCusto
                 .groupBy(schedule.date)
                 .having(schedule.count().gt(0))
                 .orderBy(schedule.date.asc())
+                .fetch();
+    }
+
+    @Override
+    public List<ScheduleTitleQueryDto> titlesBetweenDatesByMemberId(Long memberId, LocalDate startDate,
+                                                                    LocalDate endDate) {
+        return jpaQueryFactory
+                .select(new QScheduleTitleQueryDto(
+                        schedule.date,
+                        schedule.title
+                ))
+                .from(schedule)
+                .join(schedule.scheduleMembers, scheduleMember)
+                .on(scheduleMember.member.id.eq(memberId))
+                .where(schedule.date.between(startDate, endDate))
+                .orderBy(schedule.date.asc(),
+                        schedule.startTime.asc().nullsFirst(),
+                        schedule.endTime.asc().nullsFirst())
                 .fetch();
     }
 
@@ -196,7 +229,8 @@ public class ScheduleQueryRepositoryImpl implements ScheduleQueryRepositoryCusto
         List<Long> scheduleIds = mapToIds(scheduleListDtos);
 
         Map<Long, String> confirmedSchedulePlacesJoiningMap = fetchConfirmedSchedulePlaces(scheduleIds).stream()
-                .collect(groupingBy(ConfirmedSchedulePlaceQueryDto::getScheduleId, mapping(ConfirmedSchedulePlaceQueryDto::getPlaceName, joining(", "))));
+                .collect(groupingBy(ConfirmedSchedulePlaceQueryDto::getScheduleId,
+                        mapping(ConfirmedSchedulePlaceQueryDto::getPlaceName, joining(", "))));
 
         for (ScheduleListQueryDto scheduleListDto : scheduleListDtos) {
             scheduleListDto.setConfirmedPlaceNames(confirmedSchedulePlacesJoiningMap.get(scheduleListDto.getId()));

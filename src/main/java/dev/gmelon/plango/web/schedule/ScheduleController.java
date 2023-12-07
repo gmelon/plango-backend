@@ -61,11 +61,18 @@ public class ScheduleController {
         return scheduleService.findAllByDate(memberId, requestDate, noDiaryOnly);
     }
 
-    @GetMapping(params = "yearMonth")
-    public List<ScheduleCountResponseDto> getCountByDays(
+    @GetMapping(value = "/count", params = "yearMonth")
+    public List<ScheduleCountResponseDto> getCountByYearMonth(
             @LoginMember Long memberId,
             @DateTimeFormat(pattern = "yyyy-MM") @RequestParam("yearMonth") YearMonth requestYearMonth) {
-        return scheduleService.getCountByDays(memberId, requestYearMonth);
+        return scheduleService.getCountByYearMonth(memberId, requestYearMonth);
+    }
+
+    @GetMapping(value = "/titles", params = "yearMonth")
+    public List<ScheduleTitlesResponseDto> getTitlesByYearMonth(
+            @LoginMember Long memberId,
+            @DateTimeFormat(pattern = "yyyy-MM") @RequestParam("yearMonth") YearMonth requestYearMonth) {
+        return scheduleService.getTitlesByYearMonth(memberId, requestYearMonth);
     }
 
     @PatchMapping("/{scheduleId}")

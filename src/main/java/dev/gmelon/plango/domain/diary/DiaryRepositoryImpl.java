@@ -45,7 +45,7 @@ public class DiaryRepositoryImpl implements DiaryRepositoryCustom {
                 .orderBy(schedule.date.desc())
                 .orderBy(schedule.startTime.desc().nullsFirst())
                 .offset(offset(page, size))
-                .limit(DEFAULT_PAGINATION_SIZE)
+                .limit(size)
                 .fetch();
     }
 

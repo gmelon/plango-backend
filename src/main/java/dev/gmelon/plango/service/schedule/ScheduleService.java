@@ -1,29 +1,47 @@
 package dev.gmelon.plango.service.schedule;
 
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
+
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
-import dev.gmelon.plango.domain.schedule.*;
+import dev.gmelon.plango.domain.schedule.Schedule;
+import dev.gmelon.plango.domain.schedule.ScheduleEditor;
+import dev.gmelon.plango.domain.schedule.ScheduleMember;
+import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
+import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.domain.schedule.place.SchedulePlace;
 import dev.gmelon.plango.domain.schedule.query.ScheduleQueryRepository;
 import dev.gmelon.plango.domain.schedule.query.dto.ScheduleCountQueryDto;
 import dev.gmelon.plango.domain.schedule.query.dto.ScheduleListQueryDto;
 import dev.gmelon.plango.domain.schedule.query.dto.ScheduleQueryDto;
+import dev.gmelon.plango.domain.schedule.query.dto.ScheduleTitleQueryDto;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
-import dev.gmelon.plango.exception.schedule.*;
+import dev.gmelon.plango.exception.schedule.NoOwnerOfScheduleException;
+import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
+import dev.gmelon.plango.exception.schedule.ScheduleAccessDeniedException;
+import dev.gmelon.plango.exception.schedule.ScheduleNotAcceptedException;
+import dev.gmelon.plango.exception.schedule.ScheduleOwnerParticipantDuplicateException;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
-import dev.gmelon.plango.service.schedule.dto.*;
+import dev.gmelon.plango.service.schedule.dto.ScheduleCountResponseDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleCreateRequestDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleDateListResponseDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleEditDoneRequestDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleEditRequestDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleResponseDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleSearchResponseDto;
+import dev.gmelon.plango.service.schedule.dto.ScheduleTitlesResponseDto;
 import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceCreateRequestDto;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -46,8 +64,10 @@ public class ScheduleService {
         Member owner = findMemberById(memberId);
 
         // TODO 리팩토링 하기
-        List<ScheduleMember> participantScheduleMembers = mapToScheduleMembers(requestDto.getParticipantIds(), requestSchedule, owner);
-        List<ScheduleMember> allScheduleMembers = addOwnerScheduleMember(participantScheduleMembers, owner, requestSchedule);
+        List<ScheduleMember> participantScheduleMembers = mapToScheduleMembers(requestDto.getParticipantIds(),
+                requestSchedule, owner);
+        List<ScheduleMember> allScheduleMembers = addOwnerScheduleMember(participantScheduleMembers, owner,
+                requestSchedule);
         requestSchedule.setScheduleMembers(allScheduleMembers);
 
         List<SchedulePlace> schedulePlaces = mapToSchedulePlaces(requestDto.getSchedulePlaces(), requestSchedule);
@@ -60,7 +80,8 @@ public class ScheduleService {
         return savedSchedule.getId();
     }
 
-    private List<ScheduleMember> mapToScheduleMembers(List<Long> participantIds, Schedule requestSchedule, Member owner) {
+    private List<ScheduleMember> mapToScheduleMembers(List<Long> participantIds, Schedule requestSchedule,
+                                                      Member owner) {
         validateParticipantsAreNotOwner(participantIds, owner.getId());
         return participantIds.stream()
                 .distinct()
@@ -78,13 +99,15 @@ public class ScheduleService {
                 });
     }
 
-    private List<ScheduleMember> addOwnerScheduleMember(List<ScheduleMember> participantScheduleMembers, Member owner, Schedule requestSchedule) {
+    private List<ScheduleMember> addOwnerScheduleMember(List<ScheduleMember> participantScheduleMembers, Member owner,
+                                                        Schedule requestSchedule) {
         ArrayList<ScheduleMember> allScheduleMembers = new ArrayList<>(participantScheduleMembers);
         allScheduleMembers.add(ScheduleMember.createOwner(owner, requestSchedule));
         return allScheduleMembers;
     }
 
-    private List<SchedulePlace> mapToSchedulePlaces(List<SchedulePlaceCreateRequestDto> schedulePlaces, Schedule requestSchedule) {
+    private List<SchedulePlace> mapToSchedulePlaces(List<SchedulePlaceCreateRequestDto> schedulePlaces,
+                                                    Schedule requestSchedule) {
         return schedulePlaces.stream()
                 .map(schedulePlaceCreateRequestDto -> schedulePlaceCreateRequestDto.toEntity(requestSchedule))
                 .collect(toList());
@@ -177,13 +200,36 @@ public class ScheduleService {
                 .collect(toList());
     }
 
-    public List<ScheduleCountResponseDto> getCountByDays(Long memberId, YearMonth requestMonth) {
+    public List<ScheduleCountResponseDto> getCountByYearMonth(Long memberId, YearMonth requestMonth) {
         LocalDate startDate = requestMonth.atDay(1);
         LocalDate endDate = requestMonth.atEndOfMonth();
 
-        List<ScheduleCountQueryDto> countQueryDtos = scheduleQueryRepository.countOfDaysByMemberId(memberId, startDate, endDate);
+        List<ScheduleCountQueryDto> countQueryDtos = scheduleQueryRepository.countBetweenDatesByMemberId(memberId,
+                startDate, endDate);
         return countQueryDtos.stream()
                 .map(ScheduleCountResponseDto::from)
+                .collect(toList());
+    }
+
+    public List<ScheduleTitlesResponseDto> getTitlesByYearMonth(Long memberId, YearMonth requestMonth) {
+        LocalDate startDate = requestMonth.atDay(1);
+        LocalDate endDate = requestMonth.atEndOfMonth();
+
+        List<ScheduleTitleQueryDto> titleQueryDtos = scheduleQueryRepository.titlesBetweenDatesByMemberId(
+                memberId, startDate, endDate);
+        return groupingByDate(titleQueryDtos);
+    }
+
+    private List<ScheduleTitlesResponseDto> groupingByDate(List<ScheduleTitleQueryDto> titleQueryDtos) {
+        Map<LocalDate, List<String>> titlesByDate = titleQueryDtos.stream()
+                .collect(groupingBy(ScheduleTitleQueryDto::getDate, mapping(ScheduleTitleQueryDto::getTitle, toList())));
+
+        return titlesByDate.keySet().stream()
+                .map(key -> ScheduleTitlesResponseDto.builder()
+                        .date(key)
+                        .titles(titlesByDate.get(key))
+                        .build()
+                )
                 .collect(toList());
     }
 
@@ -225,5 +271,4 @@ public class ScheduleService {
         return memberRepository.findById(memberId)
                 .orElseThrow(NoSuchMemberException::new);
     }
-
 }
