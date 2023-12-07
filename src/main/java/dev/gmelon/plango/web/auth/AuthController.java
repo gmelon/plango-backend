@@ -8,6 +8,7 @@ import dev.gmelon.plango.service.auth.dto.SnsLoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.SnsRevokeRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenRefreshRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenResponseDto;
+import dev.gmelon.plango.service.auth.dto.PasswordResetRequestDto;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -64,6 +65,11 @@ public class AuthController {
     @DeleteMapping("/signout/{memberId}")
     public void signoutByAdmin(@PathVariable Long memberId) {
         authService.signout(memberId);
+    }
+
+    @PostMapping("/reset-password")
+    public void resetPassword(@RequestBody @Valid PasswordResetRequestDto requestDto) {
+        authService.resetPassword(requestDto);
     }
 
 }

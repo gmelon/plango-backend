@@ -2,11 +2,8 @@ package dev.gmelon.plango.web.member;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.security.PlangoMockUser;
@@ -14,17 +11,14 @@ import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.member.MemberType;
-import dev.gmelon.plango.infrastructure.mail.EmailSender;
 import dev.gmelon.plango.service.member.dto.MemberEditProfileRequestDto;
 import dev.gmelon.plango.service.member.dto.MemberProfileResponseDto;
 import dev.gmelon.plango.service.member.dto.MemberSearchResponseDto;
 import dev.gmelon.plango.service.member.dto.PasswordChangeRequestDto;
-import dev.gmelon.plango.service.member.dto.PasswordResetRequestDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -46,9 +40,6 @@ class MemberControllerTest {
     private MemberRepository memberRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @MockBean
-    private EmailSender emailSender;
 
     @PlangoMockUser
     @Test
@@ -235,30 +226,5 @@ class MemberControllerTest {
 
         Member member = memberRepository.findAll().get(0);
         assertThat(member.isTermsAccepted()).isTrue();
-    }
-
-    @PlangoMockUser
-    @Test
-    void 비밀번호_초기화_시_메일이_발송된다() throws Exception {
-        // given
-        Member member = memberRepository.findAll().get(0);
-        String oldPassword = member.getPassword();
-        PasswordResetRequestDto request = PasswordResetRequestDto.builder()
-                .email(member.getEmail())
-                .build();
-
-        // when
-        MockHttpServletResponse response = mockMvc.perform(post("/api/members/reset-password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andReturn().getResponse();
-
-        // then
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-
-        member = memberRepository.findAll().get(0);
-        assertThat(member.getPassword()).isNotEqualTo(oldPassword);
-
-        verify(emailSender).send(any());
     }
 }

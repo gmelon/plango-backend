@@ -57,9 +57,4 @@ public class MemberController {
         memberService.acceptTerms(memberId);
     }
 
-    @PostMapping("/reset-password")
-    public void resetPassword(@RequestBody @Valid PasswordResetRequestDto requestDto) {
-        memberService.resetPassword(requestDto);
-    }
-
 }

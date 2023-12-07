@@ -22,15 +22,21 @@ import dev.gmelon.plango.exception.member.DuplicateEmailException;
 import dev.gmelon.plango.exception.member.DuplicateMemberException;
 import dev.gmelon.plango.exception.member.DuplicateNicknameException;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
+import dev.gmelon.plango.infrastructure.mail.EmailSender;
+import dev.gmelon.plango.infrastructure.mail.dto.EmailMessage;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
 import dev.gmelon.plango.service.auth.dto.LoginRequestDto;
+import dev.gmelon.plango.service.auth.dto.PasswordResetRequestDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.service.auth.dto.SnsLoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.SnsRevokeRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenRefreshRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenResponseDto;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -38,12 +44,29 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 @Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
 public class AuthService {
+    private static final List<Character> RANDOM_PASSWORD_CANDIDATES = new ArrayList<>();
+    private static final int RANDOM_PASSWORD_LENGTH = 8;
+
+    static {
+        addRandomPasswordCandidates('a', 'z');
+        addRandomPasswordCandidates('A', 'Z');
+        addRandomPasswordCandidates('0', '9');
+    }
+
+    private static void addRandomPasswordCandidates(char startInclusive, char endInclusive) {
+        for (char c = startInclusive; c <= endInclusive; c++) {
+            RANDOM_PASSWORD_CANDIDATES.add(c);
+        }
+    }
+
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JWTProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -58,6 +81,8 @@ public class AuthService {
     private final FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
     private final SchedulePlaceLikeRepository schedulePlaceLikeRepository;
     private final SocialClients socialClients;
+    private final EmailSender emailSender;
+    private final TemplateEngine templateEngine;
 
     @Transactional
     public TokenResponseDto login(LoginRequestDto requestDto) {
@@ -237,6 +262,38 @@ public class AuthService {
                 .collect(toList());
 
         s3Repository.deleteAll(diaryImageUrls);
+    }
+
+    @Transactional
+    public void resetPassword(PasswordResetRequestDto requestDto) {
+        // TODO 소셜 계정 validation
+
+        Member member = findMemberByEmail(requestDto.getEmail());
+        String newRandomPassword = createRandomPassword(RANDOM_PASSWORD_LENGTH);
+        member.changePassword(passwordEncoder.encode(newRandomPassword));
+
+        String content = buildPasswordResetMailContent(member, newRandomPassword);
+        EmailMessage emailMessage = EmailMessage.builder()
+                .to(member.getEmail())
+                .subject("[Plango] 비밀번호 재설정 안내")
+                .content(content)
+                .build();
+        emailSender.send(emailMessage);
+    }
+
+    private String createRandomPassword(int length) {
+        Collections.shuffle(RANDOM_PASSWORD_CANDIDATES);
+        return RANDOM_PASSWORD_CANDIDATES.subList(0, length + 1).stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining());
+    }
+
+    private String buildPasswordResetMailContent(Member member, String newRandomPassword) {
+        Context context = new Context();
+        context.setVariable("nickname", member.getNickname());
+        context.setVariable("newPassword", newRandomPassword);
+
+        return templateEngine.process("mail/passwordReset", context);
     }
 
     private Member findMemberById(Long memberId) {

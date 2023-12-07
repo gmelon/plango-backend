@@ -3,6 +3,7 @@ package dev.gmelon.plango.web.auth;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -30,8 +31,10 @@ import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.domain.schedule.query.ScheduleQueryRepository;
 import dev.gmelon.plango.exception.dto.ErrorResponseDto;
 import dev.gmelon.plango.exception.dto.InputInvalidErrorResponseDto;
+import dev.gmelon.plango.infrastructure.mail.EmailSender;
 import dev.gmelon.plango.service.auth.AuthService;
 import dev.gmelon.plango.service.auth.dto.LoginRequestDto;
+import dev.gmelon.plango.service.auth.dto.PasswordResetRequestDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.service.auth.dto.SnsLoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenRefreshRequestDto;
@@ -87,6 +90,9 @@ class AuthControllerTest {
 
     @MockBean
     private SocialClients socialClients;
+
+    @MockBean
+    private EmailSender emailSender;
 
     @BeforeEach
     void setUp() {
@@ -628,6 +634,31 @@ class AuthControllerTest {
                 .type(MemberType.EMAIL)
                 .build();
         return memberRepository.save(member);
+    }
+
+    @PlangoMockUser
+    @Test
+    void 비밀번호_초기화_시_메일이_발송된다() throws Exception {
+        // given
+        Member member = memberRepository.findAll().get(0);
+        String oldPassword = member.getPassword();
+        PasswordResetRequestDto request = PasswordResetRequestDto.builder()
+                .email(member.getEmail())
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+        member = memberRepository.findAll().get(0);
+        assertThat(member.getPassword()).isNotEqualTo(oldPassword);
+
+        verify(emailSender).send(any());
     }
 
 }
