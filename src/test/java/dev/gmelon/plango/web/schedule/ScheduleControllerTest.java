@@ -1056,7 +1056,7 @@ class ScheduleControllerTest {
         scheduleRepository.saveAll(requests);
 
         // when
-        MockHttpServletResponse response = mockMvc.perform(get("/api/schedules/")
+        MockHttpServletResponse response = mockMvc.perform(get("/api/schedules/count")
                         .param("yearMonth", "2023-06")
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn().getResponse();
