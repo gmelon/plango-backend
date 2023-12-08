@@ -209,11 +209,13 @@ public class AuthService {
     public StatusResponseDto checkEmailToken(CheckEmailTokenRequestDto requestDto) {
         Optional<EmailToken> optionalEmailToken = emailTokenRepository.findById(requestDto.getEmail());
         if (optionalEmailToken.isEmpty()) {
+            log.warn("메일 인증 토큰 불일치. email: {}, tokenValue: {}", requestDto.getEmail(), requestDto.getTokenValue());
             return StatusResponseDto.error();
         }
 
         EmailToken emailToken = optionalEmailToken.get();
         if (!emailToken.tokenValueEquals(requestDto.getTokenValue())) {
+            log.warn("메일 인증 토큰 불일치. email: {}, tokenValue: {}", requestDto.getEmail(), requestDto.getTokenValue());
             return StatusResponseDto.error();
         }
 
