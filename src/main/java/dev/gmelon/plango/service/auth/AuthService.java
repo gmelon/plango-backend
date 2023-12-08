@@ -11,6 +11,7 @@ import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
+import dev.gmelon.plango.domain.member.MemberType;
 import dev.gmelon.plango.domain.notification.NotificationRepository;
 import dev.gmelon.plango.domain.place.PlaceSearchRecordRepository;
 import dev.gmelon.plango.domain.refreshtoken.RefreshToken;
@@ -20,6 +21,7 @@ import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.domain.schedule.place.SchedulePlaceLikeRepository;
 import dev.gmelon.plango.exception.auth.EmailAuthenticationException;
 import dev.gmelon.plango.exception.auth.NoSuchRefreshTokenException;
+import dev.gmelon.plango.exception.auth.NotEmailMemberException;
 import dev.gmelon.plango.exception.auth.RefreshTokenTheftException;
 import dev.gmelon.plango.exception.member.DuplicateEmailException;
 import dev.gmelon.plango.exception.member.DuplicateMemberException;
@@ -325,13 +327,19 @@ public class AuthService {
 
     @Transactional
     public void resetPassword(PasswordResetRequestDto requestDto) {
-        // TODO 소셜 계정 validation
-
         Member member = findMemberByEmail(requestDto.getEmail());
+        validateMemberType(member);
+
         String newRandomPassword = randomTokenGenerator.generate(RANDOM_PASSWORD_LENGTH);
         member.changePassword(passwordEncoder.encode(newRandomPassword));
 
         sendPasswordResetMail(member, newRandomPassword);
+    }
+
+    private void validateMemberType(Member member) {
+        if (!member.typeEquals(MemberType.EMAIL)) {
+            throw new NotEmailMemberException();
+        }
     }
 
     private void sendPasswordResetMail(Member member, String newRandomPassword) {

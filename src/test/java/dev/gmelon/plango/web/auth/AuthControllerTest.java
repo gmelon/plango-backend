@@ -730,6 +730,25 @@ class AuthControllerTest {
         verify(emailSender).send(any());
     }
 
+    @PlangoMockUser(type = MemberType.KAKAO)
+    @Test
+    void 소셜_계정의_비밀번호_초기화_요청_시_예외가_발생한다() throws Exception {
+        // given
+        Member member = memberRepository.findAll().get(0);
+        PasswordResetRequestDto request = PasswordResetRequestDto.builder()
+                .email(member.getEmail())
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
     private Member createDefaultMember() {
         Member member = Member.builder()
                 .email("a@a.com")
