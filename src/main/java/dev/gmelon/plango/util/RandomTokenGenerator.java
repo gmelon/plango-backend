@@ -24,7 +24,7 @@ public class RandomTokenGenerator {
 
     public String generate(int length) {
         Collections.shuffle(RANDOM_PASSWORD_CANDIDATES);
-        return RANDOM_PASSWORD_CANDIDATES.subList(0, length + 1).stream()
+        return RANDOM_PASSWORD_CANDIDATES.subList(0, length).stream()
                 .map(String::valueOf)
                 .collect(Collectors.joining());
     }

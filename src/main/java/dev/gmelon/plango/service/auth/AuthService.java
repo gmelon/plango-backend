@@ -58,7 +58,7 @@ import org.thymeleaf.context.Context;
 @Transactional(readOnly = true)
 @Service
 public class AuthService {
-    private static final int RANDOM_PASSWORD_LENGTH = 8;
+    private static final int RANDOM_PASSWORD_LENGTH = 9;
     private static final int EMAIL_TOKEN_LENGTH = 6;
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;

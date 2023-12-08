@@ -49,6 +49,7 @@ public class TestDataGenerator implements ApplicationRunner {
                 .nickname("gmelon A")
                 .role(MemberRole.ROLE_USER)
                 .type(MemberType.EMAIL)
+                .termsAccepted(true)
                 .build();
         memberRepository.save(memberA);
 
@@ -58,6 +59,7 @@ public class TestDataGenerator implements ApplicationRunner {
                 .nickname("gmelon B")
                 .role(MemberRole.ROLE_USER)
                 .type(MemberType.EMAIL)
+                .termsAccepted(true)
                 .build();
         memberRepository.save(memberB);
 
@@ -67,6 +69,7 @@ public class TestDataGenerator implements ApplicationRunner {
                 .nickname("gmelon C")
                 .role(MemberRole.ROLE_USER)
                 .type(MemberType.EMAIL)
+                .termsAccepted(true)
                 .build();
         memberRepository.save(memberC);
 
