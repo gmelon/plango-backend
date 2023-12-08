@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Plango 메일 계정 인증 코드</title>
+</head>
+<body>
+    <div style="padding: 16px; width: 600px">
+        <p style="padding: 32px 0; font-size: 24px; font-weight: bold;">Plango 메일 계정 인증 코드입니다.</p>
+        <p>앱에 아래의 인증 코드를 입력해주시기 바랍니다.</p>
+
+        <div style="padding: 16px; background-color: #f8f9fa; margin: 32px 0;">
+            <p th:text="${tokenValue}" style="font-weight: bold">인증 코드</p>
+        </div>
+
+        <p style="border-top: 1px solid lightgrey;  margin: 32px 0;"></p>
+
+        <p style="color: grey;  margin: 32px 0;">&copy; plango</p>
+
+    </div>
+</body>
+</html>

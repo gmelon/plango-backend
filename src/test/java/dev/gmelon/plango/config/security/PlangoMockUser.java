@@ -1,6 +1,7 @@
 package dev.gmelon.plango.config.security;
 
 import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.member.MemberType;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -19,6 +20,8 @@ public @interface PlangoMockUser {
     String nickname() default "nameA";
 
     MemberRole role() default MemberRole.ROLE_USER;
+
+    MemberType type() default MemberType.EMAIL;
 
     boolean termsAccepted() default true;
 

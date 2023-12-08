@@ -2,17 +2,23 @@ package dev.gmelon.plango.web.auth;
 
 import dev.gmelon.plango.config.auth.LoginMember;
 import dev.gmelon.plango.service.auth.AuthService;
+import dev.gmelon.plango.service.auth.dto.CheckEmailTokenRequestDto;
 import dev.gmelon.plango.service.auth.dto.LoginRequestDto;
+import dev.gmelon.plango.service.auth.dto.PasswordResetRequestDto;
+import dev.gmelon.plango.service.auth.dto.SendEmailTokenRequestDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.service.auth.dto.SnsLoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.SnsRevokeRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenRefreshRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenResponseDto;
-import dev.gmelon.plango.service.auth.dto.PasswordResetRequestDto;
+import dev.gmelon.plango.service.common.dto.StatusResponseDto;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,6 +55,20 @@ public class AuthController {
     @DeleteMapping("/sns-revoke")
     public void snsRevoke(@RequestBody @Valid SnsRevokeRequestDto requestDto) {
         authService.snsRevoke(requestDto);
+    }
+
+    @PostMapping("send-email-token")
+    public void sendEmailToken(@RequestBody @Valid SendEmailTokenRequestDto requestDto) {
+        authService.sendEmailToken(requestDto);
+    }
+
+    @GetMapping("check-email-token")
+    public ResponseEntity<StatusResponseDto> checkEmailToken(
+            @ModelAttribute @Valid CheckEmailTokenRequestDto requestDto) {
+        StatusResponseDto responseDto = authService.checkEmailToken(requestDto);
+        return ResponseEntity
+                .status(responseDto.getCode())
+                .body(responseDto);
     }
 
     @PostMapping("/signup")

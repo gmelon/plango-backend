@@ -2,6 +2,8 @@ package dev.gmelon.plango;
 
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
+import dev.gmelon.plango.domain.member.MemberRole;
+import dev.gmelon.plango.domain.member.MemberType;
 import dev.gmelon.plango.domain.place.PlaceSearchRecord;
 import dev.gmelon.plango.domain.place.PlaceSearchRecordRepository;
 import dev.gmelon.plango.domain.refreshtoken.RefreshTokenRepository;
@@ -9,7 +11,6 @@ import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.service.auth.AuthService;
-import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.service.schedule.ScheduleService;
 import dev.gmelon.plango.service.schedule.dto.ScheduleCreateRequestDto;
 import dev.gmelon.plango.service.schedule.place.dto.SchedulePlaceCreateRequestDto;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Profile("local")
@@ -35,35 +37,38 @@ public class TestDataGenerator implements ApplicationRunner {
     private final PlaceSearchRecordRepository placeSearchRecordRepository;
     private final ScheduleRepository scheduleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         resetRedisRepositories();
 
-        SignupRequestDto memberRequestA = SignupRequestDto.builder()
+        Member memberA = Member.builder()
                 .email("test1@naver.com")
-                .password("1111")
+                .password(passwordEncoder.encode("1111"))
                 .nickname("gmelon A")
-                .profileImageUrl("https://avatars.githubusercontent.com/u/33623106?v=4")
+                .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
-        authService.signup(memberRequestA);
-        Member memberA = memberRepository.findByEmail(memberRequestA.getEmail()).get();
+        memberRepository.save(memberA);
 
-        SignupRequestDto memberRequestB = SignupRequestDto.builder()
+        Member memberB = Member.builder()
                 .email("test2@daum.net")
-                .password("1111")
+                .password(passwordEncoder.encode("1111"))
                 .nickname("gmelon B")
+                .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
-        authService.signup(memberRequestB);
-        Member memberB = memberRepository.findByEmail(memberRequestB.getEmail()).get();
+        memberRepository.save(memberB);
 
-        SignupRequestDto memberRequestC = SignupRequestDto.builder()
+        Member memberC = Member.builder()
                 .email("test3@gmelon.dev")
-                .password("1111")
+                .password(passwordEncoder.encode("1111"))
                 .nickname("gmelon C")
+                .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
                 .build();
-        authService.signup(memberRequestC);
-        Member memberC = memberRepository.findByEmail(memberRequestC.getEmail()).get();
+        memberRepository.save(memberC);
 
         // memberA 개인 일정
         ScheduleCreateRequestDto scheduleRequestA = ScheduleCreateRequestDto.builder()

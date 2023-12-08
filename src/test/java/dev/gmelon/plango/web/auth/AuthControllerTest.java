@@ -6,12 +6,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.gmelon.plango.config.auth.social.SocialClients;
 import dev.gmelon.plango.config.auth.social.dto.SocialAccountResponse;
 import dev.gmelon.plango.config.security.PlangoMockUser;
+import dev.gmelon.plango.domain.auth.EmailToken;
+import dev.gmelon.plango.domain.auth.EmailTokenRepository;
 import dev.gmelon.plango.domain.diary.Diary;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageToken;
@@ -35,6 +38,7 @@ import dev.gmelon.plango.infrastructure.mail.EmailSender;
 import dev.gmelon.plango.service.auth.AuthService;
 import dev.gmelon.plango.service.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.PasswordResetRequestDto;
+import dev.gmelon.plango.service.auth.dto.SendEmailTokenRequestDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.service.auth.dto.SnsLoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenRefreshRequestDto;
@@ -87,6 +91,8 @@ class AuthControllerTest {
     private FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
+    @Autowired
+    private EmailTokenRepository emailTokenRepository;
 
     @MockBean
     private SocialClients socialClients;
@@ -97,6 +103,7 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         refreshTokenRepository.deleteAll();
+        emailTokenRepository.deleteAll();
     }
 
     @Test
@@ -107,6 +114,12 @@ class AuthControllerTest {
                 .password("passwordA")
                 .nickname("nameA")
                 .build();
+
+        EmailToken emailToken = EmailToken.builder()
+                .email(request.getEmail())
+                .build();
+        emailToken.authenticate();
+        emailTokenRepository.save(emailToken);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(post("/api/auth/signup")
@@ -125,17 +138,31 @@ class AuthControllerTest {
     }
 
     @Test
-    void 이미_존재하는_이메일로_회원가입() throws Exception {
+    void 인증되지_않은_메일로_회원가입() throws Exception {
         // given
-        SignupRequestDto firstRequest = SignupRequestDto.builder()
+        SignupRequestDto request = SignupRequestDto.builder()
                 .email("a@a.com")
                 .password("passwordA")
                 .nickname("nameA")
                 .build();
-        authService.signup(firstRequest);
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @Test
+    void 이미_존재하는_이메일로_회원가입() throws Exception {
+        // given
+        Member member = createDefaultMember();
 
         SignupRequestDto secondRequest = SignupRequestDto.builder()
-                .email("a@a.com")
+                .email(member.getEmail())
                 .password("passwordA")
                 .nickname("nameB")
                 .build();
@@ -159,17 +186,12 @@ class AuthControllerTest {
     @Test
     void 이미_존재하는_닉네임으로_회원가입() throws Exception {
         // given
-        SignupRequestDto firstRequest = SignupRequestDto.builder()
-                .email("a@a.com")
-                .password("passwordA")
-                .nickname("nameA")
-                .build();
-        authService.signup(firstRequest);
+        Member member = createDefaultMember();
 
         SignupRequestDto secondRequest = SignupRequestDto.builder()
                 .email("b@b.com")
                 .password("passwordA")
-                .nickname("nameA")
+                .nickname(member.getNickname())
                 .build();
 
         // when
@@ -189,17 +211,95 @@ class AuthControllerTest {
     }
 
     @Test
+    void 메일_인증_토큰_요청() throws Exception {
+        // given
+        SendEmailTokenRequestDto request = SendEmailTokenRequestDto.builder()
+                .email("a@a.com")
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/auth/send-email-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        assertThat(emailTokenRepository.findById(request.getEmail())).isPresent();
+        verify(emailSender).send(any());
+    }
+
+    @Test
+    void 이미_존재하는_메일에_대한_메일_인증_토큰_요청() throws Exception {
+        // given
+        Member member = createDefaultMember();
+        SendEmailTokenRequestDto request = SendEmailTokenRequestDto.builder()
+                .email(member.getEmail())
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/auth/send-email-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @Test
+    void 유효한_메일_토큰_확인() throws Exception {
+        // given
+        EmailToken emailToken = EmailToken.builder()
+                .email("a@a.com")
+                .tokenValue("abcdef")
+                .build();
+        emailTokenRepository.save(emailToken);
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(get("/api/auth/check-email-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .queryParam("email", emailToken.getEmail())
+                        .queryParam("tokenValue", emailToken.getTokenValue()))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+        EmailToken foundEmailToken = emailTokenRepository.findById(emailToken.getEmail()).get();
+        assertThat(foundEmailToken.authenticated()).isTrue();
+    }
+
+    @Test
+    void 유효하지_않은_메일_토큰_확인() throws Exception {
+        // given
+        EmailToken emailToken = EmailToken.builder()
+                .email("a@a.com")
+                .tokenValue("abcdef")
+                .build();
+        emailTokenRepository.save(emailToken);
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(get("/api/auth/check-email-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .queryParam("email", emailToken.getEmail())
+                        .queryParam("tokenValue", "123456"))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+
+        EmailToken foundEmailToken = emailTokenRepository.findById(emailToken.getEmail()).get();
+        assertThat(foundEmailToken.authenticated()).isFalse();
+    }
+
+    @Test
     void 정상_이메일로_로그인() throws Exception {
         // given
-        SignupRequestDto signupRequest = SignupRequestDto.builder()
-                .email("a@a.com")
-                .password("passwordA")
-                .nickname("nameA")
-                .build();
-        authService.signup(signupRequest);
+        Member member = createDefaultMember();
 
         LoginRequestDto loginRequest = LoginRequestDto.builder()
-                .emailOrNickname("a@a.com")
+                .emailOrNickname(member.getEmail())
                 .password("passwordA")
                 .build();
 
@@ -216,7 +316,7 @@ class AuthControllerTest {
                 TokenResponseDto.class);
         assertThat(responseDto.getAccessToken()).isNotBlank();
         assertThat(responseDto.getRefreshToken()).isNotBlank();
-        assertThat(refreshTokenRepository.findById(signupRequest.getEmail())).isNotEmpty();
+        assertThat(refreshTokenRepository.findById(member.getEmail())).isNotEmpty();
     }
 
     @Test
@@ -245,15 +345,10 @@ class AuthControllerTest {
     @Test
     void 정상_닉네임으로_로그인() throws Exception {
         // given
-        SignupRequestDto signupRequest = SignupRequestDto.builder()
-                .email("a@a.com")
-                .password("passwordA")
-                .nickname("nameA")
-                .build();
-        authService.signup(signupRequest);
+        Member member = createDefaultMember();
 
         LoginRequestDto loginRequest = LoginRequestDto.builder()
-                .emailOrNickname("nameA")
+                .emailOrNickname(member.getNickname())
                 .password("passwordA")
                 .build();
 
@@ -270,7 +365,7 @@ class AuthControllerTest {
                 TokenResponseDto.class);
         assertThat(responseDto.getAccessToken()).isNotBlank();
         assertThat(responseDto.getRefreshToken()).isNotBlank();
-        assertThat(refreshTokenRepository.findById(signupRequest.getEmail())).isNotEmpty();
+        assertThat(refreshTokenRepository.findById(member.getEmail())).isNotEmpty();
     }
 
     @Test
@@ -299,12 +394,7 @@ class AuthControllerTest {
     @Test
     void 로그아웃() throws Exception {
         // given
-        SignupRequestDto signupRequest = SignupRequestDto.builder()
-                .email("a@a.com")
-                .password("passwordA")
-                .nickname("nameA")
-                .build();
-        authService.signup(signupRequest);
+        Member member = createDefaultMember();
         LoginRequestDto loginRequest = LoginRequestDto.builder()
                 .emailOrNickname("nameA")
                 .password("passwordA")
@@ -325,7 +415,7 @@ class AuthControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
 
-        assertThat(refreshTokenRepository.findById(signupRequest.getEmail())).isEmpty();
+        assertThat(refreshTokenRepository.findById(member.getEmail())).isEmpty();
     }
 
     @Test
@@ -355,12 +445,7 @@ class AuthControllerTest {
     @Test
     void 정상_Refresh_Token으로_토큰_갱신() throws Exception {
         // given
-        SignupRequestDto signupRequest = SignupRequestDto.builder()
-                .email("a@a.com")
-                .password("passwordA")
-                .nickname("nameA")
-                .build();
-        authService.signup(signupRequest);
+        Member member = createDefaultMember();
         LoginRequestDto loginRequest = LoginRequestDto.builder()
                 .emailOrNickname("nameA")
                 .password("passwordA")
@@ -389,18 +474,13 @@ class AuthControllerTest {
                 TokenResponseDto.class);
         assertThat(responseDto.getAccessToken()).isNotBlank();
         assertThat(responseDto.getRefreshToken()).isNotBlank();
-        assertThat(refreshTokenRepository.findById(signupRequest.getEmail())).isPresent();
+        assertThat(refreshTokenRepository.findById(member.getEmail())).isPresent();
     }
 
     @Test
     void 비정상_Refresh_Token으로_토큰_갱신() throws Exception {
         // given
-        SignupRequestDto signupRequest = SignupRequestDto.builder()
-                .email("a@a.com")
-                .password("passwordA")
-                .nickname("nameA")
-                .build();
-        authService.signup(signupRequest);
+        Member member = createDefaultMember();
         LoginRequestDto loginRequest = LoginRequestDto.builder()
                 .emailOrNickname("nameA")
                 .password("passwordA")
@@ -425,6 +505,7 @@ class AuthControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
+
 
     // TODO refresh token 갱신 요청 시 동시성 문제 해결
 //    @Test
@@ -479,7 +560,6 @@ class AuthControllerTest {
 //
 //        assertThat(refreshTokenRepository.findById(signupRequest.getEmail())).isEmpty();
 //    }
-
     @PlangoMockUser
     @Test
     void 회원이_스스로_회원_탈퇴() throws Exception {
@@ -625,17 +705,6 @@ class AuthControllerTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
     }
 
-    private Member createAnotherMember() {
-        Member member = Member.builder()
-                .email("b@b.com")
-                .password("passwordB")
-                .nickname("nameB")
-                .role(MemberRole.ROLE_USER)
-                .type(MemberType.EMAIL)
-                .build();
-        return memberRepository.save(member);
-    }
-
     @PlangoMockUser
     @Test
     void 비밀번호_초기화_시_메일이_발송된다() throws Exception {
@@ -659,6 +728,29 @@ class AuthControllerTest {
         assertThat(member.getPassword()).isNotEqualTo(oldPassword);
 
         verify(emailSender).send(any());
+    }
+
+    private Member createDefaultMember() {
+        Member member = Member.builder()
+                .email("a@a.com")
+                .password(passwordEncoder.encode("passwordA"))
+                .nickname("nameA")
+                .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
+                .termsAccepted(true)
+                .build();
+        return memberRepository.save(member);
+    }
+
+    private Member createAnotherMember() {
+        Member member = Member.builder()
+                .email("b@b.com")
+                .password(passwordEncoder.encode("passwordB"))
+                .nickname("nameB")
+                .role(MemberRole.ROLE_USER)
+                .type(MemberType.EMAIL)
+                .build();
+        return memberRepository.save(member);
     }
 
 }

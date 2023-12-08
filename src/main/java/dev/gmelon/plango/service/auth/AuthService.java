@@ -5,6 +5,8 @@ import static java.util.stream.Collectors.toList;
 import dev.gmelon.plango.config.auth.jwt.JWTProvider;
 import dev.gmelon.plango.config.auth.social.SocialClients;
 import dev.gmelon.plango.config.auth.social.dto.SocialAccountResponse;
+import dev.gmelon.plango.domain.auth.EmailToken;
+import dev.gmelon.plango.domain.auth.EmailTokenRepository;
 import dev.gmelon.plango.domain.diary.DiaryRepository;
 import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
 import dev.gmelon.plango.domain.member.Member;
@@ -16,6 +18,7 @@ import dev.gmelon.plango.domain.refreshtoken.RefreshTokenRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.domain.schedule.place.SchedulePlaceLikeRepository;
+import dev.gmelon.plango.exception.auth.EmailAuthenticationException;
 import dev.gmelon.plango.exception.auth.NoSuchRefreshTokenException;
 import dev.gmelon.plango.exception.auth.RefreshTokenTheftException;
 import dev.gmelon.plango.exception.member.DuplicateEmailException;
@@ -25,18 +28,19 @@ import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.infrastructure.mail.EmailSender;
 import dev.gmelon.plango.infrastructure.mail.dto.EmailMessage;
 import dev.gmelon.plango.infrastructure.s3.S3Repository;
+import dev.gmelon.plango.service.auth.dto.CheckEmailTokenRequestDto;
 import dev.gmelon.plango.service.auth.dto.LoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.PasswordResetRequestDto;
+import dev.gmelon.plango.service.auth.dto.SendEmailTokenRequestDto;
 import dev.gmelon.plango.service.auth.dto.SignupRequestDto;
 import dev.gmelon.plango.service.auth.dto.SnsLoginRequestDto;
 import dev.gmelon.plango.service.auth.dto.SnsRevokeRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenRefreshRequestDto;
 import dev.gmelon.plango.service.auth.dto.TokenResponseDto;
-import java.util.ArrayList;
-import java.util.Collections;
+import dev.gmelon.plango.service.common.dto.StatusResponseDto;
+import dev.gmelon.plango.util.RandomTokenGenerator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -52,20 +56,8 @@ import org.thymeleaf.context.Context;
 @Transactional(readOnly = true)
 @Service
 public class AuthService {
-    private static final List<Character> RANDOM_PASSWORD_CANDIDATES = new ArrayList<>();
     private static final int RANDOM_PASSWORD_LENGTH = 8;
-
-    static {
-        addRandomPasswordCandidates('a', 'z');
-        addRandomPasswordCandidates('A', 'Z');
-        addRandomPasswordCandidates('0', '9');
-    }
-
-    private static void addRandomPasswordCandidates(char startInclusive, char endInclusive) {
-        for (char c = startInclusive; c <= endInclusive; c++) {
-            RANDOM_PASSWORD_CANDIDATES.add(c);
-        }
-    }
+    private static final int EMAIL_TOKEN_LENGTH = 6;
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JWTProvider jwtProvider;
@@ -80,9 +72,11 @@ public class AuthService {
     private final NotificationRepository notificationRepository;
     private final FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
     private final SchedulePlaceLikeRepository schedulePlaceLikeRepository;
+    private final EmailTokenRepository emailTokenRepository;
     private final SocialClients socialClients;
     private final EmailSender emailSender;
     private final TemplateEngine templateEngine;
+    private final RandomTokenGenerator randomTokenGenerator;
 
     @Transactional
     public TokenResponseDto login(LoginRequestDto requestDto) {
@@ -179,8 +173,57 @@ public class AuthService {
     }
 
     @Transactional
+    public void sendEmailToken(SendEmailTokenRequestDto requestDto) {
+        validateEmailNotExists(requestDto.getEmail());
+
+        String tokenValue = randomTokenGenerator.generate(EMAIL_TOKEN_LENGTH);
+        EmailToken emailToken = EmailToken.builder()
+                .email(requestDto.getEmail())
+                .tokenValue(tokenValue)
+                .build();
+        emailTokenRepository.save(emailToken);
+
+        sendEmailTokenMail(requestDto, tokenValue);
+    }
+
+    private void sendEmailTokenMail(SendEmailTokenRequestDto requestDto, String tokenValue) {
+        String content = buildEmailTokenMailContent(tokenValue);
+        EmailMessage emailMessage = EmailMessage.builder()
+                .to(requestDto.getEmail())
+                .subject("[Plango] 메일 계정 인증 코드")
+                .content(content)
+                .build();
+        emailSender.send(emailMessage);
+    }
+
+    private String buildEmailTokenMailContent(String tokenValue) {
+        Context context = new Context();
+        context.setVariable("tokenValue", tokenValue);
+
+        return templateEngine.process("mail/emailToken", context);
+    }
+
+    @Transactional
+    public StatusResponseDto checkEmailToken(CheckEmailTokenRequestDto requestDto) {
+        Optional<EmailToken> optionalEmailToken = emailTokenRepository.findById(requestDto.getEmail());
+        if (optionalEmailToken.isEmpty()) {
+            return StatusResponseDto.error();
+        }
+
+        EmailToken emailToken = optionalEmailToken.get();
+        if (!emailToken.tokenValueEquals(requestDto.getTokenValue())) {
+            return StatusResponseDto.error();
+        }
+
+        emailToken.authenticate();
+        emailTokenRepository.save(emailToken);
+        return StatusResponseDto.ok();
+    }
+
+    @Transactional
     public void signup(SignupRequestDto requestDto) {
         validateUniqueColumns(requestDto);
+        validateEmailAuthenticated(requestDto);
 
         String encodePassword = passwordEncoder.encode(requestDto.getPassword());
         requestDto.setPassword(encodePassword);
@@ -189,27 +232,43 @@ public class AuthService {
 
     // TODO 리팩토링
     private void validateUniqueColumns(SignupRequestDto requestDto) {
-        validateEmailNotEquals(requestDto.getEmail());
-        validateEmailNotEquals(requestDto.getNickname());
+        validateEmailNotExists(requestDto.getEmail());
+        validateEmailNotExists(requestDto.getNickname());
 
-        validateNicknameNotEquals(requestDto.getEmail());
-        validateNicknameNotEquals(requestDto.getNickname());
+        validateNicknameNotExists(requestDto.getEmail());
+        validateNicknameNotExists(requestDto.getNickname());
     }
 
-    private void validateEmailNotEquals(String value) {
-        boolean isEmailAlreadyExists = memberRepository.findByEmail(value)
-                .isPresent();
-        if (isEmailAlreadyExists) {
+    private void validateEmailAuthenticated(SignupRequestDto requestDto) {
+        Optional<EmailToken> optionalEmailToken = emailTokenRepository.findById(requestDto.getEmail());
+        if (optionalEmailToken.isEmpty()) {
+            throw new EmailAuthenticationException();
+        }
+
+        EmailToken emailToken = optionalEmailToken.get();
+        if (!emailToken.isAuthenticated()) {
+            throw new EmailAuthenticationException();
+        }
+    }
+
+    private void validateEmailNotExists(String value) {
+        if (isEmailAlreadyExists(value)) {
             throw new DuplicateEmailException();
         }
     }
 
-    private void validateNicknameNotEquals(String value) {
-        boolean isNicknameAlreadyExists = memberRepository.findByNickname(value)
-                .isPresent();
-        if (isNicknameAlreadyExists) {
+    private void validateNicknameNotExists(String value) {
+        if (isNicknameAlreadyExists(value)) {
             throw new DuplicateNicknameException();
         }
+    }
+
+    private boolean isEmailAlreadyExists(String email) {
+        return memberRepository.findByEmail(email).isPresent();
+    }
+
+    private boolean isNicknameAlreadyExists(String nickname) {
+        return memberRepository.findByNickname(nickname).isPresent();
     }
 
     @Transactional
@@ -269,9 +328,13 @@ public class AuthService {
         // TODO 소셜 계정 validation
 
         Member member = findMemberByEmail(requestDto.getEmail());
-        String newRandomPassword = createRandomPassword(RANDOM_PASSWORD_LENGTH);
+        String newRandomPassword = randomTokenGenerator.generate(RANDOM_PASSWORD_LENGTH);
         member.changePassword(passwordEncoder.encode(newRandomPassword));
 
+        sendPasswordResetMail(member, newRandomPassword);
+    }
+
+    private void sendPasswordResetMail(Member member, String newRandomPassword) {
         String content = buildPasswordResetMailContent(member, newRandomPassword);
         EmailMessage emailMessage = EmailMessage.builder()
                 .to(member.getEmail())
@@ -279,13 +342,6 @@ public class AuthService {
                 .content(content)
                 .build();
         emailSender.send(emailMessage);
-    }
-
-    private String createRandomPassword(int length) {
-        Collections.shuffle(RANDOM_PASSWORD_CANDIDATES);
-        return RANDOM_PASSWORD_CANDIDATES.subList(0, length + 1).stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining());
     }
 
     private String buildPasswordResetMailContent(Member member, String newRandomPassword) {
