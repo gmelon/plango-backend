@@ -1,5 +1,7 @@
 package dev.gmelon.plango.infrastructure.fcm;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.auth.oauth2.GoogleCredentials;
 import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageToken;
 import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
@@ -7,6 +9,8 @@ import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.notification.Notification;
 import dev.gmelon.plango.exception.fcm.FirebaseTokenRefreshFailureException;
 import dev.gmelon.plango.infrastructure.fcm.dto.FcmRequestDto;
+import java.io.IOException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,12 +22,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.IOException;
-import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -59,9 +59,10 @@ public class FirebaseCloudMessageService {
 
     private void sendMessageTo(Notification notification, String targetToken) {
         HttpEntity<FcmRequestDto> httpEntity = createHttpEntity(notification, targetToken);
-        ResponseEntity<String> response = restTemplate.postForEntity(API_URL, httpEntity, String.class);
-
-        if (response.getStatusCode().isError()) {
+        ResponseEntity<String> response = null;
+        try {
+            response = restTemplate.postForEntity(API_URL, httpEntity, String.class);
+        } catch (RestClientException exception) {
             log.warn("FirebaseCloudMessage 푸시 발송 실패. code: {}, body: {}", response.getStatusCode(), response.getBody());
         }
     }
