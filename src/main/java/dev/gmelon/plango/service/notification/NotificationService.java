@@ -79,7 +79,7 @@ public class NotificationService {
         try {
             firebaseCloudMessageService.sendMessageTo(notification, targetMember);
         } catch (RuntimeException exception) {
-            log.error("FCM 푸시 발송 실패. - Notification Service", exception);
+            log.warn("FirebaseCloudMessage 푸시 발송 실패. - Notification Service", exception);
         }
     }
 

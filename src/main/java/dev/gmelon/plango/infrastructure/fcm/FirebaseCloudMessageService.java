@@ -20,7 +20,6 @@ import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -59,11 +58,10 @@ public class FirebaseCloudMessageService {
 
     private void sendMessageTo(Notification notification, String targetToken) {
         HttpEntity<FcmRequestDto> httpEntity = createHttpEntity(notification, targetToken);
-        ResponseEntity<String> response = null;
         try {
-            response = restTemplate.postForEntity(API_URL, httpEntity, String.class);
+            restTemplate.postForEntity(API_URL, httpEntity, String.class);
         } catch (RestClientException exception) {
-            log.warn("FirebaseCloudMessage 푸시 발송 실패. code: {}, body: {}", response.getStatusCode(), response.getBody());
+            log.warn("FirebaseCloudMessage 푸시 발송 실패.", exception);
         }
     }
 
