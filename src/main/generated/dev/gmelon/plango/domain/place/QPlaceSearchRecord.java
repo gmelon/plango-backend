@@ -22,6 +22,10 @@ public class QPlaceSearchRecord extends EntityPathBase<PlaceSearchRecord> {
 
     public static final QPlaceSearchRecord placeSearchRecord = new QPlaceSearchRecord("placeSearchRecord");
 
+    public final NumberPath<Double> centerLatitude = createNumber("centerLatitude", Double.class);
+
+    public final NumberPath<Double> centerLongitude = createNumber("centerLongitude", Double.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final StringPath keyword = createString("keyword");

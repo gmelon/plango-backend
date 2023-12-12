@@ -16,13 +16,20 @@ public class PlaceSearchRecordListResponseDto {
 
     private String keyword;
 
+    private Double centerLatitude;
+
+    private Double centerLongitude;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime lastSearchedDate;
 
     @Builder
-    public PlaceSearchRecordListResponseDto(Long id, String keyword, LocalDateTime lastSearchedDate) {
+    public PlaceSearchRecordListResponseDto(Long id, String keyword, Double centerLatitude, Double centerLongitude,
+                                            LocalDateTime lastSearchedDate) {
         this.id = id;
         this.keyword = keyword;
+        this.centerLatitude = centerLatitude;
+        this.centerLongitude = centerLongitude;
         this.lastSearchedDate = lastSearchedDate;
     }
 
@@ -30,6 +37,8 @@ public class PlaceSearchRecordListResponseDto {
         return PlaceSearchRecordListResponseDto.builder()
                 .id(entity.getId())
                 .keyword(entity.getKeyword())
+                .centerLatitude(entity.getCenterLatitude())
+                .centerLongitude(entity.getCenterLongitude())
                 .lastSearchedDate(entity.getLastSearchedDate())
                 .build();
     }

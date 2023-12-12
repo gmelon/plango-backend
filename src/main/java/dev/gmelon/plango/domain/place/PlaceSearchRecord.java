@@ -33,14 +33,22 @@ public class PlaceSearchRecord {
     @Column(nullable = false)
     private String keyword;
 
+    private Double centerLatitude;
+
+    private Double centerLongitude;
+
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
     @Builder
-    public PlaceSearchRecord(LocalDateTime lastSearchedDate, String keyword, Member member) {
+    public PlaceSearchRecord(Long id, LocalDateTime lastSearchedDate, String keyword,
+                             Double centerLatitude, Double centerLongitude, Member member) {
+        this.id = id;
         this.lastSearchedDate = lastSearchedDate;
         this.keyword = keyword;
+        this.centerLatitude = centerLatitude;
+        this.centerLongitude = centerLongitude;
         this.member = member;
     }
 

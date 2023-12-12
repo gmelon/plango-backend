@@ -16,14 +16,22 @@ public class PlaceSearchRecordRequestDto {
     @NotBlank
     private String keyword;
 
+    private Double centerLatitude;
+
+    private Double centerLongitude;
+
     @Builder
-    public PlaceSearchRecordRequestDto(String keyword) {
+    public PlaceSearchRecordRequestDto(String keyword, Double centerLatitude, Double centerLongitude) {
         this.keyword = keyword;
+        this.centerLatitude = centerLatitude;
+        this.centerLongitude = centerLongitude;
     }
 
     public PlaceSearchRecord toEntity(Member member, LocalDateTime currentDate) {
         return PlaceSearchRecord.builder()
                 .keyword(keyword)
+                .centerLatitude(centerLatitude)
+                .centerLongitude(centerLongitude)
                 .member(member)
                 .lastSearchedDate(currentDate)
                 .build();
