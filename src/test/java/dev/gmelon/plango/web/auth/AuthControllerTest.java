@@ -109,17 +109,19 @@ class AuthControllerTest {
     @Test
     void 정상_값으로_회원가입() throws Exception {
         // given
-        SignupRequestDto request = SignupRequestDto.builder()
-                .email("a@a.com")
-                .password("passwordA")
-                .nickname("nameA")
-                .build();
-
         EmailToken emailToken = EmailToken.builder()
-                .email(request.getEmail())
+                .email("a@a.com")
+                .tokenValue("abc123")
                 .build();
         emailToken.authenticate();
         emailTokenRepository.save(emailToken);
+
+        SignupRequestDto request = SignupRequestDto.builder()
+                .email(emailToken.getEmail())
+                .tokenValue(emailToken.getTokenValue())
+                .password("passwordA")
+                .nickname("nameA")
+                .build();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(post("/api/auth/signup")
@@ -142,6 +144,7 @@ class AuthControllerTest {
         // given
         SignupRequestDto request = SignupRequestDto.builder()
                 .email("a@a.com")
+                .tokenValue("abc123")
                 .password("passwordA")
                 .nickname("nameA")
                 .build();
@@ -163,6 +166,7 @@ class AuthControllerTest {
 
         SignupRequestDto secondRequest = SignupRequestDto.builder()
                 .email(member.getEmail())
+                .tokenValue("abc123")
                 .password("passwordA")
                 .nickname("nameB")
                 .build();
@@ -190,6 +194,7 @@ class AuthControllerTest {
 
         SignupRequestDto secondRequest = SignupRequestDto.builder()
                 .email("b@b.com")
+                .tokenValue("abc123")
                 .password("passwordA")
                 .nickname(member.getNickname())
                 .build();

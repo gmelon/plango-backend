@@ -20,6 +20,9 @@ public class SignupRequestDto {
     private String email;
 
     @NotBlank
+    private String tokenValue;
+
+    @NotBlank
     @Length(min=8)
     private String password;
 
@@ -29,15 +32,16 @@ public class SignupRequestDto {
     private String profileImageUrl;
 
     @Builder
-    public SignupRequestDto(String email, String password, String nickname, String profileImageUrl) {
+    public SignupRequestDto(String email, String tokenValue, String password, String nickname, String profileImageUrl) {
         this.email = email;
+        this.tokenValue = tokenValue;
         this.password = password;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setEncodedPassword(String encodedPassword) {
+        this.password = encodedPassword;
     }
 
     public Member toEntity() {

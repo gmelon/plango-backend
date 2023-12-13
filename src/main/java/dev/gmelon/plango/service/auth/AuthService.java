@@ -209,13 +209,13 @@ public class AuthService {
     public StatusResponseDto checkEmailToken(CheckEmailTokenRequestDto requestDto) {
         Optional<EmailToken> optionalEmailToken = emailTokenRepository.findById(requestDto.getEmail());
         if (optionalEmailToken.isEmpty()) {
-            log.warn("메일 인증 토큰 불일치. email: {}, tokenValue: {}", requestDto.getEmail(), requestDto.getTokenValue());
+            logEmailTokenMismatch(requestDto.getEmail(), requestDto.getTokenValue());
             return StatusResponseDto.error();
         }
 
         EmailToken emailToken = optionalEmailToken.get();
         if (!emailToken.tokenValueEquals(requestDto.getTokenValue())) {
-            log.warn("메일 인증 토큰 불일치. email: {}, tokenValue: {}", requestDto.getEmail(), requestDto.getTokenValue());
+            logEmailTokenMismatch(requestDto.getEmail(), requestDto.getTokenValue());
             return StatusResponseDto.error();
         }
 
@@ -230,7 +230,7 @@ public class AuthService {
         validateEmailAuthenticated(requestDto);
 
         String encodePassword = passwordEncoder.encode(requestDto.getPassword());
-        requestDto.setPassword(encodePassword);
+        requestDto.setEncodedPassword(encodePassword);
         memberRepository.save(requestDto.toEntity());
     }
 
@@ -246,13 +246,19 @@ public class AuthService {
     private void validateEmailAuthenticated(SignupRequestDto requestDto) {
         Optional<EmailToken> optionalEmailToken = emailTokenRepository.findById(requestDto.getEmail());
         if (optionalEmailToken.isEmpty()) {
+            logEmailTokenMismatch(requestDto.getEmail(), requestDto.getTokenValue());
             throw new EmailAuthenticationException();
         }
 
         EmailToken emailToken = optionalEmailToken.get();
-        if (!emailToken.isAuthenticated()) {
+        if (!(emailToken.isAuthenticated() && emailToken.tokenValueEquals(requestDto.getTokenValue()))) {
+            logEmailTokenMismatch(requestDto.getEmail(), requestDto.getTokenValue());
             throw new EmailAuthenticationException();
         }
+    }
+
+    private void logEmailTokenMismatch(String email, String tokenValue) {
+        log.warn("메일 인증 토큰 불일치. email: {}, tokenValue: {}", email, tokenValue);
     }
 
     private void validateEmailNotExists(String value) {
