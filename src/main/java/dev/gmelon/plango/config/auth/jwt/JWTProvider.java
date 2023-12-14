@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,6 +30,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class JWTProvider implements InitializingBean {
@@ -140,8 +142,10 @@ public class JWTProvider implements InitializingBean {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (UnsupportedJwtException exception) {
+            log.warn("지원하지 않는 토큰으로 인증 시도", exception);
             throw JWTException.unSupportedToken();
         } catch (JwtException | IllegalArgumentException exception) {
+            log.warn("유효하지 않은 토큰으로 인증 시도", exception);
             throw JWTException.invalidToken();
         }
         return payload;
