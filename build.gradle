@@ -80,6 +80,16 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
+test {
+	testLogging {
+		showStandardStreams = true
+		showCauses = true
+		showExceptions = true
+		showStackTraces = true
+		exceptionFormat = 'full'
+	}
+}
+
 jar {
 	enabled = false
 }
