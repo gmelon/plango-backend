@@ -2,7 +2,6 @@ package dev.gmelon.plango.service.notification;
 
 import static java.util.stream.Collectors.toList;
 
-import dev.gmelon.plango.domain.fcm.FirebaseCloudMessageTokenRepository;
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.notification.Notification;
@@ -13,12 +12,16 @@ import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.notification.NoSuchNotificationException;
 import dev.gmelon.plango.exception.notification.NotificationAccessDeniedException;
 import dev.gmelon.plango.infrastructure.fcm.FirebaseCloudMessageService;
+import dev.gmelon.plango.service.notification.dto.NotificationEvent;
 import dev.gmelon.plango.service.notification.dto.NotificationResponseDto;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,7 +32,6 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final MemberRepository memberRepository;
     private final FirebaseCloudMessageService firebaseCloudMessageService;
-    private final FirebaseCloudMessageTokenRepository firebaseCloudMessageTokenRepository;
 
     public List<NotificationResponseDto> findAll(Long memberId, int page) {
         return notificationRepository.findAllByMemberId(memberId, page).stream()
@@ -62,25 +64,29 @@ public class NotificationService {
         notificationRepository.deleteAllInBatchByMemberId(memberId);
     }
 
-    @Transactional
-    public void send(Long targetMemberId, NotificationType notificationType, NotificationArguments notificationArguments) {
-        Member targetMember = findMemberById(targetMemberId);
+    @Async
+    @TransactionalEventListener
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void send(NotificationEvent event) {
+        Member targetMember = findMemberById(event.getTargetMemberId());
 
-        Notification notification = Notification.builder()
+        Notification notification = buildNotification(event, targetMember);
+        notificationRepository.save(notification);
+
+        firebaseCloudMessageService.sendMessageTo(notification, targetMember);
+    }
+
+    private Notification buildNotification(NotificationEvent event, Member targetMember) {
+        NotificationType notificationType = event.getNotificationType();
+        NotificationArguments notificationArguments = event.getNotificationArguments();
+
+        return Notification.builder()
                 .notificationType(notificationType)
                 .argument(notificationArguments.getNotificationArgument())
                 .member(targetMember)
                 .title(notificationType.formatTitle(notificationArguments.getTitleArguments()))
                 .content(notificationType.formatContent(notificationArguments.getContentArguments()))
                 .build();
-        notificationRepository.save(notification);
-
-        // TODO @Async 적용해서 트랜잭션 분리하기
-        try {
-            firebaseCloudMessageService.sendMessageTo(notification, targetMember);
-        } catch (RuntimeException exception) {
-            log.warn("FirebaseCloudMessage 푸시 발송 실패. - Notification Service", exception);
-        }
     }
 
     private Member findMemberById(Long receiverMemberId) {

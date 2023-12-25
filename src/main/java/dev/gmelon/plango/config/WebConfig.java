@@ -6,10 +6,8 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration(proxyBeanMethods = false)
 public class WebConfig {
-
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
-
 }

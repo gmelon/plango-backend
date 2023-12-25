@@ -1,6 +1,7 @@
 package dev.gmelon.plango.service.notification;
 
-import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.NotificationArguments;
+import static dev.gmelon.plango.domain.notification.type.NotificationType.NotificationArguments;
+import static dev.gmelon.plango.domain.notification.type.TestNotificationType.SCHEDULE_INVITED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
@@ -12,11 +13,13 @@ import dev.gmelon.plango.domain.notification.Notification;
 import dev.gmelon.plango.domain.notification.NotificationRepository;
 import dev.gmelon.plango.domain.notification.type.TestNotificationType;
 import dev.gmelon.plango.infrastructure.fcm.FirebaseCloudMessageService;
+import dev.gmelon.plango.service.notification.dto.NotificationEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.jdbc.Sql;
 
 @Sql(value = "classpath:/reset.sql")
@@ -35,6 +38,9 @@ class NotificationServiceTest {
     private NotificationRepository notificationRepository;
     @Autowired
     private MemberRepository memberRepository;
+
+    @Autowired
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @BeforeEach
     void setUp() {
@@ -58,7 +64,7 @@ class NotificationServiceTest {
     }
 
     @Test
-    void 알림을_생성하고_FirebaseCloudMessage를_발송한다() {
+    void 알림을_생성하고_FirebaseCloudMessage를_발송한다() throws InterruptedException {
         // given
         NotificationArguments notificationArguments = NotificationArguments.builderOf(TestNotificationType.SCHEDULE_INVITED)
                 .titleArgument("한강 산책")
@@ -68,7 +74,15 @@ class NotificationServiceTest {
                 .build();
 
         // when
-        notificationService.send(memberA.getId(), TestNotificationType.SCHEDULE_INVITED, notificationArguments);
+        NotificationEvent notificationEvent = NotificationEvent.builder()
+                .targetMemberId(memberA.getId())
+                .notificationType(SCHEDULE_INVITED)
+                .notificationArguments(notificationArguments)
+                .build();
+        notificationService.send(notificationEvent);
+
+        // TODO 비동기 로직 테스트 개선
+        Thread.sleep(2000);
 
         // then
         Notification foundNotification = notificationRepository.findAll().get(0);

@@ -23,5 +23,12 @@ decorator:
   datasource:
     p6spy:
       enable-logging: true
+logging:
+  level:
+    org:
+      springframework:
+        transaction:
+          interceptor: trace
+        jpa: debug
 firebase-token-path: 'classpath:/tokens/firebase-adminsdk.json'
 apple-key-path: 'classpath:/tokens/apple_plango_key.p8'

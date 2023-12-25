@@ -2,6 +2,8 @@ package dev.gmelon.plango.web.schedule;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -12,16 +14,19 @@ import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.member.MemberRole;
 import dev.gmelon.plango.domain.member.MemberType;
+import dev.gmelon.plango.domain.notification.NotificationRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
 import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleMemberRepository;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
+import dev.gmelon.plango.service.notification.NotificationService;
 import dev.gmelon.plango.service.schedule.dto.ScheduleMemberAddRequestDto;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -44,6 +49,48 @@ class ScheduleMemberControllerTest {
     private ScheduleRepository scheduleRepository;
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @MockBean
+    private NotificationService notificationService;
+
+    @PlangoMockUser
+    @Test
+    void 알림_서비스가_실패해도_일정_서비스는_커밋된다() throws Exception {
+        // given
+        doThrow(new RuntimeException()).when(notificationService).send(any());
+
+        Member member = memberRepository.findAll().get(0);
+        Member anotherMember = createAnotherMember();
+
+        Schedule givenSchedule = Schedule.builder()
+                .title("일정")
+                .build();
+        ScheduleMember ownerMember = ScheduleMember.createOwner(member, givenSchedule);
+        givenSchedule.setScheduleMembers(List.of(ownerMember));
+        scheduleRepository.save(givenSchedule);
+
+        ScheduleMemberAddRequestDto request = ScheduleMemberAddRequestDto.builder()
+                .memberId(anotherMember.getId())
+                .build();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(post("/api/schedules/" + givenSchedule.getId() + "/members")
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+        ScheduleMember addedScheduleMember = assertDoesNotThrow(() ->
+                scheduleMemberRepository.findByMemberIdAndScheduleId(anotherMember.getId(), givenSchedule.getId()).get());
+        assertThat(addedScheduleMember.isAccepted()).isFalse();
+        assertThat(addedScheduleMember.isOwner()).isFalse();
+
+        assertThat(notificationRepository.findAll()).hasSize(0);
+    }
 
     @PlangoMockUser
     @Test

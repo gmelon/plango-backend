@@ -82,7 +82,6 @@ public class FirebaseCloudMessageService {
             googleCredentials.refreshIfExpired();
         } catch (IOException e) {
             log.error("Firebase token refresh 실패.", e);
-            // TODO 푸시가 발송되지 못해도 상위 Schedule, Notication 관련 트랜잭션은 커밋되어야 함
             throw new FirebaseTokenRefreshFailureException();
         }
 

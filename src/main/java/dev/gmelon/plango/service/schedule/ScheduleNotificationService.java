@@ -1,5 +1,13 @@
 package dev.gmelon.plango.service.schedule;
 
+import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.NotificationArguments;
+import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.SCHEDULE_ACCEPTED;
+import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.SCHEDULE_DELETED;
+import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.SCHEDULE_EDITED;
+import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.SCHEDULE_EXITED_BY_OWNER;
+import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.SCHEDULE_EXITED_BY_PARTICIPANT;
+import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.SCHEDULE_INVITED;
+
 import dev.gmelon.plango.domain.member.Member;
 import dev.gmelon.plango.domain.member.MemberRepository;
 import dev.gmelon.plango.domain.schedule.Schedule;
@@ -7,23 +15,22 @@ import dev.gmelon.plango.domain.schedule.ScheduleMember;
 import dev.gmelon.plango.domain.schedule.ScheduleRepository;
 import dev.gmelon.plango.exception.member.NoSuchMemberException;
 import dev.gmelon.plango.exception.schedule.NoSuchScheduleException;
-import dev.gmelon.plango.service.notification.NotificationService;
+import dev.gmelon.plango.service.notification.dto.NotificationEvent;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
-import static dev.gmelon.plango.domain.notification.type.DefaultNotificationType.*;
-
+@Slf4j
 @RequiredArgsConstructor
 @Transactional
 @Service
 public class ScheduleNotificationService {
-
-    private final NotificationService notificationService;
     private final ScheduleRepository scheduleRepository;
     private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public void sendInvitedNotifications(Schedule schedule, List<ScheduleMember> scheduleMembers) {
         NotificationArguments notificationArguments = NotificationArguments.builderOf(SCHEDULE_INVITED)
@@ -32,7 +39,12 @@ public class ScheduleNotificationService {
                 .build();
 
         for (ScheduleMember scheduleMember : scheduleMembers) {
-            notificationService.send(scheduleMember.memberId(), SCHEDULE_INVITED, notificationArguments);
+            NotificationEvent notificationEvent = NotificationEvent.builder()
+                    .targetMemberId(scheduleMember.memberId())
+                    .notificationType(SCHEDULE_INVITED)
+                    .notificationArguments(notificationArguments)
+                    .build();
+            eventPublisher.publishEvent(notificationEvent);
         }
     }
 
@@ -47,10 +59,14 @@ public class ScheduleNotificationService {
             if (scheduleMember.isMemberEquals(editorMember.getId())) {
                 continue;
             }
-            notificationService.send(scheduleMember.memberId(), SCHEDULE_EDITED, notificationArguments);
+            NotificationEvent notificationEvent = NotificationEvent.builder()
+                    .targetMemberId(scheduleMember.memberId())
+                    .notificationType(SCHEDULE_EDITED)
+                    .notificationArguments(notificationArguments)
+                    .build();
+            eventPublisher.publishEvent(notificationEvent);
         }
     }
-
 
     public void sendDeletedNotification(Schedule schedule, Long memberId) {
         NotificationArguments notificationArguments = NotificationArguments.builderOf(SCHEDULE_DELETED)
@@ -61,7 +77,12 @@ public class ScheduleNotificationService {
             if (scheduleMember.isMemberEquals(memberId)) {
                 continue;
             }
-            notificationService.send(scheduleMember.memberId(), SCHEDULE_DELETED, notificationArguments);
+            NotificationEvent notificationEvent = NotificationEvent.builder()
+                    .targetMemberId(scheduleMember.memberId())
+                    .notificationType(SCHEDULE_DELETED)
+                    .notificationArguments(notificationArguments)
+                    .build();
+            eventPublisher.publishEvent(notificationEvent);
         }
     }
 
@@ -70,7 +91,12 @@ public class ScheduleNotificationService {
                 .titleArgument(schedule.getTitle())
                 .notificationArgument(schedule.getId().toString())
                 .build();
-        notificationService.send(scheduleMember.memberId(), SCHEDULE_INVITED, notificationArguments);
+        NotificationEvent notificationEvent = NotificationEvent.builder()
+                .targetMemberId(scheduleMember.memberId())
+                .notificationType(SCHEDULE_INVITED)
+                .notificationArguments(notificationArguments)
+                .build();
+        eventPublisher.publishEvent(notificationEvent);
     }
 
     public void sendAcceptedNotification(Long scheduleId, Long memberId) {
@@ -82,14 +108,24 @@ public class ScheduleNotificationService {
                 .contentArgument(participant.getNickname())
                 .notificationArgument(schedule.getId().toString())
                 .build();
-        notificationService.send(schedule.ownerId(), SCHEDULE_ACCEPTED, notificationArguments);
+        NotificationEvent notificationEvent = NotificationEvent.builder()
+                .targetMemberId(schedule.ownerId())
+                .notificationType(SCHEDULE_ACCEPTED)
+                .notificationArguments(notificationArguments)
+                .build();
+        eventPublisher.publishEvent(notificationEvent);
     }
 
     public void sendRemovedNotification(Schedule schedule, Long targetMemberId) {
         NotificationArguments notificationArguments = NotificationArguments.builderOf(SCHEDULE_EXITED_BY_OWNER)
                 .titleArgument(schedule.getTitle())
                 .build();
-        notificationService.send(targetMemberId, SCHEDULE_EXITED_BY_OWNER, notificationArguments);
+        NotificationEvent notificationEvent = NotificationEvent.builder()
+                .targetMemberId(targetMemberId)
+                .notificationType(SCHEDULE_EXITED_BY_OWNER)
+                .notificationArguments(notificationArguments)
+                .build();
+        eventPublisher.publishEvent(notificationEvent);
     }
 
     public void sendRejectedOrExitedNotification(Schedule schedule, Long memberId) {
@@ -100,7 +136,12 @@ public class ScheduleNotificationService {
                 .contentArgument(participant.getNickname())
                 .notificationArgument(schedule.getId().toString())
                 .build();
-        notificationService.send(schedule.ownerId(), SCHEDULE_EXITED_BY_PARTICIPANT, notificationArguments);
+        NotificationEvent notificationEvent = NotificationEvent.builder()
+                .targetMemberId(schedule.ownerId())
+                .notificationType(SCHEDULE_EXITED_BY_PARTICIPANT)
+                .notificationArguments(notificationArguments)
+                .build();
+        eventPublisher.publishEvent(notificationEvent);
     }
 
     private Schedule findScheduleById(Long scheduleId) {
