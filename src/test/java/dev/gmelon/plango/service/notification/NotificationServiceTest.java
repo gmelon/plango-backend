@@ -64,7 +64,7 @@ class NotificationServiceTest {
     }
 
     @Test
-    void 알림을_생성하고_FirebaseCloudMessage를_발송한다() throws InterruptedException {
+    void 알림을_생성하고_FirebaseCloudMessage를_발송한다() {
         // given
         NotificationArguments notificationArguments = NotificationArguments.builderOf(TestNotificationType.SCHEDULE_INVITED)
                 .titleArgument("한강 산책")
@@ -80,9 +80,6 @@ class NotificationServiceTest {
                 .notificationArguments(notificationArguments)
                 .build();
         notificationService.send(notificationEvent);
-
-        // TODO 비동기 로직 테스트 개선
-        Thread.sleep(2000);
 
         // then
         Notification foundNotification = notificationRepository.findAll().get(0);
